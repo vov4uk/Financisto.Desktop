@@ -1,52 +1,23 @@
+﻿using Avalonia;
+using Financisto.Desktop;
 using System;
-using System.Reflection;
-using Avalonia;
-using Avalonia.WebView.Desktop;
-using Financisto.Desktop.Utils;
 
-namespace Financisto.Desktop;
+namespace Monetria;
 
-public static class Program
+sealed class Program
 {
-    private static Assembly Assembly { get; } = Assembly.GetExecutingAssembly();
-
-    public static string Name { get; } = Assembly.GetName().Name ?? "Financisto.Desktop";
-
-    public static Version Version { get; } = Assembly.GetName().Version ?? new Version(0, 0, 0);
-
-    public static string VersionString { get; } = Version.ToString(3);
-
-    public static bool IsDevelopmentBuild { get; } = Version.Major is <= 0 or >= 999;
-
-    public static string ProjectUrl { get; } = "https://github.com/vov4uk/Financisto.Desktop";
-
-    public static string ProjectReleasesUrl { get; } = $"{ProjectUrl}/releases";
-
-    public static Avalonia.AppBuilder BuildAvaloniaApp() =>
-        Avalonia.AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace().UseDesktopWebView();
-
+    // Initialization code. Don't use any Avalonia, third-party APIs or any
+    // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
+    // yet and stuff might break.
     [STAThread]
-    public static int Main(string[] args)
-    {
-        // Build and run the app
-        var builder = BuildAvaloniaApp();
+    public static void Main(string[] args) 
+        => BuildAvaloniaApp()
+        .StartWithClassicDesktopLifetime(args);
 
-        try
-        {
-            return builder.StartWithClassicDesktopLifetime(args);
-        }
-        catch (Exception ex)
-        {
-            if (OperatingSystem.IsWindows())
-                _ = NativeMethods.Windows.MessageBox(0, ex.ToString(), "Fatal Error", 0x10);
-
-            throw;
-        }
-        finally
-        {
-            // Clean up after application shutdown
-            if (builder.Instance is IDisposable disposableApp)
-                disposableApp.Dispose();
-        }
-    }
+    // Avalonia configuration, don't remove; also used by visual designer.
+    public static AppBuilder BuildAvaloniaApp()
+        => AppBuilder.Configure<App>()
+            .UsePlatformDetect()
+            .WithInterFont()
+            .LogToTrace();
 }

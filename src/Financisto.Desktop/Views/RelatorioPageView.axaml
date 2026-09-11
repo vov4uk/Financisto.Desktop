@@ -1,0 +1,96 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Financisto.Desktop.ViewModels"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="Financisto.Desktop.Views.RelatorioPageView"
+             x:DataType="vm:RelatorioPageViewModel">
+
+    <ScrollViewer>
+        <StackPanel Spacing="16" Margin="16">
+            <TextBlock Text="Relatório de Transações" FontSize="20" FontWeight="Bold"/>
+
+            <!-- Filtros -->
+            <Grid ColumnDefinitions="120,*,120,*" Margin="0,0,0,10">
+                <ComboBox Grid.Column="0" ItemsSource="{Binding MesesDisponiveis}" SelectedItem="{Binding MesSelecionado}" />
+                <ComboBox Grid.Column="1" ItemsSource="{Binding AnosDisponiveis}" SelectedItem="{Binding AnoSelecionado}" />
+            </Grid>
+
+            <!-- Gráficos lado a lado -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+                <!-- Pizza -->
+                <StackPanel Grid.Column="0" Spacing="6">
+                    <TextBlock Text="Distribuição de despesas por categoria"
+                               FontWeight="SemiBold"
+                               Margin="8,4,0,0"/>
+                    
+                    <TextBlock Text="Mostra quanto você gasta em cada categoria" 
+                               FontSize="12"
+                               Foreground="Gray"
+                               Margin="8,4,0,0"/>
+                    
+                    <Border CornerRadius="15" 
+                            BorderThickness="2" 
+                            BorderBrush="{DynamicResource SystemAltMediumHighColor}"
+                            Background="{DynamicResource SystemAltHighColor}"
+                            Padding="10"
+                            Margin="0,10,0,0"
+                            Height="400">
+                        
+                        
+                        <lvc:PieChart Series="{Binding PieSeries}" />
+                    </Border>
+                </StackPanel>
+
+                <!-- Barras -->
+                <StackPanel Grid.Column="1" Spacing="6">
+                    <TextBlock Text="Receitas e Despesas por categoria" 
+                               FontWeight="SemiBold"
+                               Margin="8,4,0,0"/>
+                    
+                    <TextBlock Text="Comparação de valores por categoria"
+                               FontSize="12"
+                               Foreground="Gray"
+                               Margin="8,4,0,0"/>
+                    
+                    <Border CornerRadius="15" 
+                            BorderThickness="2" 
+                            BorderBrush="{DynamicResource SystemAltMediumHighColor}"
+                            Background="{DynamicResource SystemAltHighColor}"
+                            Padding="10"
+                            Margin="0,10,0,0"
+                            Height="400">
+                        
+                        <lvc:CartesianChart Series="{Binding BarSeries}" />
+                    </Border>
+                </StackPanel>
+            </Grid>
+
+            <!-- Linha embaixo -->
+            <StackPanel Spacing="6">
+                <TextBlock Text="Evolução mensal do saldo" 
+                           FontWeight="SemiBold"
+                           Margin="8,4,0,0"/>
+                
+                <TextBlock Text="Mostra como seu saldo evoluiu ao longo dos meses" 
+                           FontSize="12"
+                           Foreground="Gray"
+                           Margin="8,4,0,0"/>
+                
+                <Border CornerRadius="15"
+                        BorderThickness="2"
+                        BorderBrush="{DynamicResource SystemAltMediumHighColor}" 
+                        Background="{DynamicResource SystemAltHighColor}"
+                        Padding="10" Margin="0,10,0,0" 
+                        Height="300">
+                    
+                    <lvc:CartesianChart Series="{Binding LineSeries}"
+                                        XAxes="{Binding XAxes}"
+                                        YAxes="{Binding YAxes}" />
+                </Border>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

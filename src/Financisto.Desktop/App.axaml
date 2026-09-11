@@ -1,18 +1,24 @@
-<Application
-  x:Class="Financisto.Desktop.App"
-  xmlns="https://github.com/avaloniaui"
-  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-  xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
-  xmlns:materialStyles="clr-namespace:Material.Styles.Themes;assembly=Material.Styles"
-  Name="Financisto"
-  RequestedThemeVariant="Default"
->
-  <Application.Styles>
-	<materialStyles:MaterialTheme
-	  BaseTheme="Light"
-	  PrimaryColor="Grey"
-	  SecondaryColor="DeepOrange"
-	/>
-	<materialIcons:MaterialIconStyles />
-  </Application.Styles>
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Financisto.Desktop.App" 
+             xmlns:local="using:Financisto.Desktop"
+             xmlns:actipro="http://schemas.actiprosoftware.com/avaloniaui"
+             RequestedThemeVariant="Default">
+    
+    <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. --> 
+     <Application.DataTemplates>
+          <local:ViewLocator/>
+     </Application.DataTemplates>
+     
+     <Application.Styles>
+           <FluentTheme>
+
+          <StyleInclude Source="avares://Financisto.Desktop/Styles/EstilosIcones.axaml">
+               
+          </StyleInclude>
+          <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/> 
+          <FluentTheme /> 
+          
+     </FluentTheme> 
+     </Application.Styles>
 </Application>

@@ -1,69 +1,44 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <!--<ApplicationIcon>..\favicon.ico</ApplicationIcon>-->
-    <ApplicationManifest>app.manifest</ApplicationManifest>
-    <!-- Trimmed builds break support for Windows 10 for some reason -->
-    <!-- https://github.com/Tyrrrz/YoutubeDownloader/issues/496 -->
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+       <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <PublishTrimmed>false</PublishTrimmed>
-    <CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
-    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-  </PropertyGroup>
+    <ApplicationIcon>Assets\ic_launcher.ico</ApplicationIcon>
 
-  <PropertyGroup>
-    <MacOSBundleIdentifier>me.vov4uk.financisto</MacOSBundleIdentifier>
-    <MacOSBundleName>Financisto</MacOSBundleName>
-    <MacOSBundleDisplayName>Financisto</MacOSBundleDisplayName>
-  </PropertyGroup>
+    </PropertyGroup>
 
-  <PropertyGroup>
-    <EncryptionSalt>HimalayanPinkSalt</EncryptionSalt>
-  </PropertyGroup>
+    <ItemGroup>
+        <AvaloniaResource Include="Assets\**" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <!-- Expose this property in code -->
-    <ProjectProperty Include="EncryptionSalt" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Avalonia" Version="11.3.22" />
+        <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.13" />
+        <PackageReference Include="Avalonia.Desktop" Version="11.3.22" />
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.22" />
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.22" />
+        <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+        <PackageReference Include="Avalonia.Diagnostics" Version="11.3.22">
+            <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+            <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="AvaloniaWASM.Storage" Version="1.0.0" />
+        <PackageReference Include="ClosedXML" Version="0.105.1" />
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+        <PackageReference Include="LiveChartsCore" Version="2.0.5" />
+        <PackageReference Include="LiveChartsCore.SkiaSharpView" Version="2.0.5" />
+        <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.0.5" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <AvaloniaResource Include="../favicon.ico" Link="favicon.ico" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="AsyncImageLoader.Avalonia" />
-    <PackageReference Include="Avalonia" />
-    <PackageReference Include="Avalonia.Controls.DataGrid" />
-    <PackageReference Include="Avalonia.Desktop" />
-    <PackageReference Include="Cogwheel" />
-    <PackageReference Include="CommunityToolkit.Mvvm" />
-    <PackageReference Include="CSharpier.MsBuild" PrivateAssets="all" />
-    <PackageReference Include="Deorcify" />
-    <PackageReference Include="DialogHost.Avalonia" />
-    <PackageReference Include="Gress" />
-    <PackageReference Include="MacBundle" />
-    <PackageReference Include="Markdig" />
-    <PackageReference Include="Material.Avalonia" />
-    <PackageReference Include="Material.Avalonia.DataGrid" />
-    <PackageReference Include="Material.Icons.Avalonia" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
-    <PackageReference Include="Onova" />
-    <PackageReference Include="PowerKit" />
-    <PackageReference Include="ThisAssembly.Project" PrivateAssets="all" />
-    <PackageReference Include="WebView.Avalonia" />
-    <PackageReference Include="WebView.Avalonia.Desktop" />
-  </ItemGroup>
-
-  <!-- Avalonia.WebView is completely incompatible with trimming -->
-  <ItemGroup>
-    <TrimmerRootAssembly Include="Avalonia.WebView" />
-    <TrimmerRootAssembly Include="Avalonia.WebView.Desktop" />
-    <TrimmerRootAssembly Include="Avalonia.WebView.Linux" />
-    <TrimmerRootAssembly Include="Avalonia.WebView.MacCatalyst" />
-    <TrimmerRootAssembly Include="Avalonia.WebView.Windows" />
-    <TrimmerRootAssembly Include="AvaloniaWebView.Shared" />
-    <TrimmerRootAssembly Include="Linux.WebView.Core" />
-    <TrimmerRootAssembly Include="Microsoft.Web.WebView2.Core" />
-    <TrimmerRootAssembly Include="WebView.Avalonia" />
-    <TrimmerRootAssembly Include="WebView.Core" />
-  </ItemGroup>
+    <ItemGroup>
+      <Compile Update="Views\ConfigurationsPageView.axaml.cs">
+        <DependentUpon>ConfigurationsPageView.axaml</DependentUpon>
+      </Compile>
+    </ItemGroup>
 </Project>

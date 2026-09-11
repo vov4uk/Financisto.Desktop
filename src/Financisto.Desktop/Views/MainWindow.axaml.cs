@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace Financisto.Desktop;
+namespace Financisto.Desktop.Views;
 
 public partial class MainWindow : Window
 {
@@ -8,4 +8,6 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
     }
+    
+    
 }

@@ -1,0 +1,96 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Financisto.Desktop.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="720"
+        Width="1280" Height="720"
+        x:Class="Financisto.Desktop.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/ic_launcher.png"
+        Title="Financisto.Desktop"
+        WindowState="Maximized"
+        SystemDecorations="Full">
+
+    <!-- Utilizando DynamicResources para trocar cores dinamicamente entre os temas -->
+    <SplitView IsPaneOpen="{Binding IsPaneOpen}"
+               DisplayMode="CompactInline"
+               OpenPaneLength="200"
+               CompactPaneLength="50"
+               PaneBackground="{DynamicResource SystemAltMediumLowColor}"  
+               Background="{DynamicResource SystemControlPageBackgroundBaseMediumBrush}">
+        
+        <SplitView.Pane>
+            <Grid RowDefinitions="*,Auto" Background="{DynamicResource SystemControlBackgroundBaseMediumLowBrush}" Margin="5">
+
+                <!-- Conteúdo principal -->
+                <Grid Grid.Row="0"
+                      RowDefinitions="Auto,Auto,*"
+                      Background="{DynamicResource SystemControlBackgroundAltMediumLowBrush}">
+
+                    <!-- Botão -->
+                    <Button Command="{Binding OpenPaneCommand}" HorizontalAlignment="Left">
+                        <PathIcon Foreground="{DynamicResource SystemControlForegroundBaseBrush}" 
+                                  Data="{StaticResource line_horizontal_3_regular}" />
+                    </Button>
+
+                    <!-- Logo -->
+                    <Image Grid.Row="1"
+                           Source="../Assets/Images/BR/FinancistoIcon.png"
+                           HorizontalAlignment="Stretch"
+                           VerticalAlignment="Top" Margin="0,11,10,0" />
+
+                    <!-- Menu -->
+                    <Grid Grid.Row="2"
+                          RowDefinitions="*,Auto"
+                          Background="{DynamicResource SystemControlDisabledBaseMediumLowBrush}">
+
+                       
+                        <!-- Itens do topo -->
+                        <ListBox Grid.Row="0"
+                                 ItemsSource="{Binding ItemsTopo}"
+                                 SelectedItem="{Binding SelectedItemTopo}"
+                                 Background="{DynamicResource SystemAltMediumLowColor}"
+                                 Foreground="{DynamicResource SystemControlForegroundBaseBrush}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:ListItemTemplate}">
+                                    <StackPanel Orientation="Horizontal" Spacing="15">
+                                        <PathIcon Foreground="{DynamicResource SystemControlForegroundBaseBrush}" 
+                                                  Data="{Binding ListItemIcon}" />
+                                        <TextBlock Text="{Binding Label}" Foreground="{DynamicResource SystemControlForegroundBaseBrush}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <!-- Configurações FIXO EMBAIXO -->
+                        <ListBox Grid.Row="1"
+                                 ItemsSource="{Binding ItemsFundo}"
+                                 SelectedItem="{Binding SelectedItemFundo}"
+                                 Background="{DynamicResource SystemAltMediumLowColor}"
+                                 Foreground="{DynamicResource SystemControlForegroundBaseBrush}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:ListItemTemplate}">
+                                    <StackPanel Orientation="Horizontal" Spacing="15">
+                                        <PathIcon Foreground="{DynamicResource SystemControlForegroundBaseBrush}" 
+                                                  Data="{Binding ListItemIcon}" />
+                                        <TextBlock Text="{Binding Label}" Foreground="{DynamicResource SystemControlForegroundBaseBrush}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+
+                    </Grid>
+                </Grid>
+            </Grid>
+        </SplitView.Pane>
+
+        <SplitView.Content>
+            <Border CornerRadius="10,0,0,0" Background="{DynamicResource SystemAltMediumHighColor}"> 
+                <TransitioningContentControl Content="{Binding CurrentPage}" />
+            </Border>
+        </SplitView.Content>
+    </SplitView>
+
+</Window>
