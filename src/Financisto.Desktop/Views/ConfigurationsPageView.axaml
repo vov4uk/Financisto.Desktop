@@ -111,7 +111,7 @@
                            FontWeight="SemiBold"/>
 
                 <TextBlock Text="Financisto Desktop"/>
-                <TextBlock Text="Cersion: 0.0.1"/>
+                <TextBlock Text="Version: 0.0.1"/>
                 <TextBlock Text="Developer: vov4uk"/>
 
                 <HyperlinkButton Content="Repository"

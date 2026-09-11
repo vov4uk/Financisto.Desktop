@@ -1,0 +1,92 @@
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Avalonia.Media;
+using Avalonia.Styling;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Financisto.Desktop.Services;
+using Financisto.Desktop.Enum;
+
+namespace Financisto.Desktop.ViewModels;
+
+public partial class ConfigurationsPageViewModel : ViewModelBase
+{
+    private readonly TransactionsService _transacaoService;
+    private readonly ThemeService _themeService;
+
+    private int _clickCount;
+
+    public IReadOnlyList<AppTheme> AppThemes { get; } =
+        new[] { AppTheme.System, AppTheme.Light, AppTheme.Dark };
+
+    // Corrigido: Nome do campo com underscore para seguir o padrão do CommunityToolkit.Mvvm
+    [ObservableProperty]
+    private AppTheme _currentAppTheme;
+
+    [ObservableProperty]
+    private string _message = "Clique 3 vezes para resetar os dados";
+
+    [ObservableProperty]
+    private IBrush _messageColor = Brushes.Gray;
+
+    public ConfigurationsPageViewModel(
+        TransactionsService transacaoService,
+        ThemeService themeService)
+    {
+        _transacaoService = transacaoService;
+        _themeService = themeService;
+
+        var tema = themeService.TemaAtual;
+
+        if (tema == ThemeVariant.Dark)
+            CurrentAppTheme = AppTheme.Dark;  // Propriedade gerada (com C maiúsculo)
+        else if (tema == ThemeVariant.Light)
+            CurrentAppTheme = AppTheme.Light;
+        else
+            CurrentAppTheme = AppTheme.System;
+    }
+
+    // O partial void deve corresponder ao tipo do campo (AppTheme)
+    partial void OnCurrentAppThemeChanged(AppTheme value)
+    {
+        switch (value)
+        {
+            case AppTheme.Dark:
+                _themeService.DefinirEscuro();
+                break;
+
+            case AppTheme.Light:
+                _themeService.DefinirClaro();
+                break;
+
+            case AppTheme.System:
+                _themeService.DefinirSystem();
+                break;
+        }
+    }
+
+    [RelayCommand]
+    private async Task ResetarDados()
+    {
+        _clickCount++;
+
+        if (_clickCount < 3)
+        {
+            Message = $"Clique {_clickCount}/3 para resetar";  // Propriedade gerada
+            MessageColor = Brushes.Gray;
+            return;
+        }
+
+        _transacaoService.ResetarTudo();
+
+        Message = "Dados resetados com sucesso!";
+        MessageColor = Brushes.Green;
+
+        _clickCount = 0;
+
+        await Task.Delay(1000);
+
+        Message = "Ready...";
+        MessageColor = Brushes.Gray;
+    }
+}

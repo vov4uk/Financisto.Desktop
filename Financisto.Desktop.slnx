@@ -1,3 +1,6 @@
 <Solution>
+  <Project Path="src/Financisto.Adapter/Financisto.Adapter.csproj" />
+  <Project Path="src/Financisto.Common/Financisto.Common.csproj" />
+  <Project Path="src/Financisto.DataAccess/Financisto.DataAccess.csproj" />
   <Project Path="src/Financisto.Desktop/Financisto.Desktop.csproj" />
 </Solution>

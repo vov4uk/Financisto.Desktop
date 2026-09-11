@@ -9,7 +9,7 @@ namespace Financisto.Desktop.ViewModels
     public partial class MainWindowViewModel : ViewModelBase
     {
         private readonly ThemeService _themeService = AppServices.ThemeService;
-        private readonly TransacaoService _transacaoService = AppServices.TransacaoService;
+        private readonly TransactionsService _transacaoService = AppServices.TransacaoService;
         [ObservableProperty]
         private ViewModelBase _currentPage;
 
@@ -36,8 +36,8 @@ namespace Financisto.Desktop.ViewModels
         public ObservableCollection<ListItemTemplate> ItemsTopo { get; } = new()
         {
             new(typeof(DashboardPageViewModel), "Dashboard", "glance_regular"),
-            new(typeof(TransacaoPageViewModel), "Transactions", "money_regular"),
-            new(typeof(CategoriasPageViewModel), "Categories", "grid_regular"),
+            new(typeof(TransactionsPageViewModel), "Transactions", "money_regular"),
+            new(typeof(CategoriesPageViewModel), "Categories", "grid_regular"),
             new(typeof(RelatorioPageViewModel), "Reports", "book_pulse_regular"),
         };
 
@@ -54,7 +54,7 @@ namespace Financisto.Desktop.ViewModels
             }
             else if (
                 value.ModelType == typeof(DashboardPageViewModel) ||
-                value.ModelType == typeof(TransacaoPageViewModel))
+                value.ModelType == typeof(TransactionsPageViewModel))
             {
                 instance = Activator.CreateInstance(
                     value.ModelType,

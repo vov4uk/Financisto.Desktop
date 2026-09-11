@@ -9,7 +9,7 @@ namespace Financisto.Desktop.ViewModels
 {
     public class DashboardPageViewModel : ViewModelBase
     {
-        private readonly TransacaoService _service;
+        private readonly TransactionsService _service;
 
         // gráficos
         public ObservableCollection<ISeries> PieSeries { get; } = new();
@@ -20,12 +20,12 @@ namespace Financisto.Desktop.ViewModels
         public ObservableCollection<Axis> YAxes { get; } = new();
 
         //construtor obrigatório recebendo o serviço
-        public DashboardPageViewModel(TransacaoService service)
+        public DashboardPageViewModel(TransactionsService service)
         {
             _service = service ?? throw new ArgumentNullException(nameof(service));
 
             //atualiza gráficos sempre que a coleção de transações muda
-            _service.Transacoes.CollectionChanged += (_, _) => AtualizarGraficos();
+            _service.Transactions.CollectionChanged += (_, _) => AtualizarGraficos();
 
             //atualiza gráficos na inicialização
             AtualizarGraficos();
@@ -41,7 +41,7 @@ namespace Financisto.Desktop.ViewModels
         {
             PieSeries.Clear();
 
-            var grupos = _service.Transacoes
+            var grupos = _service.Transactions
                 .GroupBy(t => t.Categoria)
                 .Select(g => new { Categoria = g.Key, Total = g.Sum(t => t.Valor) })
                 .ToList();
@@ -56,7 +56,7 @@ namespace Financisto.Desktop.ViewModels
             }
 
             // adiciona total apenas na legenda
-            var total = _service.Transacoes.Sum(t => t.Valor);
+            var total = _service.Transactions.Sum(t => t.Valor);
             PieSeries.Add(new PieSeries<double>
             {
                 Values = new double[] { 0 },
@@ -74,7 +74,7 @@ namespace Financisto.Desktop.ViewModels
             YAxes.Clear();
 
             //agrupa por mês e ano, mas sem acumular valores
-            var agrupado = _service.Transacoes
+            var agrupado = _service.Transactions
                 .OrderBy(t => t.Data)
                 .GroupBy(t => new { t.Data.Year, t.Data.Month })
                 .Select(g => new

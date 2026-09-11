@@ -11,7 +11,7 @@ namespace Financisto.Desktop.ViewModels
 {
     public class RelatorioPageViewModel : ViewModelBase
     {
-        private readonly TransacaoService _service;
+        private readonly TransactionsService _service;
 
         // Séries de gráficos
         public ObservableCollection<ISeries> PieSeries { get; } = new();
@@ -56,7 +56,7 @@ namespace Financisto.Desktop.ViewModels
             _service = AppServices.TransacaoService;
 
             // Atualiza quando as transações mudam (adicionar novas transações)
-            _service.Transacoes.CollectionChanged += (_, _) => Atualizar();
+            _service.Transactions.CollectionChanged += (_, _) => Atualizar();
 
             // Carregar meses e anos disponíveis no início
             CarregarMesesEAno();
@@ -72,13 +72,13 @@ namespace Financisto.Desktop.ViewModels
         // Carregar meses e anos únicos com base nas transações
         private void CarregarMesesEAno()
         {
-            var meses = _service.Transacoes
+            var meses = _service.Transactions
                 .Select(t => t.Data.ToString("MMMM"))
                 .Distinct()
                 .OrderBy(m => DateTime.ParseExact(m, "MMMM", System.Globalization.CultureInfo.CurrentCulture))  // Ordena os meses
                 .ToList();
 
-            var anos = _service.Transacoes
+            var anos = _service.Transactions
                 .Select(t => t.Data.Year)
                 .Distinct()
                 .OrderBy(a => a)
@@ -122,7 +122,7 @@ namespace Financisto.Desktop.ViewModels
             }
 
             // Filtra as transações com base no mês e no ano
-            var transacoesFiltradas = _service.Transacoes
+            var transacoesFiltradas = _service.Transactions
                 .Where(t => t.Data.Month == mesNumero && t.Data.Year == AnoSelecionado)
                 .ToList();
 
@@ -193,7 +193,7 @@ namespace Financisto.Desktop.ViewModels
             YAxes.Clear();
 
             double saldo = 0;
-            var valores = _service.Transacoes
+            var valores = _service.Transactions
                 .OrderBy(t => t.Data)  // Ordenar as transações pela data
                 .GroupBy(t => new { t.Data.Year, t.Data.Month })  // Agrupar por ano e mês
                 .Select(g =>
@@ -209,7 +209,7 @@ namespace Financisto.Desktop.ViewModels
             LineSeries.Add(new LineSeries<double> { Values = valores });
 
             // Eixo X: nomes dos meses de todos os anos disponíveis
-            var meses = _service.Transacoes
+            var meses = _service.Transactions
                 .OrderBy(t => t.Data)
                 .GroupBy(t => t.Data.ToString("MMM"))
                 .Select(g => g.Key)
