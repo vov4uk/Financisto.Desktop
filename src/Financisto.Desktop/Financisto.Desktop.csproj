@@ -35,4 +35,10 @@
         <PackageReference Include="LiveChartsCore.SkiaSharpView" />
         <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" />
     </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Financisto.Common\Financisto.Common.csproj" />
+        <ProjectReference Include="..\Financisto.DataAccess\Financisto.DataAccess.csproj" />
+        <ProjectReference Include="..\Financisto.Adapter\Financisto.Adapter.csproj" />
+    </ItemGroup>
 </Project>

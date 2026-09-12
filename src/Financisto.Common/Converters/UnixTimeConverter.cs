@@ -34,9 +34,13 @@ namespace Financisto.Converters
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var dateStr = System.Convert.ToString(value);
+
             if (!DateTime.TryParseExact(dateStr, FORMAT, null, DateTimeStyles.None, out var date))
             {
-                date = (DateTime)value;
+                if(!DateTime.TryParseExact(dateStr, FORMAT_DAY, null, DateTimeStyles.None, out date))
+                {
+                    date = (DateTime)value;
+                }
             }
 
             return ConvertBack(date);

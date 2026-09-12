@@ -1,121 +1,69 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
-             xmlns:vm="using:Financisto.Desktop.ViewModels" 
-             x:Class="Financisto.Desktop.Views.TransactionsPageView" 
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Financisto.Desktop.ViewModels"
+             xmlns:conv="using:Financisto.Converters"
+             x:Class="Financisto.Desktop.Views.TransactionsPageView"
              x:DataType="vm:TransactionsPageViewModel">
-    
-     
-    <!-- Grid principal para layout responsivo --> 
-    <Grid Margin="10" RowDefinitions="Auto,Auto,Auto,*" ColumnDefinitions="*">
-         <!-- Cabeçalho --> <TextBlock Grid.Row="0" Text="Bem vindo a aba de transações!" 
-                           FontSize="20" FontWeight="Bold" Margin="0,0,0,10"/> 
-         
-         <!-- Botões --> <Grid Grid.Row="1" 
-                               ColumnDefinitions="140,*"
-                               Margin="0,0,0,10">
-             <Button Grid.Column="0" 
-                     Command="{Binding NovaTransacaoCommand}"
-                     Content="+ Nova Transação" Width="140"/> 
-             
-             <Button Grid.Column="1" 
-                     Content="Exportar Excel" 
-                     Command="{Binding ExportarExcelAsync}" 
-                     Width="140"/>
-             
-         </Grid> 
-         
-         <!-- Filtros (exemplo, você pode preencher) --> 
-         <Grid Grid.Row="2"
-               ColumnDefinitions="140,*,140,*,140,*" 
-               Margin="0,0,0,10"> <!-- Mês, Tipo e Categoria --> 
-         </Grid>
-         <!-- DataGrid responsivo --> <DataGrid Grid.Row="3"
-                                                ItemsSource="{Binding Transactions}"
-                                                AutoGenerateColumns="False" 
-                                                IsReadOnly="False"
-                                                GridLinesVisibility="All" 
-                                                BorderThickness="1" 
-                                                BorderBrush="Transparent" 
-                                                CanUserReorderColumns="True" 
-                                                CanUserResizeColumns="True"
-                                                CanUserSortColumns="True"
-                                                HorizontalAlignment="Stretch" 
-                                                VerticalAlignment="Stretch">
-             
-             <DataGrid.Columns> <!-- Data --> <DataGridTemplateColumn 
-                                                  Header="Data" 
-                                                  Width="120" 
-                                                  SortMemberPath="Data">
-                 
-                 <DataGridTemplateColumn.CellTemplate>
-                       <DataTemplate>
-                            <CalendarDatePicker SelectedDate="{Binding Data, Mode=TwoWay}" />
-                       </DataTemplate>
-                  </DataGridTemplateColumn.CellTemplate>
-                 
-             </DataGridTemplateColumn> <!-- Tipo com ComboBox -->
-                 <DataGridTemplateColumn Header="Tipo" Width="110">
-                     <DataGridTemplateColumn.CellTemplate>
-                         <DataTemplate>
-                             <ComboBox SelectedItem="{Binding Tipo, Mode=TwoWay}"
-                                       ItemsSource="{x:Static vm:TransactionsPageViewModel.TiposDisponiveisStatic}" />
-                         </DataTemplate>
-                     </DataGridTemplateColumn.CellTemplate>
-                 </DataGridTemplateColumn> <!-- Categoria -->
-                 
-                 <DataGridTextColumn
-                     Header="Categoria"
-                     Binding="{Binding Categoria, Mode=TwoWay}"
-                     Width="*" /> <!-- Descrição --> 
-                 
-                 <DataGridTextColumn Header="Descrição"
-                                     Binding="{Binding Descricao, Mode=TwoWay}" 
-                                     Width="2*" /> <!-- Valor com R$ e centralizado --> 
-                 
-                 <DataGridTemplateColumn Header="Valor" 
-                                         Width="100" SortMemberPath="Valor">
-                     
-                      <DataGridTemplateColumn.CellTemplate>
-                           <DataTemplate>
-                            <TextBlock Text="{Binding ValorFormatado}"
-                                       HorizontalAlignment="Center" 
-                                       VerticalAlignment="Center"/>
-                            
-                      </DataTemplate> 
-                           
-                      </DataGridTemplateColumn.CellTemplate> 
-                      <DataGridTemplateColumn.CellEditingTemplate>
-                            <DataTemplate>
-                                 
-                                 <TextBox Text="{Binding Valor,
-                                          Mode=TwoWay, 
-                                          UpdateSourceTrigger=LostFocus, 
-                                          TargetNullValue=0,StringFormat=N2}" 
-                                          HorizontalAlignment="Center"
-                                          VerticalAlignment="Center"/>
-                                 
-                            </DataTemplate>
-                           
-                      </DataGridTemplateColumn.CellEditingTemplate>
-                 </DataGridTemplateColumn> 
-                 
-                 <!-- Ações --> <DataGridTemplateColumn Header="Ações"
-                                                        Width="120">
-                       
-                     <DataGridTemplateColumn.CellTemplate>
-                           <DataTemplate>
-                                <StackPanel Orientation="Horizontal"
-                                            HorizontalAlignment="Center" 
-                                            Spacing="6"> <Button Content="Excluir"
-                                                                 Command="{Binding ExcluirCommand}" /> 
-                                </StackPanel>
-                               
-                           </DataTemplate>
-                         
-                     </DataGridTemplateColumn.CellTemplate>
-                     
-                 </DataGridTemplateColumn> 
-             </DataGrid.Columns>
-         </DataGrid>
+
+    <UserControl.Resources>
+        <conv:UnixTimeConverter x:Key="UnixTimeConverter" />
+    </UserControl.Resources>
+
+    <Grid Margin="10" RowDefinitions="Auto,*" ColumnDefinitions="*">
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,0,0,10">
+            <TextBlock Grid.Column="0"
+                       Text="Transactions"
+                       FontSize="20" FontWeight="Bold"
+                       VerticalAlignment="Center" />
+
+            <TextBlock Grid.Column="1"
+                       Text="Loading..."
+                       IsVisible="{Binding IsLoading}"
+                       VerticalAlignment="Center"
+                       Margin="0,0,10,0" />
+
+            <Button Grid.Column="2"
+                    Content="Refresh"
+                    Command="{Binding RefreshDataCommand}"
+                    Width="90" Margin="0,0,8,0" />
+
+            <Button Grid.Column="3"
+                    Content="Export Excel"
+                    Command="{Binding ExportarExcelCommand}"
+                    Width="110" />
+        </Grid>
+
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding Entities}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  GridLinesVisibility="Horizontal"
+                  BorderThickness="1"
+                  CanUserReorderColumns="True"
+                  CanUserResizeColumns="True"
+                  CanUserSortColumns="True"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Date"
+                                    Binding="{Binding Datetime, Converter={StaticResource UnixTimeConverter}}"
+                                    Width="150" />
+                <DataGridTextColumn Header="Account"
+                                    Binding="{Binding AccountTitle}"
+                                    Width="150" />
+                <DataGridTextColumn Header="Category"
+                                    Binding="{Binding CategoryTitle}"
+                                    Width="130" />
+                <DataGridTextColumn Header="Description"
+                                    Binding="{Binding TransactionTitle}"
+                                    Width="*" />
+                <DataGridTextColumn Header="Amount"
+                                    Binding="{Binding AmountTitle}"
+                                    Width="130" />
+                <DataGridTextColumn Header="Balance"
+                                    Binding="{Binding BalanceTitle}"
+                                    Width="130" />
+            </DataGrid.Columns>
+        </DataGrid>
     </Grid>
 </UserControl>

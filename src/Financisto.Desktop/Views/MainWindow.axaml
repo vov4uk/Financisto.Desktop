@@ -13,17 +13,34 @@
         SystemDecorations="Full">
 
     <DockPanel>
-        <Menu DockPanel.Dock="Top">
-            <MenuItem Header="_File">
-                <MenuItem Header="_Open..." Command="{Binding OpenBackupCommand}" CommandParameter="{Binding $parent[Window]}"/>
-                <Separator/>
-                <MenuItem Header="_Exit"/>
-            </MenuItem>
-            <MenuItem Header="_Edit">
-                <MenuItem Header="Copy"/>
-                <MenuItem Header="Paste"/>
-            </MenuItem>
-        </Menu>
+        <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+            <Menu DockPanel.Dock="Left">
+                <MenuItem Header="_File">
+                    <MenuItem Header="_Open..." Command="{Binding OpenBackupCommand}" CommandParameter="{Binding $parent[Window]}" IsEnabled="{Binding !IsLoading}"/>
+                    <MenuItem Header="_Save Backup..." Command="{Binding SaveBackupCommand}" CommandParameter="{Binding $parent[Window]}" IsEnabled="{Binding !IsLoading}"/>
+                    <MenuItem Header="Save as _DB..." Command="{Binding SaveBackupAsDbCommand}" CommandParameter="{Binding $parent[Window]}" IsEnabled="{Binding !IsLoading}"/>
+                    <Separator/>
+                    <MenuItem Header="_Exit"/>
+                </MenuItem>
+                <MenuItem Header="_Edit">
+                    <MenuItem Header="Copy"/>
+                    <MenuItem Header="Paste"/>
+                </MenuItem>
+            </Menu>
+
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="10,0" Spacing="10">
+                <TextBlock Text="Loading backup..."
+                           IsVisible="{Binding IsLoading}"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource SystemControlForegroundBaseBrush}"/>
+                <TextBlock Text="{Binding StatusMessage}"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource SystemControlForegroundBaseBrush}"/>
+                <TextBlock Text="{Binding OpenBackupPath}"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource SystemControlForegroundBaseBrush}"/>
+            </StackPanel>
+        </DockPanel>
 
         <SplitView IsPaneOpen="{Binding IsPaneOpen}"
                DisplayMode="CompactInline"

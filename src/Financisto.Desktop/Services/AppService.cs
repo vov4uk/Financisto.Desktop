@@ -4,6 +4,7 @@
     {
         public static TransactionsService TransactionsService { get; } = new();
         public static ThemeService ThemeService { get; } = new();
+        public static DatabaseService DatabaseService { get; } = new();
     }
 }
 
