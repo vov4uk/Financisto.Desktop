@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Financisto.Desktop.ViewModels
 {
-    public class RelatorioPageViewModel : ViewModelBase
+    public class ReportsPageViewModel : ViewModelBase
     {
         private readonly TransactionsService _service;
 
@@ -51,9 +51,9 @@ namespace Financisto.Desktop.ViewModels
         }
 
         // Construtor
-        public RelatorioPageViewModel()
+        public ReportsPageViewModel()
         {
-            _service = AppServices.TransacaoService;
+            _service = AppServices.TransactionsService;
 
             // Atualiza quando as transações mudam (adicionar novas transações)
             _service.Transactions.CollectionChanged += (_, _) => Atualizar();

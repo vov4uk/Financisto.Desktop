@@ -22,7 +22,7 @@ public partial class CategoriesPageViewModel : ViewModelBase
 
     public CategoriesPageViewModel()
     {
-        _transacaoService = AppServices.TransacaoService;
+        _transacaoService = AppServices.TransactionsService;
 
         _transacaoService.Transactions.CollectionChanged += (_, _) => Recarregar();
 

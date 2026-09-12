@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using Avalonia.Controls;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Financisto.Desktop.Services;
 using System;
@@ -9,7 +10,7 @@ namespace Financisto.Desktop.ViewModels
     public partial class MainWindowViewModel : ViewModelBase
     {
         private readonly ThemeService _themeService = AppServices.ThemeService;
-        private readonly TransactionsService _transacaoService = AppServices.TransacaoService;
+        private readonly TransactionsService _transacaoService = AppServices.TransactionsService;
         [ObservableProperty]
         private ViewModelBase _currentPage;
 
@@ -28,17 +29,24 @@ namespace Financisto.Desktop.ViewModels
             _currentPage = new DashboardPageViewModel(_transacaoService);
         }
 
-        public ObservableCollection<ListItemTemplate> ItemsFundo { get; } = new()
+        public ObservableCollection<ListItemTemplate> ItemsBottom { get; } = new()
         {
             new(typeof(ConfigurationsPageViewModel), "Configurations", "settings_regular"),
         };
 
-        public ObservableCollection<ListItemTemplate> ItemsTopo { get; } = new()
+        public ObservableCollection<ListItemTemplate> ItemsTop { get; } = new()
         {
             new(typeof(DashboardPageViewModel), "Dashboard", "glance_regular"),
-            new(typeof(TransactionsPageViewModel), "Transactions", "money_regular"),
+            new(typeof(AccountsPageViewModel), "Accounts", "inprivate_account_regular"),
             new(typeof(CategoriesPageViewModel), "Categories", "grid_regular"),
-            new(typeof(RelatorioPageViewModel), "Reports", "book_pulse_regular"),
+            new(typeof(ProjectsPageViewModel), "Projects", "grid_regular"),
+            new(typeof(PayeesPageViewModel), "Payees", "money_regular"),
+            new(typeof(LocationsPageViewModel), "Locations", "home_regular"),
+            new(typeof(CurrenciesPageViewModel), "Currencies", "dark_theme_regular"),
+            new(typeof(ExchangeRatesPageViewModel), "Exchange Rates", "arrow_sync_regular"),
+            new(typeof(TransactionsPageViewModel), "Transactions", "money_regular"),
+            new(typeof(ReportsPageViewModel), "Reports", "book_pulse_regular"),
+            new(typeof(RulesPageViewModel), "Rules", "settings_regular"),
         };
 
         private void NavigateToPage(ListItemTemplate value)
@@ -92,6 +100,12 @@ namespace Financisto.Desktop.ViewModels
         private void OpenPane()
         {
             IsPaneOpen = !IsPaneOpen;
+        }
+
+        [RelayCommand]
+        private void OpenBackup(Window window)
+        {
+            // TODO: not implemented yet.
         }
     }
 }

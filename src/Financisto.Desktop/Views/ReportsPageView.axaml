@@ -5,8 +5,8 @@
              xmlns:vm="using:Financisto.Desktop.ViewModels"
              xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
-             x:Class="Financisto.Desktop.Views.RelatorioPageView"
-             x:DataType="vm:RelatorioPageViewModel">
+             x:Class="Financisto.Desktop.Views.ReportsPageView"
+             x:DataType="vm:ReportsPageViewModel">
 
     <ScrollViewer>
         <StackPanel Spacing="16" Margin="16">
