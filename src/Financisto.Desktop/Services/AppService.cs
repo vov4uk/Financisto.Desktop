@@ -1,10 +1,13 @@
-﻿namespace Financisto.Desktop.Services
+﻿using Financisto.Desktop.Helpers;
+
+namespace Financisto.Desktop.Services
 {
     public static class AppServices
     {
         public static TransactionsService TransactionsService { get; } = new();
         public static ThemeService ThemeService { get; } = new();
         public static DatabaseService DatabaseService { get; } = new();
+        public static IDialogWrapper DialogWrapper { get; } = new DialogWrapper();
     }
 }
 

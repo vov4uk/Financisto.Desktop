@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:conv="using:Financisto.Converters"
+             mc:Ignorable="d" d:DesignWidth="340" d:DesignHeight="140"
+             x:Class="Financisto.Desktop.Views.Dialogs.AmountControl"
+             x:CompileBindings="False">
+
+    <UserControl.Resources>
+        <conv:AmountConverter x:Key="AmountConverter" />
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Button.icon">
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+    </UserControl.Styles>
+
+    <StackPanel Spacing="4">
+        <StackPanel Orientation="Horizontal" Spacing="4" IsVisible="{Binding Transaction.IsOriginalFromAmountVisible}">
+            <TextBlock VerticalAlignment="Center" MinWidth="70"
+                       Text="{Binding Transaction.OriginalCurrency.Name, StringFormat='Amount {0}'}" />
+            <NumericUpDown Width="150"
+                           Value="{Binding Transaction.OriginalFromAmount, Converter={StaticResource AmountConverter}}"
+                           Increment="0.01" Minimum="0" FormatString="F2" />
+            <Button Classes="icon" Command="{Binding ClearOriginalFromAmountCommand}">
+                <Image Source="{StaticResource IconXmark}" Width="16" Height="16" />
+            </Button>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" Spacing="4">
+            <TextBlock VerticalAlignment="Center" MinWidth="70"
+                       Text="{Binding Transaction.FromAccountCurrency.Name, StringFormat='Amount {0}'}" />
+            <Button Classes="icon" Command="{Binding ChangeFromAmountSignCommand}">
+                <Panel>
+                    <Image Source="{StaticResource IconMinus}" Width="16" Height="16" IsVisible="{Binding Transaction.IsAmountNegative}" />
+                    <Image Source="{StaticResource IconPlus}" Width="16" Height="16" IsVisible="{Binding !Transaction.IsAmountNegative}" />
+                </Panel>
+            </Button>
+            <NumericUpDown Width="150"
+                           Value="{Binding Transaction.FromAmount, Converter={StaticResource AmountConverter}, ConverterParameter=false}"
+                           Increment="0.01" Minimum="0" FormatString="F2" />
+            <Button Classes="icon" Command="{Binding ClearFromAmountCommand}">
+                <Image Source="{StaticResource IconXmark}" Width="16" Height="16" />
+            </Button>
+        </StackPanel>
+
+        <StackPanel IsVisible="{Binding Transaction.IsOriginalFromAmountVisible}" Spacing="2">
+            <TextBlock Text="Rate" />
+            <NumericUpDown Value="{Binding Transaction.Rate}" Increment="0.00001" Minimum="0" FormatString="F5" IsEnabled="False" />
+            <TextBlock Text="{Binding Transaction.RateString}" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

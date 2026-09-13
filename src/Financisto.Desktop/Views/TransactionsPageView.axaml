@@ -10,10 +10,12 @@
     </UserControl.Resources>
 
     <Grid Margin="10" RowDefinitions="Auto,*" ColumnDefinitions="*">
-        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,0,0,10">
+
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto" Margin="0,0,0,10">
             <TextBlock Grid.Column="0"
                        Text="Transactions"
-                       FontSize="20" FontWeight="Bold"
+                       FontSize="20"
+                       FontWeight="Bold"
                        VerticalAlignment="Center" />
 
             <TextBlock Grid.Column="1"
@@ -22,15 +24,11 @@
                        VerticalAlignment="Center"
                        Margin="0,0,10,0" />
 
-            <Button Grid.Column="2"
-                    Content="Refresh"
-                    Command="{Binding RefreshDataCommand}"
-                    Width="90" Margin="0,0,8,0" />
-
-            <Button Grid.Column="3"
-                    Content="Export Excel"
-                    Command="{Binding ExportarExcelCommand}"
-                    Width="110" />
+            <Button Content="Add Expense" Grid.Column="2" Command="{Binding AddCommand}" />
+            <Button Content="Add Transfer" Grid.Column="3" Command="{Binding AddTransferCommand}" />
+            <Button Content="Edit" Grid.Column="4" Command="{Binding EditCommand}" />
+            <Button Content="Duplicate" Grid.Column="5" Command="{Binding DuplicateCommand}" />
+            <Button Content="Delete" Grid.Column="6"  Command="{Binding DeleteCommand}" />
         </Grid>
 
         <DataGrid Grid.Row="1"
@@ -54,9 +52,6 @@
                 <DataGridTextColumn Header="Category"
                                     Binding="{Binding CategoryTitle}"
                                     Width="130" />
-                <DataGridTextColumn Header="Description"
-                                    Binding="{Binding TransactionTitle}"
-                                    Width="*" />
                 <DataGridTextColumn Header="Amount"
                                     Binding="{Binding AmountTitle}"
                                     Width="130" />

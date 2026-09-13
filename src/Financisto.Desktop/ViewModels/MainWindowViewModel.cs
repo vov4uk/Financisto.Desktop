@@ -120,6 +120,10 @@ namespace Financisto.Desktop.ViewModels
             {
                 instance = new TransactionsPageViewModel(AppServices.DatabaseService.CurrentDatabase);
             }
+            else if (value.ModelType == typeof(AccountsPageViewModel))
+            {
+                instance = new AccountsPageViewModel(AppServices.DatabaseService.CurrentDatabase);
+            }
             else
             {
                 instance = Activator.CreateInstance(value.ModelType);
@@ -171,11 +175,17 @@ namespace Financisto.Desktop.ViewModels
             var file = files.Count > 0 ? files[0] : null;
             if (file == null) return;
 
+            await OpenBackupAsync(file.Path.LocalPath);
+        }
+
+        public async Task OpenBackupAsync(string path)
+        {
+            if (IsLoading) return;
+
             IsLoading = true;
             StatusMessage = null;
             try
             {
-                var path = file.Path.LocalPath;
                 var entitiesCount = await AppServices.DatabaseService.OpenBackupAsync(path);
                 OpenBackupPath = path;
 

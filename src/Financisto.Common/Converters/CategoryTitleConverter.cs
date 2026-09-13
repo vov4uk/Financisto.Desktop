@@ -11,9 +11,9 @@ namespace Financisto.Common.Converters
     {
         public object Convert(IList<object> values, Type targetType, object parameter, CultureInfo culture)
         {
-            var title = (string)values[0];
-            var level = (int)values[1];
-            return (title ?? string.Empty).PadLeft((title ?? string.Empty).Length + level, '-');
+            var title = values.Count > 0 && values[0] is string s ? s : string.Empty;
+            var level = values.Count > 1 && values[1] is int i ? i : 0;
+            return title.PadLeft(title.Length + level, '-');
         }
     }
 }

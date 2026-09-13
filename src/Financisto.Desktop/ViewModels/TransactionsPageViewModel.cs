@@ -1,16 +1,19 @@
-using Avalonia.Platform.Storage;
-using ClosedXML.Excel;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Financisto.Common.Entities;
 using Financisto.Common.Model;
 using Financisto.DataAccess.Abstractions;
+using Financisto.DataAccess.Data;
 using Financisto.DataAccess.View;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
+using Financisto.Desktop.Data;
+using Financisto.Desktop.Helpers;
+using Financisto.Desktop.Services;
+using Financisto.Desktop.ViewModels.Dialogs;
+using Financisto.Desktop.Views.Dialogs;
 
 namespace Financisto.Desktop.ViewModels;
 
@@ -83,59 +86,145 @@ public partial class TransactionsPageViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task ExportarExcelAsync()
+    private async Task Add()
     {
-        try
+        var transaction = await _db.GetOrCreateTransactionAsync(0);
+        var subTransactions = await _db.GetSubTransactionsAsync(0);
+
+        await OpenTransactionDialogAsync(transaction, subTransactions);
+    }
+
+    private async Task OpenTransactionDialogAsync(Transaction transaction, IEnumerable<Transaction> subTransactions)
+    {
+        var transactionDto = new TransactionDto(transaction, subTransactions);
+        var dialogVm = new TransactionControlVM(transactionDto, AppServices.DialogWrapper);
+
+        var result = await AppServices.DialogWrapper.ShowDialogAsync<TransactionControl>(dialogVm, 640, 400, "Transaction");
+
+        if (result is TransactionDto resultVm)
         {
-            var topLevel = App.Current?.ApplicationLifetime
-                is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
-                    ? desktop.MainWindow
-                    : null;
+            await SaveTransactionResultAsync(transaction, subTransactions, resultVm);
+        }
+    }
 
-            if (topLevel == null) return;
+    private async Task SaveTransactionResultAsync(Transaction transaction, IEnumerable<Transaction> subTransactions, TransactionDto resultVm)
+    {
+        var resultTransactions = new List<Transaction>();
 
-            var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        MapperHelper.MapTransaction(resultVm, transaction);
+        var totalFromAmountHomeCurrency = transaction.FromAmount;
+        resultTransactions.Add(transaction);
+
+        if (resultVm.SubTransactions?.Any() == true)
+        {
+            foreach (var subTransactionDto in resultVm.SubTransactions.OfType<TransactionDto>())
             {
-                Title = "Salvar arquivo Excel",
-                FileTypeChoices = new List<FilePickerFileType>
+                var subTransaction = await GetSubTransactionAsync(transaction, resultVm, subTransactionDto);
+
+                // Set FromAmount in home currency
+                if (resultVm.IsOriginalFromAmountVisible)
                 {
-                    new FilePickerFileType("Excel Workbook") { Patterns = new[] { "*.xlsx" } }
-                },
-                DefaultExtension = "xlsx"
-            });
+                    var originalFromAmount = subTransactionDto.RealFromAmount;
+                    subTransaction.FromAmount = (long)(originalFromAmount * resultVm.Rate);
+                    subTransaction.OriginalFromAmount = originalFromAmount;
+                    totalFromAmountHomeCurrency -= subTransaction.FromAmount;
+                }
 
-            if (file == null) return;
-
-            var caminho = file.Path.LocalPath;
-
-            using var workbook = new XLWorkbook();
-            var worksheet = workbook.Worksheets.Add("Transactions");
-
-            worksheet.Cell(1, 1).Value = "Date";
-            worksheet.Cell(1, 2).Value = "Account";
-            worksheet.Cell(1, 3).Value = "Category";
-            worksheet.Cell(1, 4).Value = "Description";
-            worksheet.Cell(1, 5).Value = "Amount";
-            worksheet.Cell(1, 6).Value = "Balance";
-
-            int row = 2;
-            foreach (var t in Entities)
-            {
-                worksheet.Cell(row, 1).Value = Financisto.Converters.UnixTimeConverter.Convert(t.Datetime);
-                worksheet.Cell(row, 2).Value = t.AccountTitle;
-                worksheet.Cell(row, 3).Value = t.CategoryTitle;
-                worksheet.Cell(row, 4).Value = t.TransactionTitle;
-                worksheet.Cell(row, 5).Value = t.FromAmount / 100.0;
-                worksheet.Cell(row, 6).Value = t.BalanceTitle;
-                row++;
+                resultTransactions.Add(subTransaction);
             }
 
-            worksheet.Columns().AdjustToContents();
-            workbook.SaveAs(caminho);
+            if (!resultVm.IsOriginalFromAmountVisible)
+            {
+                foreach (var subTransfer in resultVm.SubTransactions.OfType<TransferDto>())
+                {
+                    var subTransaction = await GetSubTransferAsync(transaction, resultVm, subTransfer);
+                    resultTransactions.Add(subTransaction);
+                }
+            }
+
+            // check if sum of all subtransactions == parentTransaction.FromAmount
+            // if not - add the difference to the last transaction
+            if (resultVm.IsOriginalFromAmountVisible && totalFromAmountHomeCurrency != 0)
+            {
+                resultTransactions[^1].FromAmount += totalFromAmountHomeCurrency;
+            }
         }
-        catch (Exception ex)
+
+        await _db.InsertOrUpdateAsync(resultTransactions);
+
+        await ProcessDeletedTransactionsAsync(subTransactions, resultTransactions);
+
+        await _db.RebuildAccountBalanceAsync(transaction.FromAccountId);
+        var toAccounts = resultTransactions.Select(x => x.ToAccountId).Where(x => x > 0).Distinct().ToList();
+        foreach (var account in toAccounts)
         {
-            Console.WriteLine("Erro ao exportar Excel: " + ex.Message);
+            await _db.RebuildAccountBalanceAsync(account);
         }
+
+        await RefreshDataAsync();
+    }
+
+    private async Task ProcessDeletedTransactionsAsync(IEnumerable<Transaction> subTransactions, List<Transaction> resultTransactions)
+    {
+        var transactionIds = resultTransactions.Select(x => x.Id).Distinct().ToList();
+        var deletedSubTransactionIds = subTransactions.Select(x => x.Id).Where(x => !transactionIds.Contains(x));
+        foreach (var id in deletedSubTransactionIds)
+        {
+            await DeleteTransactionAsync(id);
+        }
+    }
+
+    private async Task DeleteTransactionAsync(int id)
+    {
+        using var uow = _db.CreateUnitOfWork();
+        var repo = uow.GetRepository<Transaction>();
+        var transaction = await repo.FindByAsync(x => x.Id == id);
+
+        await repo.DeleteAsync(transaction);
+        await uow.SaveChangesAsync();
+    }
+
+    private async Task<Transaction> GetSubTransactionAsync(Transaction transaction, TransactionDto resultVm, TransactionDto subTransactionDto)
+    {
+        var subTransaction = await _db.GetOrCreateAsync<Transaction>(subTransactionDto.Id);
+        subTransactionDto.Date = resultVm.Date;
+        subTransactionDto.Time = resultVm.Time;
+        MapperHelper.MapTransaction(subTransactionDto, subTransaction);
+        subTransaction.Parent = transaction;
+        subTransaction.FromAccountId = transaction.FromAccountId;
+        subTransaction.OriginalCurrencyId = transaction.OriginalCurrencyId ?? transaction.FromAccount.CurrencyId;
+        subTransaction.Category = default;
+        return subTransaction;
+    }
+
+    private async Task<Transaction> GetSubTransferAsync(Transaction transaction, TransactionDto resultVm, TransferDto subTransfer)
+    {
+        var subTransaction = await _db.GetOrCreateAsync<Transaction>(subTransfer.Id);
+        subTransfer.Date = resultVm.Date;
+        subTransfer.Time = resultVm.Time;
+        MapperHelper.MapTransfer(subTransfer, subTransaction);
+        subTransaction.Parent = transaction;
+        subTransaction.FromAccountId = transaction.FromAccountId;
+        return subTransaction;
+    }
+
+    [RelayCommand]
+    private void AddTransfer()
+    {
+    }
+
+    [RelayCommand]
+    private void Edit()
+    {
+    }
+
+    [RelayCommand]
+    private void Duplicate()
+    {
+    }
+
+    [RelayCommand]
+    private void Delete()
+    {
     }
 }

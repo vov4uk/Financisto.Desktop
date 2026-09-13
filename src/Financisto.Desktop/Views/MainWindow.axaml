@@ -10,7 +10,8 @@
         Icon="/Assets/ic_launcher.png"
         Title="Financisto.Desktop"
         WindowState="Maximized"
-        SystemDecorations="Full">
+        SystemDecorations="Full"
+        Loaded="MainWindow_Loaded">
 
     <DockPanel>
         <DockPanel DockPanel.Dock="Top" LastChildFill="False">
