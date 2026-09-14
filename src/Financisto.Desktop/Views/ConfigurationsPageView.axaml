@@ -18,7 +18,7 @@
                    Margin="4"/>
 
         <!-- CARD: TEMA -->
-        <Border Padding="14"
+        <!--<Border Padding="14"
                 CornerRadius="8"
                 BorderThickness="1"
                 BorderBrush="#1F000000"
@@ -28,8 +28,8 @@
                   ColumnSpacing="12"
                   VerticalAlignment="Center">
 
-                <!-- ÍCONE -->
-                <Border Width="32"
+                --><!-- ÍCONE --><!--
+                --><!--<Border Width="32"
                         Height="32"
                         CornerRadius="16"
                         Background="#14000000"
@@ -41,10 +41,10 @@
                               Height="16"
                               VerticalAlignment="Center"
                               HorizontalAlignment="Center"/>
-                </Border>
+                </Border>--><!--
 
-                <!-- TEXTO -->
-                <StackPanel Grid.Column="1"
+                --><!-- TEXTO --><!--
+                --><!--<StackPanel Grid.Column="1"
                             VerticalAlignment="Center"
                             Spacing="2">
 
@@ -55,19 +55,19 @@
                     <TextBlock Text="Escolha entre sistema, claro ou escuro"
                                FontSize="12"
                                Opacity="0.6"/>
-                </StackPanel>
+                </StackPanel>--><!--
 
-                <!-- COMBO -->
-                <ComboBox Grid.Column="2"
+                --><!-- COMBO --><!--
+                --><!--<ComboBox Grid.Column="2"
                           Width="140"
                           VerticalAlignment="Center"
                           SelectedItem="{Binding CurrentAppTheme}"
-                          ItemsSource="{Binding AppThemes}"/>
+                          ItemsSource="{Binding AppThemes}"/>--><!--
             </Grid>
-        </Border>
+        </Border>-->
 
         <!-- CARD: DADOS -->
-        <Border Padding="14"
+        <!--<Border Padding="14"
                 CornerRadius="8"
                 BorderThickness="1"
                 BorderBrush="#1F000000"
@@ -95,7 +95,7 @@
                 <TextBlock Text="{Binding Message}"
                            Foreground="{Binding MessageColor}"/>
             </StackPanel>
-        </Border>
+        </Border>-->
 
         <!-- CARD: Information -->
         <Border Padding="14"

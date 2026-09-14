@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Financisto.Common.Entities;
+using Financisto.Common.Localization;
 using Financisto.Common.Model;
 using Financisto.DataAccess.Abstractions;
 using Financisto.DataAccess.Data;
@@ -99,7 +100,7 @@ public partial class TransactionsPageViewModel : ViewModelBase
         var transactionDto = new TransactionDto(transaction, subTransactions);
         var dialogVm = new TransactionControlVM(transactionDto, AppServices.DialogWrapper);
 
-        var result = await AppServices.DialogWrapper.ShowDialogAsync<TransactionControl>(dialogVm, 640, 400, "Transaction");
+        var result = await AppServices.DialogWrapper.ShowDialogAsync<TransactionControl>(dialogVm, 640, 580, LocalizationService.Instance.transaction);
 
         if (result is TransactionDto resultVm)
         {

@@ -7,11 +7,20 @@
              mc:Ignorable="d"
              x:Class="Financisto.Desktop.Views.DashboardPageView"
              x:DataType="vm:DashboardPageViewModel">
-    
-    <ScrollViewer>
+    <StackPanel Margin="10" Spacing="10">
+
+        <TextBlock Text="Dashboard"
+                   FontSize="20"
+                   FontWeight="Bold"/>
+
+        <TextBlock Text="This section is under construction."
+                   Foreground="Gray"/>
+
+    </StackPanel>
+    <!--<ScrollViewer>
         <StackPanel Spacing="16" Margin="16">
 
-            <!-- Cabeçalho -->
+            --><!-- Cabeçalho --><!--
             <StackPanel Spacing="6">
                 <TextBlock Text="Bem vindo ao Dashboard!"
                            FontSize="20"
@@ -23,7 +32,7 @@
                            TextWrapping="Wrap"/>
             </StackPanel>
 
-            <!-- Seção Pizza -->
+            --><!-- Seção Pizza --><!--
             <StackPanel Spacing="6">
 
                 <TextBlock Text="Distribuição geral"
@@ -53,7 +62,7 @@
 
             </StackPanel>
 
-            <!-- Seção Linha -->
+            --><!-- Seção Linha --><!--
             <StackPanel Spacing="6">
 
                 <TextBlock Text="Evolução anual do saldo"
@@ -84,5 +93,5 @@
             </StackPanel>
 
         </StackPanel>
-    </ScrollViewer>
+    </ScrollViewer>-->
 </UserControl>
