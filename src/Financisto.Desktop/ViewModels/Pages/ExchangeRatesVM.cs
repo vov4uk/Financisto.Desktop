@@ -9,12 +9,11 @@ using Financisto.Common.Model;
 using Financisto.DataAccess.Abstractions;
 using Financisto.DataAccess.Data;
 using Financisto.Desktop.Helpers;
-using Financisto.Desktop.ViewModels.Pages;
 //using OxyPlot;
 //using OxyPlot.Axes;
 //using OxyPlot.Series;
 
-namespace Financier.Desktop.ViewModel
+namespace Financisto.Desktop.ViewModels.Pages
 {
     [ExcludeFromCodeCoverage]
     public class ExchangeRatesVM : EntityBaseVM<ExchangeRateModel>

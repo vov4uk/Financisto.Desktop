@@ -13,7 +13,7 @@ public partial class TransactionControl : UserControl
         InitializeComponent();
     }
 
-    private async Task OnSubTransactionDoubleTapped(object sender, TappedEventArgs e)
+    private async void OnSubTransactionDoubleTapped(object sender, TappedEventArgs e)
     {
         if (sender is Control { DataContext: BaseTransactionDto item } && DataContext is TransactionControlVM vm)
         {

@@ -1,10 +1,11 @@
 ﻿using Financisto.Common.Entities;
 using Financisto.Desktop.Data;
 using Financisto.Desktop.Helpers;
+using Prism.Mvvm;
 
-namespace Financisto.Desktop.ViewModels.Dialogs
+namespace Financisto.Desktop.ViewModels.Pages
 {
-    public class SettingsVM : DialogBaseVM
+    public class SettingsVM : BindableBase
     {
         ExchangeRatesProviders _providerSelected;
 
@@ -18,11 +19,9 @@ namespace Financisto.Desktop.ViewModels.Dialogs
             get => _providerSelected;
             set
             {
-                if (_providerSelected != value)
+                if (SetProperty(ref _providerSelected, value))
                 {
-                    _providerSelected = value;
-                    OnPropertyChanged(nameof(SelectedProvider));
-                    OnPropertyChanged(nameof(IsOpenExchangeRatesProviderSelected));
+                    RaisePropertyChanged(nameof(IsOpenExchangeRatesProviderSelected));
                 }
             }
         }
@@ -36,7 +35,7 @@ namespace Financisto.Desktop.ViewModels.Dialogs
 
         public SettingsDto Entity { get; }
 
-        public override object OnRequestSave()
+        public object OnRequestSave()
         {
             Entity.ExchangeRates.Provider = SelectedProvider;
 

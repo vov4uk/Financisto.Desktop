@@ -10,9 +10,8 @@ using Financisto.DataAccess.Abstractions;
 using Financisto.Desktop.Data;
 using Financisto.Desktop.Helpers;
 using Financisto.Desktop.ViewModels.Dialogs;
-using Financisto.Desktop.ViewModels.Pages;
 
-namespace Financisto.Desktop.ViewModel
+namespace Financisto.Desktop.ViewModels.Pages
 {
     [ExcludeFromCodeCoverage]
     public class RulesVM : EntityBaseVM<RuleModel>

@@ -8,11 +8,10 @@ using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Financier.Desktop.ViewModel;
+using Financisto.Common;
+using Financisto.Desktop.Data;
 using Financisto.Desktop.Helpers;
 using Financisto.Desktop.Services;
-using Financisto.Desktop.ViewModel;
-using Financisto.Desktop.ViewModels.Dialogs;
 using Financisto.Desktop.ViewModels.Pages;
 using Prism.Mvvm;
 
@@ -79,8 +78,16 @@ namespace Financisto.Desktop.ViewModels
         private void NavigateToPage(ListItemTemplate value)
         {
             var instance = GetOrCreatePage(value);
-            if (instance != null)
-                CurrentPage = instance;
+            if (instance == null) return;
+
+            CurrentPage = instance;
+
+            // Pages are constructed without loading data (mirrors Financier, where pages are
+            // cached/reused for the session) - so refresh explicitly on every navigation.
+            if (instance is IDataRefresh dataRefresh)
+            {
+                _ = dataRefresh.RefreshDataCommand.ExecuteAsync();
+            }
         }
 
         private BindableBase? GetOrCreatePage(ListItemTemplate value)
@@ -107,11 +114,14 @@ namespace Financisto.Desktop.ViewModels
 
         private BindableBase? CreatePageInstance(ListItemTemplate value)
         {
-            object? instance;
-
+            // SettingsVM is a dialog view model (SettingsDto-based), not an entity page,
+            // so it doesn't fit the uniform (db, dialogWrapper) constructor used below.
+            if (value.ModelType == typeof(SettingsVM))
             {
-                instance = Activator.CreateInstance(value.ModelType, AppServices.DatabaseService.CurrentDatabase, new DialogWrapper());
+                return new SettingsVM(new SettingsDto());
             }
+
+            object? instance = Activator.CreateInstance(value.ModelType, AppServices.DatabaseService.CurrentDatabase, new DialogWrapper());
 
             return instance as BindableBase;
         }

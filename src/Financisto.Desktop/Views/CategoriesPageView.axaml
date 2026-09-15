@@ -1,110 +1,39 @@
 ﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Financisto.Desktop.ViewModels.Pages"
-             xmlns:models="using:Financisto.Desktop.Models"
+             xmlns:model="using:Financisto.Common.Model"
              x:Class="Financisto.Desktop.Views.CategoriesPageView"
              x:DataType="vm:CategoriesVM">
 
-    <StackPanel Margin="10" Spacing="10">
+    <Grid Margin="10" RowDefinitions="Auto,Auto,*">
 
-        <TextBlock Text="Categorias"
+        <TextBlock Grid.Row="0"
+                   Text="Categories"
                    FontSize="20"
-                   FontWeight="Bold"/>
+                   FontWeight="Bold"
+                   Margin="0,0,0,10" />
 
-        <!--  Filtro -->
-        <StackPanel Orientation="Horizontal" Spacing="8">
-            <TextBlock Text="Filtrar por tipo:"
-                       VerticalAlignment="Center"/>
-
-            <ComboBox Width="160"
-                      ItemsSource="{Binding TiposFiltro}"
-                      SelectedItem="{Binding FiltroTipo, Mode=TwoWay}" />
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" Margin="0,0,0,10">
+            <Button Content="Add" Command="{Binding AddCommand}" />
+            <Button Content="Edit" Command="{Binding EditCommand}" />
+            <Button Content="Delete" Command="{Binding DeleteCommand}" />
+            <Button Content="Move Top" Command="{Binding MoveTopCommand}" />
+            <Button Content="Move Up" Command="{Binding MoveUpCommand}" />
+            <Button Content="Move Down" Command="{Binding MoveDownCommand}" />
+            <Button Content="Move Bottom" Command="{Binding MoveBottomCommand}" />
+            <Button Content="Sort By Title" Command="{Binding SortByTitleCommand}" />
         </StackPanel>
 
-        <!--  Grid das categorias -->
-        <DataGrid ItemsSource="{Binding Categorias}"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  GridLinesVisibility="All"
-                  CanUserResizeColumns="True"
-                  CanUserSortColumns="True"
-                  RowDetailsVisibilityMode="VisibleWhenSelected"
-                  x:CompileBindings="False">
+        <TreeView Grid.Row="2"
+                  ItemsSource="{Binding Entities}"
+                  SelectedItem="{Binding SelectedValue, Mode=TwoWay}">
+            <TreeView.ItemTemplate>
+                <TreeDataTemplate DataType="model:CategoryTreeModel"
+                                  ItemsSource="{Binding SubCategoties}">
+                    <TextBlock Text="{Binding Title}" />
+                </TreeDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
 
-            <DataGrid.Columns >
-
-                <DataGridTextColumn Header="Nome"
-                                    Binding="{Binding Nome}"
-                                    Width="*" />
-
-                <DataGridTextColumn Header="Tipo"
-                                    Binding="{Binding Tipo}"
-                                    Width="120"/>
-
-                
-                <DataGridTextColumn Header="Total"
-                                    Binding="{Binding TotalFormatado}"
-                                    Width="140"/>
-
-                <DataGridTemplateColumn Header="Cor" Width="80">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Border Width="14"
-                                    Height="14"
-                                    Background="{Binding Cor}"
-                                    CornerRadius="7"
-                                    HorizontalAlignment="Center"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-
-            </DataGrid.Columns>
-
-            <!-- Detalhes das transações -->
-            <DataGrid.RowDetailsTemplate>
-                <DataTemplate x:DataType="models:Categoria">
-
-                    <Border Margin="10"
-                            Padding="10"
-                            BorderThickness="1"
-                            BorderBrush="LightGray"
-                            CornerRadius="6">
-
-                        <DataGrid ItemsSource="{Binding Transacoes}"
-                                  AutoGenerateColumns="False"
-                                  IsReadOnly="True"
-                                  HeadersVisibility="Column"
-                                  GridLinesVisibility="Horizontal"
-                                  HorizontalScrollBarVisibility="Disabled">  <!-- Adicionado para remover barra horizontal -->
-
-                            <DataGrid.Columns>
-
-                                <DataGridTextColumn Header="Data"
-                                                    Binding="{Binding Data, StringFormat='{}{0:dd/MM/yyyy}'}"
-                                                    Width="120"/>
-
-                                <DataGridTextColumn Header="Tipo"
-                                                    Binding="{Binding Tipo}"
-                                                    Width="120"/>
-
-                                <DataGridTextColumn Header="Descrição"
-                                                    Binding="{Binding Descricao}"
-                                                    Width="*"/>
-
-                                <DataGridTextColumn Header="Valor"
-                                                    Binding="{Binding ValorFormatado}"
-                                                    Width="120"/>
-
-                            </DataGrid.Columns>
-
-                        </DataGrid>
-
-                    </Border>
-
-                </DataTemplate>
-            </DataGrid.RowDetailsTemplate>
-
-        </DataGrid>
-
-    </StackPanel>
+    </Grid>
 </UserControl>
