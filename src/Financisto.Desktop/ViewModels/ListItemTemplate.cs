@@ -4,7 +4,6 @@ using System;
 
 namespace Financisto.Desktop.ViewModels
 {
-    // Modelo usado no menu lateral
     public class ListItemTemplate
     {
         public ListItemTemplate(Type type, string label, string iconKey)
@@ -14,14 +13,14 @@ namespace Financisto.Desktop.ViewModels
 
             if (Application.Current is not null &&
                 Application.Current.TryGetResource(iconKey, null, out var resource) &&
-                resource is StreamGeometry geometry)
+                resource is DrawingImage drawingImage)
             {
-                ListItemIcon = geometry;
+                ListItemIcon = drawingImage;
             }
         }
 
         public string Label { get; }
-        public StreamGeometry? ListItemIcon { get; }
+        public DrawingImage? ListItemIcon { get; }
         public Type ModelType { get; }
     }
 }

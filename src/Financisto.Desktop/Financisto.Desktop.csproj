@@ -30,11 +30,13 @@
         </PackageReference>
         <PackageReference Include="AvaloniaWASM.Storage" />
         <PackageReference Include="ClosedXML" />
+        <PackageReference Include="Cogwheel" />
         <PackageReference Include="CommunityToolkit.Mvvm" />
         <PackageReference Include="CsvHelper" />
         <PackageReference Include="LiveChartsCore" />
         <PackageReference Include="LiveChartsCore.SkiaSharpView" />
         <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" />
+        <PackageReference Include="Onova" />
         <PackageReference Include="System.Security.Cryptography.ProtectedData" />
     </ItemGroup>
 

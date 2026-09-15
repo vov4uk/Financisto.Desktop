@@ -268,7 +268,7 @@ namespace Financisto.Desktop.ViewModels.Pages
         {
             TransferControlVM dialogVm = new TransferControlVM(new TransferDto(transfer));
 
-            var result = await dialogWrapper.ShowDialogAsync<TransferControl>(dialogVm, 385, 340, LocalizationService.Instance.transfer);
+            var result = await dialogWrapper.ShowDialogAsync<TransferControl>(dialogVm, 400, 580, LocalizationService.Instance.transfer);
 
             var output = result as TransferDto;
             if (output != null)
@@ -314,8 +314,7 @@ namespace Financisto.Desktop.ViewModels.Pages
 
             TransactionControlVM dialogVm = new TransactionControlVM(transactionDto, dialogWrapper);
 
-            var result = await dialogWrapper.ShowDialogAsync<TransactionControl>(dialogVm, 640, 340, LocalizationService.Instance.transaction);
-
+            var result = await dialogWrapper.ShowDialogAsync<TransactionControl>(dialogVm, 640, 580, LocalizationService.Instance.transaction);
             var resultVm = result as TransactionDto;
             if (resultVm != null)
             {

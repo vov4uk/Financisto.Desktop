@@ -4,8 +4,9 @@
                     xmlns:conv="using:Financisto.Converters"
                     xmlns:data="using:Financisto.Common.Model">
 
-    <SolidColorBrush x:Key="DefaultGray" Color="#858585" />
+    <SolidColorBrush x:Key="DefaultGray" Color="#000000" />
     <SolidColorBrush x:Key="DefaultBlack" Color="#000000" />
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#FFF0F0F0" />
     <convert:CategoryTitleConverter x:Key="categoryTitleConvert"/>
     <convert:LocalizedFormatConverter x:Key="localizedFormatConverter"/>
     <conv:ActiveStatusBrushConverter x:Key="activeStatusBrush"/>

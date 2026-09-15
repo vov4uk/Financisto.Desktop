@@ -21,6 +21,8 @@
                 <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
             </ResourceDictionary.MergedDictionaries>
             <conv:AmountConverter x:Key="AmountConverter" />
+            <conv:DateTimeToDateTimeOffsetConverter x:Key="DateTimeToDateTimeOffsetConverter" />
+            <conv:DateTimeToTimeSpanConverter x:Key="DateTimeToTimeSpanConverter" />
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -91,11 +93,11 @@
 
                         <DatePicker Grid.Row="0" Grid.Column="0"
                                     Margin="2"
-                                    SelectedDate="{Binding Transaction.Date}" />
+                                    SelectedDate="{Binding Transaction.Date, Converter={StaticResource DateTimeToDateTimeOffsetConverter}}" />
                         <TimePicker Grid.Row="0" Grid.Column="1"
                                     Margin="2"
                                     HorizontalAlignment="Stretch"
-                                    SelectedTime="{Binding Transaction.Time}" />
+                                    SelectedTime="{Binding Transaction.Time, Converter={StaticResource DateTimeToTimeSpanConverter}}" />
                     </Grid>
 
                     <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
@@ -370,6 +372,8 @@
                               SelectedValueBinding="{Binding Id}"
                               SelectedValue="{Binding Transaction.LocationId}" />
                     <Button Grid.Row="14" Grid.Column="1"
+                            Height="32"
+                            Width="32"
                             Command="{Binding ClearLocationCommand}">
                         <Image Source="{StaticResource IconXmark}" Height="16" Width="16" />
                     </Button>
@@ -380,6 +384,8 @@
                     <TextBox   Grid.Row="16" Grid.Column="0"
                                Text="{Binding Transaction.Note}" />
                     <Button Grid.Row="16" Grid.Column="1"
+                            Height="32"
+                            Width="32"
                             Command="{Binding ClearNotesCommand}">
                             <Image Source="{StaticResource IconXmark}" Height="16" Width="16" />
                     </Button>
@@ -418,7 +424,9 @@
                               SelectedValue="{Binding Transaction.ProjectId}" />
                     <Button Grid.Row="18" Grid.Column="1"
                             IsVisible="{Binding ElementName=ProjectIdBox, Path=IsVisible}"
-                            Command="{Binding ClearProjectCommand}">
+                            Command="{Binding ClearProjectCommand}"
+                            Height="32"
+                            Width="32">
                         <Image Source="{StaticResource IconXmark}" Height="16" Width="16" />
                     </Button>
                 </Grid>

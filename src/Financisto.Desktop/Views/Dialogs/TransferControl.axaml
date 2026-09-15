@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="580" d:DesignHeight="480"
              x:Class="Financisto.Desktop.TransferControl"
              xmlns:vm="using:Financisto.Desktop.ViewModels.Dialogs"
              xmlns:entities="using:Financisto.Common.Entities"
@@ -17,9 +17,11 @@
             </ResourceDictionary.MergedDictionaries>
             <conv:AmountConverter x:Key="AmountConverter" />
             <conv:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+            <conv:DateTimeToDateTimeOffsetConverter x:Key="DateTimeToDateTimeOffsetConverter" />
+            <conv:DateTimeToTimeSpanConverter x:Key="DateTimeToTimeSpanConverter" />
         </ResourceDictionary>
     </UserControl.Resources>
-    <GroupBox Margin="5"
+    <GroupBox Margin="3"
               Header="{loc:Translate Key=transfer_details}"
               FontSize="12"
               Background="{StaticResource WindowBackgroundBrush}">
@@ -38,17 +40,17 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
-                <RowDefinition Height="24" />
+                <RowDefinition Height="32" />
             </Grid.RowDefinitions>
             <Grid Margin="5">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="30" />
                     <!--FromAccount-->
-                    <RowDefinition Height="15" />
-                    <RowDefinition Height="24" />
+                    <RowDefinition Height="18" />
+                    <RowDefinition Height="32" />
                     <!--ToAccount-->
-                    <RowDefinition Height="15" />
-                    <RowDefinition Height="24" />
+                    <RowDefinition Height="18" />
+                    <RowDefinition Height="32" />
                     <!--amount out-->
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -60,35 +62,50 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <!--note-->
-                    <RowDefinition Height="15" />
-                    <RowDefinition Height="24" />
+                    <RowDefinition Height="18" />
+                    <RowDefinition Height="32" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="24" />
+                    <ColumnDefinition Width="32" />
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="24" />
+                    <ColumnDefinition Width="32" />
                 </Grid.ColumnDefinitions>
 
-                <Grid Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"
+                <!--<Grid Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"
                       IsEnabled="{Binding Transfer.IsSubTransaction, Converter={StaticResource InverseBooleanConverter}}">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="24" />
+
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="120" />
                     </Grid.ColumnDefinitions>
-                    <Button Grid.Row="0" Grid.Column="0"
+                    --><!--<Button Grid.Row="0" Grid.Column="0"
                                      IsEnabled="False">
 
                             <Image Source="{StaticResource IconCircleInfo}" Height="16" Width="16" />
 
-                    </Button>
-                    <DatePicker      Grid.Row="0" Grid.Column="1"
+                    </Button>--><!--
+                    <DatePicker      Grid.Row="0" Grid.Column="0"
                                      Margin="2"
-                                     SelectedDate="{Binding Transfer.Date}" />
-                    <TimePicker Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="1"
+                                     SelectedDate="{Binding Transfer.Date, Converter={StaticResource DateTimeToDateTimeOffsetConverter}}" />
+                    <TimePicker Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="1"
                                      Margin="2"
                                      HorizontalAlignment="Stretch"
-                                     SelectedTime="{Binding Transfer.Time}" />
+                                     SelectedTime="{Binding Transfer.Time, Converter={StaticResource DateTimeToTimeSpanConverter}}" />
+                </Grid>-->
+                <Grid Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"
+                      IsEnabled="{Binding Transfer.IsSubTransaction, Converter={StaticResource InverseBooleanConverter}}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <DatePicker Grid.Row="0" Grid.Column="0"
+                                Margin="2"
+                                SelectedDate="{Binding Transfer.Date, Converter={StaticResource DateTimeToDateTimeOffsetConverter}}" />
+                    <TimePicker Grid.Row="0" Grid.Column="1"
+                                Margin="2"
+                                HorizontalAlignment="Stretch"
+                                SelectedTime="{Binding Transfer.Time, Converter={StaticResource DateTimeToTimeSpanConverter}}" />
                 </Grid>
 
                 <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
@@ -144,8 +161,8 @@
                 </TextBlock>
                 <Button    Grid.Column="0" Grid.Row="6"
                                     IsEnabled="False"
-                                    Height="24"
-                                    Width="24">
+                                    Height="32"
+                                    Width="32">
 
                         <Image Source="{StaticResource IconMinus}" Height="16" Width="16" />
 
@@ -168,8 +185,8 @@
                 </TextBlock>
                 <Button    Grid.Column="0" Grid.Row="8"
                            IsVisible="{Binding Path=Transfer.IsToAmountVisible, Mode=OneWay}"
-                           Height="24"
-                           Width="24">
+                           Height="32"
+                           Width="32">
 
                         <Image Source="{StaticResource IconPlus}" Height="16" Width="16" />
 
@@ -205,7 +222,9 @@
                 <TextBox   Grid.Row="13" Grid.Column="0" Grid.ColumnSpan="2"
                            Text="{Binding Transfer.Note}" />
                 <Button Grid.Row="13" Grid.Column="2"
-                                     Command="{Binding ClearNotesCommand}">
+                        Height="32"
+                        Width="32"
+                        Command="{Binding ClearNotesCommand}">
 
                         <Image Source="{StaticResource IconXmark}" Height="16" Width="16" />
                 </Button>
@@ -217,8 +236,12 @@
                 </Grid.ColumnDefinitions>
                 <Button Grid.Column="0" Margin="2"
                         Command="{Binding SaveCommand}"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
                         Content="{loc:Translate Key=save}" />
                 <Button Grid.Column="1" Margin="2"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
                         Command="{Binding CancelCommand}"
                         Content="{loc:Translate Key=cancel}" />
             </Grid>

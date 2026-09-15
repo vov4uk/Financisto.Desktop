@@ -1,0 +1,655 @@
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
+using Financisto.Adapter;
+using Financisto.Common;
+using Financisto.Common.Entities;
+using Financisto.Common.Localization;
+using Financisto.Common.Model;
+using Financisto.DataAccess.Abstractions;
+using Financisto.DataAccess.Data;
+using Financisto.DataAccess.Utils;
+using Financisto.Desktop.Data;
+using Financisto.Desktop.Helpers;
+using Financisto.Desktop.Helpers.BankHelper;
+using Financisto.Desktop.Services;
+using Financisto.Desktop.ViewModels.Pages;
+using Financisto.Desktop.Wizards;
+using Microsoft.EntityFrameworkCore;
+using Prism.Mvvm;
+using IAsyncCommand = Financisto.Common.IAsyncCommand;
+
+namespace Financisto.Desktop.ViewModels
+{
+    public class MainWindowVM : BindableBase
+    {
+        private const string Backup = "backup";
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        private readonly ConcurrentDictionary<Type, BindableBase> _pages = new ConcurrentDictionary<Type, BindableBase>();
+        private readonly IBankHelperFactory bankFactory;
+        private readonly IFinancistoDatabaseFactory dbFactory;
+        private readonly IDialogWrapper dialogWrapper;
+        private readonly List<Entity> keyLessEntities = new();
+        private readonly IToastNotifierWrapper notifier;
+        private readonly UpdateService updateService;
+        private BackupVersion _backupVersion;
+        private Dictionary<string, List<string>> _entityColumnsOrder;
+        private IAsyncCommand<Type> _menuNavigateCommand;
+        private IAsyncCommand<WizardTypes> _importCommand;
+        private IAsyncCommand _openBackupCommand;
+        private IAsyncCommand _saveBackupCommand;
+        private IAsyncCommand _saveBackupAsDbCommand;
+        private IAsyncCommand _settingsCommand;
+        private IAsyncCommand _refreshExchangeRatesCommand;
+        private IAsyncCommand _checkForUpdateCommand;
+        private IAsyncCommand _openPanelCommand;
+        private readonly IBackupWriter backupWriter;
+        private AccountsVM accountsVm;
+        private BlotterVM blotterVm;
+        private CategoriesVM categoriesVm;
+        private BindableBase currentPage;
+        private CurrenciesVM currenciesVm;
+        private IFinancistoDatabase db;
+        private readonly IEntityReader entityReader;
+        private LocationsVM locationsVm;
+        private string openBackupPath;
+        private string defaultBackupDirectory;
+        private bool isLoading;
+        private PayeesVM payeesVm;
+        private ProjectsVM projectsVm;
+        private RulesVM rulesVm;
+        private ListItemTemplate? selectedItemBottom;
+        private ListItemTemplate? selectedItemTop;
+        private bool isPanelOpen = true;
+
+        public MainWindowVM(IDialogWrapper dialogWrapper,
+            IFinancistoDatabaseFactory dbFactory,
+            IEntityReader entityReader,
+            IBackupWriter backupWriter,
+            IToastNotifierWrapper notifier,
+            IBankHelperFactory bankFactory,
+            UpdateService updateService)
+        {
+            this.dialogWrapper = dialogWrapper;
+            this.dbFactory = dbFactory;
+            this.entityReader = entityReader;
+            this.backupWriter = backupWriter;
+            this.notifier = notifier;
+            this.bankFactory = bankFactory;
+            this.updateService = updateService;
+            db = dbFactory.CreateDatabase();
+
+            CreatePages();
+        }
+
+        public AccountsVM Accounts
+        {
+            get => accountsVm;
+            private set => SetProperty(ref accountsVm, value);
+        }
+
+        public BlotterVM Blotter
+        {
+            get => blotterVm;
+            private set => SetProperty(ref blotterVm, value);
+        }
+
+        public CategoriesVM Categories
+        {
+            get => categoriesVm;
+            private set => SetProperty(ref categoriesVm, value);
+        }
+
+        public CurrenciesVM Currencies
+        {
+            get => currenciesVm;
+            private set => SetProperty(ref currenciesVm, value);
+        }
+
+        public BindableBase CurrentPage
+        {
+            get => currentPage;
+            private set
+            {
+                SetProperty(ref currentPage, value, nameof(CurrentPage));
+                Logger.Info($"CurrentPage -> {value?.GetType().FullName}");
+            }
+        }
+
+        public string OpenBackupPath
+        {
+            get => openBackupPath;
+            private set => SetProperty(ref openBackupPath, value);
+        }
+        public string DefaultBackupDirectory
+        {
+            get => defaultBackupDirectory;
+            internal set => SetProperty(ref defaultBackupDirectory, value);
+        }
+
+        public LocationsVM Locations
+        {
+            get => locationsVm;
+            private set => SetProperty(ref locationsVm, value);
+        }
+
+        public PayeesVM Payees
+        {
+            get => payeesVm;
+            private set => SetProperty(ref payeesVm, value);
+        }
+
+        public ProjectsVM Projects
+        {
+            get => projectsVm;
+            private set => SetProperty(ref projectsVm, value);
+        }
+
+        public RulesVM Rules
+        {
+            get => rulesVm;
+            private set => SetProperty(ref rulesVm, value);
+        }
+
+        public bool IsLoading
+        {
+            get => isLoading;
+            private set => SetProperty(ref isLoading, value);
+        }
+        public ListItemTemplate? SelectedItemBottom
+        {
+            get => selectedItemBottom;
+            set
+            {
+                SetProperty(ref selectedItemBottom, value);
+                if (value != null)
+                {
+                    SelectedItemTop = null;
+
+                    Task.Run(() => NavigateToType(value.ModelType));
+                }
+            }
+        }
+
+        public ListItemTemplate? SelectedItemTop
+        {
+            get => selectedItemTop;
+            set
+            {
+                SetProperty(ref selectedItemTop, value);
+                if (value != null)
+                {
+                    SelectedItemBottom = null;
+
+                    Task.Run(() => NavigateToType(value.ModelType));
+                }
+            }
+        }
+
+        public bool IsPanelOpen
+        {
+            get => isPanelOpen;
+            private set => SetProperty(ref isPanelOpen, value);
+        }
+
+        public ObservableCollection<ListItemTemplate> ItemsTop { get; } = new()
+        {
+            //new(typeof(DashboardPageViewModel), "Dashboard", "glance_regular"),
+            new(typeof(AccountModel), "Accounts", "IconWallet"),
+            new(typeof(CategoryTreeModel), "Categories", "IconFolderTree"),
+            new(typeof(ProjectModel), "Projects", "IconListCheck"),
+            new(typeof(PayeeModel), "Payees", "IconAddressBook"),
+            new(typeof(LocationModel), "Locations", "IconMap"),
+            new(typeof(CurrencyModel), "Currencies", "IconDollarSign"),
+            new(typeof(ExchangeRateModel), "Exchange Rates", "IconArrowTrendUp"),
+            new(typeof(BlotterModel), "Transactions", "IconReceipt"),
+            //new(typeof(ReportsVM), "Reports", "book_pulse_regular"),
+            new(typeof(RuleModel), "Rules", "IconBoltLightning"),
+        };
+
+        public ObservableCollection<ListItemTemplate> ItemsBottom { get; } = new()
+        {
+            new(typeof(SettingsVM), "Configurations", "IconGear"),
+        };
+
+        public IAsyncCommand<Type> MenuNavigateCommand => _menuNavigateCommand ??= new AsyncCommand<Type>(NavigateToType);
+
+        public IAsyncCommand<WizardTypes> ImportCommand => _importCommand ??= new AsyncCommand<WizardTypes>(OpenImportWizardAsync);
+
+        public IAsyncCommand OpenBackupCommand => _openBackupCommand ??= new AsyncCommand(OpenBackup_Click);
+
+        public IAsyncCommand SaveBackupCommand => _saveBackupCommand ??= new AsyncCommand(SaveBackup_Click);
+
+        public IAsyncCommand SaveBackupAsDbCommand => _saveBackupAsDbCommand ??= new AsyncCommand(SaveBackupAsDb);
+
+        public IAsyncCommand SettingsCommand => _settingsCommand ??= new AsyncCommand(Settings_Click);
+
+        public IAsyncCommand RefreshExchangeRatesCommand => _refreshExchangeRatesCommand ??= new AsyncCommand(RefreshExchangeRates_Click);
+
+        public IAsyncCommand CheckForUpdateCommand => _checkForUpdateCommand ??= new AsyncCommand(CheckForUpdatesAsync);
+        public IAsyncCommand OpenPanelCommand => _openPanelCommand ??= new AsyncCommand(OpenPanelAsync);
+
+        private Task OpenPanelAsync()
+        {
+            IsPanelOpen = !IsPanelOpen;
+            return Task.CompletedTask;
+        }
+
+        public async Task OpenBackup(string backupPath)
+        {
+            try
+            {
+                OpenBackupPath = backupPath;
+                IsLoading = true;
+                ClearPages();
+                Stopwatch stopwatch = Stopwatch.StartNew();
+                var (entities, backupVersion, columnsOrder) = await entityReader.ParseBackupFileAsync(backupPath);
+                entities = entities as IReadOnlyCollection<Entity> ?? entities.ToList();
+                _backupVersion = backupVersion;
+                _entityColumnsOrder = columnsOrder;
+
+                db?.Dispose();
+                db = dbFactory.CreateDatabase();
+                await db.ImportEntitiesAsync(entities);
+
+                keyLessEntities.Clear();
+
+                AddKeylessEntities(entities.OfType<CCardClosingDate>());
+                AddKeylessEntities(entities.OfType<CategoryAttribute>());
+                AddKeylessEntities(entities.OfType<TransactionAttribute>());
+
+                IsLoading = false;
+
+                DbManual.ResetAllDatabaseManuals();
+                await DbManual.SetupAsync(db);
+                await DbManual.LoadRulesAsync();
+
+                stopwatch.Stop();
+                int entitiesCount = entities?.Count() ?? 0;
+                Logger.Info($"Backup loaded in {stopwatch.ElapsedMilliseconds} ms. Backup version : {_backupVersion}. Entities count : {entitiesCount}");
+
+                await NavigateToType(typeof(BlotterModel));
+
+                notifier?.ShowMessage(string.Format(LocalizationService.Instance.entities_loaded, entitiesCount));
+
+                if (SettingsService.Current.Settings?.ExchangeRates.UpdateOnStart == true)
+                {
+                    await RefreshExchangeRatesCommand.ExecuteAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, ex.ToString());
+                IsLoading = false;
+                throw;
+            }
+        }
+
+        public async Task SaveBackup(string backupPath)
+        {
+            List<Entity> itemsToBackup = [.. keyLessEntities];
+            using (IUnitOfWork uow = db.CreateUnitOfWork())
+            {
+                itemsToBackup.AddRange(await uow.GetAllAsync<Budget>());
+                itemsToBackup.AddRange(await uow.GetAllAsync<TransactionAttribute>());
+                itemsToBackup.AddRange(await uow.GetAllAsync<CurrencyExchangeRate>());
+                itemsToBackup.AddRange(await uow.GetAllAsync<Currency>());
+                itemsToBackup.AddRange((await uow.GetAllAsync<Location>()).Where(x => x.Id > 0));
+                itemsToBackup.AddRange(await uow.GetAllAsync<Payee>());
+                itemsToBackup.AddRange((await uow.GetAllAsync<Project>()).Where(x => x.Id > 0));
+                itemsToBackup.AddRange(await uow.GetAllAsync<Transaction>());
+                itemsToBackup.AddRange((await uow.GetAllAsync<Account>()).OrderBy(x => x.Id));
+                itemsToBackup.AddRange((await uow.GetAllAsync<AttributeDefinition>()).Where(x => x.Id > 0));
+                itemsToBackup.AddRange(await uow.GetAllAsync<CategoryAttribute>());
+                itemsToBackup.AddRange(await uow.GetAllAsync<CCardClosingDate>());
+                itemsToBackup.AddRange(await uow.GetAllAsync<SmsTemplate>());
+                itemsToBackup.AddRange((await uow.GetAllAsync<Category>()).Where(x => x.Id > 0));
+            }
+
+            await backupWriter.GenerateBackupAsync(itemsToBackup, backupPath, _backupVersion, _entityColumnsOrder);
+        }
+
+        private void AddKeylessEntities<T>(IEnumerable<T> entities)
+        where T : Entity
+        {
+            List<T> materialized = entities as List<T> ?? entities.ToList();
+            Logger.Info($"Imported {typeof(T).Name} {materialized.Count}");
+            keyLessEntities.AddRange(materialized);
+        }
+
+        private void ClearPages()
+        {
+            _pages?.Clear();
+            Accounts = null;
+            Blotter = null;
+            Categories = null;
+            Currencies = null;
+            Locations = null;
+            Payees = null;
+            Projects = null;
+            Rules = null;
+        }
+
+        private void CreatePages()
+        {
+            Accounts = new AccountsVM(db, dialogWrapper);
+            Blotter = new BlotterVM(db, dialogWrapper);
+            Categories = new CategoriesVM(db, dialogWrapper);
+            Currencies = new CurrenciesVM(db, dialogWrapper);
+            Locations = new LocationsVM(db, dialogWrapper);
+            Payees = new PayeesVM(db, dialogWrapper);
+            Projects = new ProjectsVM(db, dialogWrapper);
+            Rules = new RulesVM(db, dialogWrapper);
+
+            _pages.TryAdd(typeof(AccountModel), Accounts);
+            _pages.TryAdd(typeof(BlotterModel), Blotter);
+            _pages.TryAdd(typeof(CategoryTreeModel), Categories);
+            _pages.TryAdd(typeof(CurrencyModel), Currencies);
+            _pages.TryAdd(typeof(LocationModel), Locations);
+            _pages.TryAdd(typeof(PayeeModel), Payees);
+            _pages.TryAdd(typeof(ProjectModel), Projects);
+            _pages.TryAdd(typeof(RuleModel), Rules);
+        }
+
+        private BindableBase GetOrCreatePage(Type type)
+        {
+            switch (type.Name)
+            {
+                case nameof(AccountModel):
+                    return Accounts ??= GetOrCreatePage<AccountModel, AccountsVM>();
+                case nameof(CurrencyModel):
+                    return Currencies ??= GetOrCreatePage<CurrencyModel, CurrenciesVM>();
+                case nameof(ProjectModel):
+                    return Projects ??= GetOrCreatePage<ProjectModel, ProjectsVM>();
+                case nameof(LocationModel):
+                    return Locations ??= GetOrCreatePage<LocationModel, LocationsVM>();
+                case nameof(PayeeModel):
+                    return Payees ??= GetOrCreatePage<PayeeModel, PayeesVM>();
+                case nameof(BlotterModel):
+                    return Blotter ??= GetOrCreatePage<BlotterModel, BlotterVM>();
+                case nameof(CategoryTreeModel):
+                    return Categories ??= GetOrCreatePage<CategoryTreeModel, CategoriesVM>();
+                case nameof(ExchangeRateModel):
+                    return GetOrCreatePage<ExchangeRateModel, ExchangeRatesVM>();
+                case nameof(RuleModel):
+                    return Rules ??= GetOrCreatePage<RuleModel, RulesVM>();
+                //case nameof(ReportsControlVM):
+                //    return _pages.GetOrAdd(type, _ => new ReportsControlVM(db));
+                case nameof(SettingsVM):
+                    return _pages.GetOrAdd(type, _ => new SettingsVM(new SettingsDto()));
+
+                default: throw new NotSupportedException($"{type.FullName} not supported");
+            }
+        }
+
+        private VMType GetOrCreatePage<TEntity, VMType>()
+            where VMType : EntityBaseVM<TEntity>
+            where TEntity : BaseModel, new()
+        {
+            var type = typeof(TEntity);
+            return (VMType)_pages.GetOrAdd(type, _ => Activator.CreateInstance(typeof(VMType), db, dialogWrapper) as VMType);
+        }
+
+        private async Task NavigateToType(Type type)
+        {
+            CurrentPage = GetOrCreatePage(type);
+            await RefreshCurrentPage();
+        }
+
+        private async Task OpenBackup_Click()
+        {
+            if (IsLoading) return;
+            var backupPath = await dialogWrapper.OpenFileDialogAsync(Backup);
+            if (!string.IsNullOrEmpty(backupPath))
+            {
+                Logger.Info($"Opened backup : {backupPath}");
+                await OpenBackup(backupPath);
+            }
+        }
+
+        private async Task OpenImportWizardAsync(WizardTypes bankType)
+        {
+            //var fileExtension = bankType.GetEnumDescription();
+            //var fileName = await dialogWrapper.OpenFileDialogAsync(fileExtension);
+            //Logger.Info($"{fileExtension} fileName -> {fileName}");
+            //if (!string.IsNullOrEmpty(fileName))
+            //{
+            //    var importHelper = this.bankFactory.CreateBankHelper(bankType);
+            //    var sourceData = importHelper.ParseReport(fileName);
+
+            //    Dictionary<int, BlotterModel> lastTransactions = new();
+            //    var blotterEntitiesById = Blotter.Entities.ToDictionary(x => x.Id);
+            //    foreach (var acc in DbManual.Account.Where(x => x.Id.HasValue))
+            //    {
+            //        blotterEntitiesById.TryGetValue(acc.LastTransactionId, out var last);
+            //        lastTransactions.Add(acc.Id.Value, last);
+            //    }
+
+            //    var vm = new MonoWizardVM(importHelper.BankTitle, sourceData, lastTransactions, dialogWrapper);
+
+            //    var output = await dialogWrapper.ShowWizardAsync(vm);
+
+            //    var outputTransactions = output as List<Transaction>;
+            //    if (outputTransactions != null)
+            //    {
+            //        using var blotter = db.CreateUnitOfWork();
+            //        var times = outputTransactions.Select(x => x.DateTime).Distinct().ToArray();
+            //        var transactionRepo = blotter.GetRepository<Transaction>();
+            //        List<Transaction> accTransactions = await transactionRepo.FindManyAsync(predicate: x => times.Contains(x.DateTime));
+
+            //        var accTransactionKeys = accTransactions
+            //            .Select(x => (x.FromAccountId, x.DateTime, x.FromAmount))
+            //            .ToHashSet();
+
+            //        List<Transaction> monoToImport = outputTransactions.Where(item =>
+            //        !accTransactionKeys.Contains((item.FromAccountId, item.DateTime, item.FromAmount))).ToList();
+
+            //        var duplicatesCount = outputTransactions.Count - monoToImport.Count;
+
+            //        await db.AddTransactionsAsync(monoToImport);
+
+            //        await RefreshAffectedAccounts(monoToImport);
+            //        await RefreshCurrentPage();
+
+            //        var message = duplicatesCount > 0
+            //            ? string.Format(LocalizationService.Instance.import_result_with_duplicates, monoToImport.Count, duplicatesCount)
+            //            : string.Format(LocalizationService.Instance.import_result, monoToImport.Count);
+
+            //        this.notifier.ShowMessage(string.Format(message, $"{importHelper.BankTitle} {LocalizationService.Instance.import}"));
+
+            //        Logger.Info($"Imported {monoToImport.Count} transactions. Found duplicates : {duplicatesCount}");
+            //    }
+            //}
+        }
+
+        //private async Task RefreshAffectedAccounts(List<Transaction> transactions)
+        //{
+        //    var accountIds = transactions
+        //        .Where(x => x.ToAccountId > 0)
+        //        .Select(x => x.ToAccountId).Union(
+        //        transactions
+        //        .Where(x => x.FromAccountId > 0)
+        //        .Select(x => x.FromAccountId))
+        //        .Distinct();
+
+        //    foreach (var accId in accountIds)
+        //    {
+        //        await db.RebuildAccountBalanceAsync(accId);
+        //    }
+
+        //    DbManual.ResetManuals(nameof(DbManual.Account));
+        //    await DbManual.SetupAsync(db);
+        //}
+
+        private async Task RefreshCurrentPage()
+        {
+            if (CurrentPage is not IDataRefresh page)
+            {
+                return;
+            }
+
+            await page.RefreshDataCommand.ExecuteAsync();
+        }
+
+        private async Task SaveBackup_Click()
+        {
+            string defaultPath = string.IsNullOrEmpty(OpenBackupPath)
+                ? BackupWriter.GenerateFileName()
+                : Path.Combine(Path.GetDirectoryName(OpenBackupPath), BackupWriter.GenerateFileName());
+            var backupPath = await dialogWrapper.SaveFileDialogAsync(Backup, defaultPath);
+            if (!string.IsNullOrEmpty(backupPath))
+            {
+                await SaveBackup(backupPath);
+
+                notifier.ShowMessage(string.Format(LocalizationService.Instance.saved_message, backupPath));
+                Logger.Info($"Backup done. Saved {backupPath}");
+            }
+        }
+
+        private async Task SaveBackupAsDb()
+        {
+            string fileName = Path.ChangeExtension(BackupWriter.GenerateFileName(), "db");
+            string defaultPath = !string.IsNullOrEmpty(OpenBackupPath) ? Path.Combine(Path.GetDirectoryName(OpenBackupPath ?? string.Empty), fileName) : fileName;
+
+            var backupPath = await dialogWrapper.SaveFileDialogAsync("db", defaultPath);
+            if (!string.IsNullOrEmpty(backupPath))
+            {
+                await db.SaveAsFile(backupPath);
+
+                notifier.ShowMessage(string.Format(LocalizationService.Instance.saved_message, backupPath));
+                Logger.Info($"Backup done. Saved {backupPath}");
+            }
+        }
+
+        private async Task Settings_Click()
+        {
+            //SettingsDto settings = SettingsService.Current.Settings.Clone() is SettingsDto clone ? clone : new SettingsDto();
+
+            //DialogBaseVM vm = new SettingsVM(settings);
+            //if (await dialogWrapper.ShowDialogAsync<SettingsControl>(vm, 300, 400, LocalizationService.Instance.settings) is SettingsDto updated)
+            //{
+            //    Language before = SettingsService.Current.Settings.General.Language;
+            //    SettingsService.Current.Settings = updated;
+            //    SettingsService.Current.Save();
+
+            //    if (before != updated.General.Language)
+            //    {
+            //        LocalizationService.Instance.ApplyLanguage(updated.General.Language);
+
+            //        DbManual.ResetManuals(nameof(DbManual.MCCEnums));
+            //        DbManual.ResetManuals(nameof(DbManual.MCCTitles));
+            //        DbManual.ResetManuals(nameof(DbManual.Currencies));
+            //        await DbManual.SetupAsync(db);
+            //    }
+            //}
+        }
+
+        private async Task RefreshExchangeRates_Click()
+        {
+            var erSettings = SettingsService.Current.Settings.ExchangeRates;
+
+            if (erSettings.Provider != ExchangeRatesProviders.None)
+            {
+                var exchangeRateLoader = new ExchangeRatesService();
+                List<CurrencyExchangeRate> exchangeRates = new List<CurrencyExchangeRate>();
+
+                switch (erSettings.Provider)
+                {
+                    case ExchangeRatesProviders.FreeCurrencyRates:
+                        exchangeRates = await exchangeRateLoader.LoadFreeCurrencyRates();
+                        break;
+                    case ExchangeRatesProviders.OpenExchangeRates:
+                        exchangeRates = await exchangeRateLoader.LoadOpenExchangeRates(erSettings.OpenExchangeRatesProviderAppId);
+                        break;
+                    case ExchangeRatesProviders.Monobank:
+                        exchangeRates = await exchangeRateLoader.LoadMonobankRates();
+                        break;
+                }
+
+                if (exchangeRates.Any())
+                {
+                    using var uow = db.CreateUnitOfWork();
+                    var currencyExchangeRepo = uow.GetRepository<CurrencyExchangeRate>();
+                    await currencyExchangeRepo.AddRangeAsync(exchangeRates);
+                    try
+                    {
+                        await uow.SaveChangesAsync();
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        string msg = ex?.InnerException?.Message;
+                        if (!string.IsNullOrEmpty(msg) && msg.Contains("UNIQUE constraint failed", StringComparison.OrdinalIgnoreCase))
+                        {
+                            notifier?.ShowWarning(LocalizationService.Instance.exchange_rates_exist);
+                        }
+                        else
+                        {
+                            notifier?.ShowWarning(LocalizationService.Instance.exchange_rates_not_updated);
+                        }
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error(ex, "Error saving exchange rates to database.");
+                        notifier?.ShowWarning(LocalizationService.Instance.exchange_rates_not_updated);
+                        return;
+                    }
+
+                    notifier?.ShowMessage(string.Format(LocalizationService.Instance.exchange_rates_updated, erSettings.Provider));
+                }
+            }
+            else
+            {
+                notifier?.ShowWarning(LocalizationService.Instance.exchange_rates_provider_not_configured);
+            }
+        }
+
+        private async Task CheckForUpdatesAsync()
+        {
+            try
+            {
+                if (updateService == null)
+                    return;
+
+                var updateVersion = await updateService.CheckForUpdatesAsync();
+                if (updateVersion is null)
+                {
+                    notifier.ShowMessage(LocalizationService.Instance.latest_version);
+                    return;
+                }
+
+                var result = await dialogWrapper.ShowMessageBoxAsync(
+                   LocalizationService.Instance.update_available_question,
+                   string.Format(LocalizationService.Instance.update_available, updateVersion),
+                   true);
+
+                if (result)
+                {
+
+                    notifier.ShowMessage(string.Format(LocalizationService.Instance.downloading_update,
+                        "Financisto.Desktop",
+                        updateVersion));
+
+                    await updateService.PrepareUpdateAsync(updateVersion);
+
+                    notifier.ShowMessage(LocalizationService.Instance.update_downloaded);
+                    await Task.Delay(3000);
+                    updateService.FinalizeUpdate(true);
+                    await Task.Delay(3000);
+                    //System.Windows.Application.Current.Shutdown();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, ex.ToString());
+                notifier.ShowWarning(LocalizationService.Instance.update_failed);
+            }
+        }
+    }
+}
