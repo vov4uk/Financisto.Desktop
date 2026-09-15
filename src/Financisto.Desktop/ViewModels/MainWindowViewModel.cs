@@ -1,25 +1,31 @@
-﻿using Avalonia.Controls;
-using Avalonia.Platform.Storage;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using Financisto.Desktop.Services;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Controls;
+using Avalonia.Platform.Storage;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Financier.Desktop.ViewModel;
+using Financisto.Desktop.Helpers;
+using Financisto.Desktop.Services;
+using Financisto.Desktop.ViewModel;
+using Financisto.Desktop.ViewModels.Dialogs;
+using Financisto.Desktop.ViewModels.Pages;
+using Prism.Mvvm;
 
 namespace Financisto.Desktop.ViewModels
 {
-    public partial class MainWindowViewModel : ViewModelBase
+    public partial class MainWindowViewModel : ObservableObject
     {
         private string openBackupPath;
         private readonly ThemeService _themeService = AppServices.ThemeService;
         private readonly TransactionsService _transactionService = AppServices.TransactionsService;
-        private readonly Dictionary<Type, ViewModelBase> _pages = new();
+        private readonly Dictionary<Type, BindableBase> _pages = new();
         [ObservableProperty]
-        private ViewModelBase _currentPage;
+        private BindableBase _currentPage;
 
         [ObservableProperty]
         private bool _isPaneOpen = true;
@@ -40,8 +46,8 @@ namespace Financisto.Desktop.ViewModels
         {
             _ = AppServices.ThemeService;
 
-            _currentPage = new DashboardPageViewModel(_transactionService);
-            _pages[typeof(DashboardPageViewModel)] = _currentPage;
+            _currentPage = new BlotterVM(AppServices.DatabaseService.CurrentDatabase, new DialogWrapper());
+            _pages[typeof(BlotterVM)] = _currentPage;
         }
 
         public string OpenBackupPath
@@ -52,22 +58,22 @@ namespace Financisto.Desktop.ViewModels
 
         public ObservableCollection<ListItemTemplate> ItemsBottom { get; } = new()
         {
-            new(typeof(ConfigurationsPageViewModel), "Configurations", "settings_regular"),
+            new(typeof(SettingsVM), "Configurations", "settings_regular"),
         };
 
         public ObservableCollection<ListItemTemplate> ItemsTop { get; } = new()
         {
-            new(typeof(DashboardPageViewModel), "Dashboard", "glance_regular"),
-            new(typeof(AccountsPageViewModel), "Accounts", "inprivate_account_regular"),
-            new(typeof(CategoriesPageViewModel), "Categories", "grid_regular"),
-            new(typeof(ProjectsPageViewModel), "Projects", "grid_regular"),
-            new(typeof(PayeesPageViewModel), "Payees", "money_regular"),
-            new(typeof(LocationsPageViewModel), "Locations", "home_regular"),
-            new(typeof(CurrenciesPageViewModel), "Currencies", "dark_theme_regular"),
-            new(typeof(ExchangeRatesPageViewModel), "Exchange Rates", "arrow_sync_regular"),
-            new(typeof(TransactionsPageViewModel), "Transactions", "money_regular"),
-            new(typeof(ReportsPageViewModel), "Reports", "book_pulse_regular"),
-            new(typeof(RulesPageViewModel), "Rules", "settings_regular"),
+            //new(typeof(DashboardPageViewModel), "Dashboard", "glance_regular"),
+            new(typeof(AccountsVM), "Accounts", "inprivate_account_regular"),
+            new(typeof(CategoriesVM), "Categories", "grid_regular"),
+            new(typeof(ProjectsVM), "Projects", "grid_regular"),
+            new(typeof(PayeesVM), "Payees", "money_regular"),
+            new(typeof(LocationsVM), "Locations", "home_regular"),
+            new(typeof(CurrenciesVM), "Currencies", "dark_theme_regular"),
+            new(typeof(ExchangeRatesVM), "Exchange Rates", "arrow_sync_regular"),
+            new(typeof(BlotterVM), "Transactions", "money_regular"),
+            //new(typeof(ReportsVM), "Reports", "book_pulse_regular"),
+            new(typeof(RulesVM), "Rules", "settings_regular"),
         };
 
         private void NavigateToPage(ListItemTemplate value)
@@ -77,7 +83,7 @@ namespace Financisto.Desktop.ViewModels
                 CurrentPage = instance;
         }
 
-        private ViewModelBase? GetOrCreatePage(ListItemTemplate value)
+        private BindableBase? GetOrCreatePage(ListItemTemplate value)
         {
             if (_pages.TryGetValue(value.ModelType, out var page))
                 return page;
@@ -99,37 +105,15 @@ namespace Financisto.Desktop.ViewModels
             }
         }
 
-        private ViewModelBase? CreatePageInstance(ListItemTemplate value)
+        private BindableBase? CreatePageInstance(ListItemTemplate value)
         {
             object? instance;
 
-            if (value.ModelType == typeof(ConfigurationsPageViewModel))
             {
-                instance = Activator.CreateInstance(
-                    value.ModelType,
-                    _transactionService,
-                    _themeService);
-            }
-            else if (value.ModelType == typeof(DashboardPageViewModel))
-            {
-                instance = Activator.CreateInstance(
-                    value.ModelType,
-                    _transactionService);
-            }
-            else if (value.ModelType == typeof(TransactionsPageViewModel))
-            {
-                instance = new TransactionsPageViewModel(AppServices.DatabaseService.CurrentDatabase);
-            }
-            else if (value.ModelType == typeof(AccountsPageViewModel))
-            {
-                instance = new AccountsPageViewModel(AppServices.DatabaseService.CurrentDatabase);
-            }
-            else
-            {
-                instance = Activator.CreateInstance(value.ModelType);
+                instance = Activator.CreateInstance(value.ModelType, AppServices.DatabaseService.CurrentDatabase, new DialogWrapper());
             }
 
-            return instance as ViewModelBase;
+            return instance as BindableBase;
         }
 
         partial void OnSelectedItemFundoChanged(ListItemTemplate? value)
@@ -191,7 +175,7 @@ namespace Financisto.Desktop.ViewModels
 
                 RecreateAllPages();
 
-                var transactionsItem = ItemsTop.First(x => x.ModelType == typeof(TransactionsPageViewModel));
+                var transactionsItem = ItemsTop.First(x => x.ModelType == typeof(BlotterVM));
                 var wasAlreadySelected = ReferenceEquals(SelectedItemTopo, transactionsItem);
 
                 SelectedItemFundo = null;
@@ -270,7 +254,7 @@ namespace Financisto.Desktop.ViewModels
                 return;
             }
 
-            var defaultName = Path.ChangeExtension(Financisto.Adapter.BackupWriter.GenerateFileName(), "db");
+            var defaultName = Path.ChangeExtension(Adapter.BackupWriter.GenerateFileName(), "db");
 
             var file = await window.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {

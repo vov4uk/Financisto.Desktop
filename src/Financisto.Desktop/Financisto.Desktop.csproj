@@ -31,9 +31,11 @@
         <PackageReference Include="AvaloniaWASM.Storage" />
         <PackageReference Include="ClosedXML" />
         <PackageReference Include="CommunityToolkit.Mvvm" />
+        <PackageReference Include="CsvHelper" />
         <PackageReference Include="LiveChartsCore" />
         <PackageReference Include="LiveChartsCore.SkiaSharpView" />
         <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" />
+        <PackageReference Include="System.Security.Cryptography.ProtectedData" />
     </ItemGroup>
 
     <ItemGroup>

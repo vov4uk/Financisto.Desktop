@@ -2,12 +2,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="using:Financisto.Desktop.ViewModels"
+             xmlns:vm="using:Financisto.Desktop.ViewModels.Dailogs"
              mc:Ignorable="d"
              d:DesignWidth="800"
              d:DesignHeight="450"
              x:Class="Financisto.Desktop.Views.ConfigurationsPageView"
-             x:DataType="vm:ConfigurationsPageViewModel">
+             x:DataType="vm:SettingsVM">
 
     <StackPanel Spacing="12" Margin="12">
 

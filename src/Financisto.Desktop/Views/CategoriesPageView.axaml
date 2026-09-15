@@ -1,9 +1,9 @@
 ﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:Financisto.Desktop.ViewModels"
+             xmlns:vm="using:Financisto.Desktop.ViewModels.Pages"
              xmlns:models="using:Financisto.Desktop.Models"
              x:Class="Financisto.Desktop.Views.CategoriesPageView"
-             x:DataType="vm:CategoriesPageViewModel">
+             x:DataType="vm:CategoriesVM">
 
     <StackPanel Margin="10" Spacing="10">
 

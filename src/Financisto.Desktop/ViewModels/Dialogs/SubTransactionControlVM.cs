@@ -1,14 +1,19 @@
-using CommunityToolkit.Mvvm.Input;
-using Financisto.Desktop.Data;
-using System.ComponentModel;
 using System.Linq;
+using Financisto.Desktop.Data;
+using Prism.Commands;
 
 namespace Financisto.Desktop.ViewModels.Dialogs;
 
-public partial class SubTransactionControlVM : DialogBaseVM
+public class SubTransactionControlVM : DialogBaseVM
 {
-    private static readonly string[] TrackingProperties = { nameof(TransactionDto.FromAmount), nameof(TransactionDto.FromAccount) };
+    private readonly string[] TrackingProperies = new string[] { nameof(TransactionDto.FromAmount), nameof(TransactionDto.FromAccount) };
 
+    private DelegateCommand _changeFromAmountSignCommand;
+    private DelegateCommand<int?> _clearCategoryCommand;
+    private DelegateCommand _clearFromAmountCommand;
+    private DelegateCommand _clearNotesCommand;
+    private DelegateCommand _clearOriginalFromAmountCommand;
+    private DelegateCommand _clearProjectCommand;
     public SubTransactionControlVM(TransactionDto transaction)
     {
         Transaction = transaction;
@@ -18,34 +23,31 @@ public partial class SubTransactionControlVM : DialogBaseVM
 
     public TransactionDto Transaction { get; }
 
-    [RelayCommand]
-    private void ChangeFromAmountSign() => Transaction.IsAmountNegative = !Transaction.IsAmountNegative;
+    public DelegateCommand ChangeFromAmountSignCommand
+        => _changeFromAmountSignCommand ??= new DelegateCommand(() => { Transaction.IsAmountNegative = !Transaction.IsAmountNegative; });
 
-    [RelayCommand]
-    private void ClearCategory() => Transaction.CategoryId = 0;
+    public DelegateCommand<int?> ClearCategoryCommand
+        => _clearCategoryCommand ??= new DelegateCommand<int?>(i => { Transaction.CategoryId = i; });
 
-    [RelayCommand]
-    private void SplitCategory() => Transaction.CategoryId = -1;
+    public DelegateCommand ClearFromAmountCommand
+        => _clearFromAmountCommand ??= new DelegateCommand(() => { Transaction.FromAmount = 0; });
 
-    [RelayCommand]
-    private void ClearFromAmount() => Transaction.FromAmount = 0;
+    public DelegateCommand ClearNotesCommand
+        => _clearNotesCommand ??= new DelegateCommand(() => { Transaction.Note = default; });
 
-    [RelayCommand]
-    private void ClearNotes() => Transaction.Note = default;
+    public DelegateCommand ClearOriginalFromAmountCommand
+        => _clearOriginalFromAmountCommand ??= new DelegateCommand(() => { Transaction.OriginalFromAmount = 0; });
 
-    [RelayCommand]
-    private void ClearOriginalFromAmount() => Transaction.OriginalFromAmount = 0;
-
-    [RelayCommand]
-    private void ClearProject() => Transaction.ProjectId = default;
+    public DelegateCommand ClearProjectCommand
+        => _clearProjectCommand ??= new DelegateCommand(() => { Transaction.ProjectId = default; });
 
     public override object OnRequestSave() => Transaction;
 
     protected override bool CanSaveCommandExecute() => !Transaction.IsSplitCategory || Transaction.UnsplitAmount == 0;
 
-    private void Transaction_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    private void Transaction_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (TrackingProperties.Contains(e.PropertyName))
+        if (TrackingProperies.Contains(e.PropertyName))
         {
             SaveCommand.NotifyCanExecuteChanged();
         }

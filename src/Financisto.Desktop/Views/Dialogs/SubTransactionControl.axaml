@@ -6,7 +6,7 @@
              xmlns:dialogs="using:Financisto.Desktop.Views.Dialogs"
              xmlns:entities="using:Financisto.Common.Entities"
              xmlns:conv="using:Financisto.Converters"
-             mc:Ignorable="d" d:DesignWidth="340" d:DesignHeight="420"
+             mc:Ignorable="d" d:DesignWidth="340" d:DesignHeight="480"
              x:Class="Financisto.Desktop.Views.Dialogs.SubTransactionControl"
              x:DataType="vm:SubTransactionControlVM"
              x:CompileBindings="False">

@@ -1,53 +1,52 @@
-using CommunityToolkit.Mvvm.Input;
+using System;
+using System.Threading.Tasks;
+using Financisto.Common;
 using Financisto.Common.Entities;
+using Financisto.Common.Localization;
 using Financisto.Desktop.Data;
 using Financisto.Desktop.Helpers;
 using Financisto.Desktop.Views.Dialogs;
-using System;
-using System.Threading.Tasks;
+using Prism.Commands;
 
 namespace Financisto.Desktop.ViewModels.Dialogs;
 
-public partial class TransactionControlVM : SubTransactionControlVM
+public class TransactionControlVM : SubTransactionControlVM
 {
-    private readonly IDialogWrapper _dialogWrapper;
+    private readonly IDialogWrapper dialogWrapper;
+    private DelegateCommand _addSubTransactionCommand;
+    private DelegateCommand _addSubTransferCommand;
+    private DelegateCommand _clearLocationCommand;
+    private DelegateCommand _clearPayeeCommand;
+    private DelegateCommand<BaseTransactionDto> _deleteSubTransactionCommand;
+    private DelegateCommand _openRecipesDialogCommand;
+    private AsyncCommand<BaseTransactionDto> _editSubTransaction;
 
-    public TransactionControlVM(TransactionDto transaction, IDialogWrapper dialogWrapper)
+    public TransactionControlVM(
+        TransactionDto transaction,
+        IDialogWrapper dialogWrapper)
         : base(transaction)
     {
-        _dialogWrapper = dialogWrapper;
+        this.dialogWrapper = dialogWrapper;
     }
 
-    protected override bool CanSaveCommandExecute() => Transaction.FromAccount != null && Transaction.FromAmount != 0;
+    public DelegateCommand AddSubTransactionCommand => _addSubTransactionCommand ??= new DelegateCommand(() => { ShowSubTransactionDialog(new TransactionDto(), true); });
+    public DelegateCommand AddSubTransferCommand => _addSubTransferCommand ??= new DelegateCommand(() => { ShowSubTransferDialog(new TransferDto(), true); });
 
-    [RelayCommand]
-    private void ClearLocation() => Transaction.LocationId = default;
+    public DelegateCommand ClearLocationCommand => _clearLocationCommand ??= new DelegateCommand(() => { Transaction.LocationId = default; });
 
-    [RelayCommand]
-    private void ClearPayee() => Transaction.PayeeId = default;
+    public DelegateCommand ClearPayeeCommand => _clearPayeeCommand ??= new DelegateCommand(() => { Transaction.PayeeId = default; });
 
-    [RelayCommand]
-    private Task AddSubTransaction() => ShowSubTransactionDialogAsync(new TransactionDto(), true);
-
-    [RelayCommand]
-    private void DeleteSubTransaction(BaseTransactionDto tr)
+    public DelegateCommand<BaseTransactionDto> DeleteSubTransactionCommand => _deleteSubTransactionCommand ??= new DelegateCommand<BaseTransactionDto>(tr =>
     {
         Transaction.SubTransactions.Remove(tr);
         Transaction.RecalculateUnSplitAmount();
-    }
+    });
 
-    [RelayCommand]
-    private Task EditSubTransaction(BaseTransactionDto original)
-    {
-        // Editing a split-out transfer sub-item would need a TransferControl dialog, which
-        // hasn't been ported yet (out of scope) — only TransactionDto sub-items are editable here.
-        if (original is TransactionDto transaction)
-        {
-            return ShowSubTransactionDialogAsync(transaction, false);
-        }
+    public AsyncCommand<BaseTransactionDto> EditSubTransactionCommand => _editSubTransaction ??= new AsyncCommand<BaseTransactionDto>(EditSubTransaction);
 
-        return Task.CompletedTask;
-    }
+    //public DelegateCommand OpenRecipesDialogCommand => _openRecipesDialogCommand ??= new DelegateCommand(ShowRecepiesDialog);
+
+    protected override bool CanSaveCommandExecute() => Transaction.FromAccount != null && Transaction.FromAmount != 0;
 
     private static void CopySubTransaction(TransactionDto original, TransactionDto modifiedCopy)
     {
@@ -59,7 +58,94 @@ public partial class TransactionControlVM : SubTransactionControlVM
         original.ProjectId = modifiedCopy.ProjectId;
     }
 
-    private async Task ShowSubTransactionDialogAsync(TransactionDto original, bool isNewItem)
+    private static void CopySubTransfer(TransferDto original, TransferDto modifiedCopy)
+    {
+        original.Id = modifiedCopy.Id;
+        original.FromAccountId = modifiedCopy.FromAccountId;
+        original.FromAccount = modifiedCopy.FromAccount;
+        original.ToAccountId = modifiedCopy.ToAccountId;
+        original.ToAccount = modifiedCopy.ToAccount;
+        original.Note = modifiedCopy.Note;
+        original.FromAmount = modifiedCopy.RealFromAmount;
+        original.ToAmount = Math.Abs(modifiedCopy.FromAmount);
+        original.Date = modifiedCopy.DateTime.Date;
+        original.Time = modifiedCopy.DateTime;
+    }
+
+    //private void ShowRecepiesDialog()
+    //{
+    //    var vm = new RecipesVM(Transaction.RealFromAmount / 100.0);
+
+    //    var output = dialogWrapper.ShowWizard(vm);
+
+    //    var outputTransactions = output as List<TransactionDto>;
+    //    if (outputTransactions != null)
+    //    {
+    //        foreach (var item in outputTransactions)
+    //        {
+    //            item.Category = DbManual.Category?.Find(x => x.Id == item.CategoryId);
+    //            Transaction.SubTransactions.Add(item);
+    //        }
+    //        Transaction.RecalculateUnSplitAmount();
+    //        SaveCommand.RaiseCanExecuteChanged();
+    //    }
+    //}
+
+
+    private async Task EditSubTransaction(BaseTransactionDto original)
+    {
+        var transaction = original as TransactionDto;
+        if (transaction != null)
+        {
+            await ShowSubTransactionDialog(transaction, false);
+            return;
+        }
+
+        var transfer = original as TransferDto;
+        if (transfer != null)
+        {
+            await ShowSubTransferDialog(transfer, false);
+        }
+    }
+
+    private async Task ShowSubTransferDialog(TransferDto original, bool isNewItem)
+    {
+        if (Transaction.IsOriginalFromAmountVisible)
+        {
+            await this.dialogWrapper.ShowMessageBoxAsync(LocalizationService.Instance.split_transfers_currency_not_supported, LocalizationService.Instance.not_supported);
+            return;
+        }
+
+        Transaction.RecalculateUnSplitAmount();
+        var workingCopy = new TransferDto()
+        {
+            FromAccountId = Transaction.FromAccountId,
+            IsSubTransaction = true,
+            FromAmount = Transaction.UnsplitAmount,
+            Date = Transaction.Date,
+            Time = Transaction.Time,
+        };
+        if (!isNewItem)
+        {
+            CopySubTransfer(workingCopy, original);
+        }
+
+        var viewModel = new TransferControlVM(workingCopy);
+
+        var dialogResult = await dialogWrapper.ShowDialogAsync<TransferControl>(viewModel, 385, 340, LocalizationService.Instance.transfer);
+
+        var modifiedCopy = dialogResult as TransferDto;
+        if (modifiedCopy != null)
+        {
+            CopySubTransfer(original, modifiedCopy);
+
+            if (isNewItem) Transaction.SubTransactions.Add(original);
+            Transaction.RecalculateUnSplitAmount();
+            SaveCommand.NotifyCanExecuteChanged();
+        }
+    }
+
+    private async Task ShowSubTransactionDialog(TransactionDto original, bool isNewItem)
     {
         Transaction.RecalculateUnSplitAmount();
         var workingCopy = new TransactionDto { IsSubTransaction = true };
@@ -79,9 +165,10 @@ public partial class TransactionControlVM : SubTransactionControlVM
 
         var viewModel = new SubTransactionControlVM(workingCopy);
 
-        var dialogResult = await _dialogWrapper.ShowDialogAsync<SubTransactionControl>(viewModel, 340, 400, "Sub Transaction");
+        var dialogResult = await dialogWrapper.ShowDialogAsync<SubTransactionControl>(viewModel, 340, 340, LocalizationService.Instance.sub_transaction);
 
-        if (dialogResult is TransactionDto modifiedCopy)
+        var modifiedCopy = dialogResult as TransactionDto;
+        if (modifiedCopy != null)
         {
             CopySubTransaction(original, modifiedCopy);
 

@@ -1,49 +1,87 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using Prism.Mvvm;
 using System;
 
-namespace Financisto.Desktop.Data;
-
-public abstract partial class BaseTransactionDto : ObservableObject
+namespace Financisto.Desktop.Data
 {
-    [ObservableProperty]
-    private DateTimeOffset? _date;
-
-    [ObservableProperty]
-    private TimeSpan? _time;
-
-    [ObservableProperty]
-    private int _id;
-
-    [ObservableProperty]
-    private string _note;
-
-    private double _rate;
-
-    public DateTime DateTime
+    public abstract class BaseTransactionDto : BindableBase
     {
-        get
+        protected DateTime date;
+        protected DateTime time;
+        protected int id;
+        protected string note;
+        protected double rate;
+
+        public DateTime Date
         {
-            var d = (Date ?? DateTimeOffset.Now).Date;
-            return new DateTime(d.Year, d.Month, d.Day, 0, 0, 0, DateTimeKind.Local).Add(Time ?? TimeSpan.Zero);
-        }
-    }
-
-    public bool IsSubTransaction { get; set; }
-
-    public virtual long RealFromAmount { get; }
-
-    public virtual string SubTransactionTitle { get; }
-
-    public virtual bool IsAmountNegative { get; set; }
-
-    public double Rate
-    {
-        get => _rate;
-        set
-        {
-            if (SetProperty(ref _rate, value))
+            get => date;
+            set
             {
-                OnPropertyChanged("RateString");
+                if (SetProperty(ref date, value))
+                {
+                    RaisePropertyChanged(nameof(Date));
+                }
+            }
+        }
+
+        public DateTime Time
+        {
+            get => time;
+            set
+            {
+                if (SetProperty(ref time, value))
+                {
+                    RaisePropertyChanged(nameof(Time));
+                }
+            }
+        }
+
+        public DateTime DateTime
+        {
+            get { return new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, DateTimeKind.Local); }
+        }
+
+        public int Id
+        {
+            get => id;
+            set
+            {
+                if (SetProperty(ref id, value))
+                {
+                    RaisePropertyChanged(nameof(Id));
+                }
+            }
+        }
+
+        public string Note
+        {
+            get => note;
+            set
+            {
+                if (SetProperty(ref note, value))
+                {
+                    RaisePropertyChanged(nameof(Note));
+                }
+            }
+        }
+
+        public bool IsSubTransaction { get; set; }
+
+        public virtual long RealFromAmount { get; }
+
+        public virtual string SubTransactionTitle { get; }
+
+        public virtual bool IsAmountNegative { get; set; }
+
+        public double Rate
+        {
+            get => rate;
+            set
+            {
+                if (SetProperty(ref rate, value))
+                {
+                    RaisePropertyChanged(nameof(Rate));
+                    RaisePropertyChanged("RateString");
+                }
             }
         }
     }

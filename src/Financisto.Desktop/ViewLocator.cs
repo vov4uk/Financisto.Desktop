@@ -1,8 +1,8 @@
-using Avalonia.Controls;
-using Avalonia.Controls.Templates;
-using Financisto.Desktop.ViewModels;
 using System;
 using System.Diagnostics.CodeAnalysis;
+using Avalonia.Controls;
+using Avalonia.Controls.Templates;
+using Prism.Mvvm;
 
 namespace Financisto.Desktop;
 
@@ -33,6 +33,6 @@ public class ViewLocator : IDataTemplate
 
     public bool Match(object? data)
     {
-        return data is ViewModelBase;
+        return data is BindableBase;
     }
 }

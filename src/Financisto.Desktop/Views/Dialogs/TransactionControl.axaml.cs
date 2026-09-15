@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Financisto.Desktop.Data;
@@ -12,11 +13,11 @@ public partial class TransactionControl : UserControl
         InitializeComponent();
     }
 
-    private void OnSubTransactionDoubleTapped(object sender, TappedEventArgs e)
+    private async Task OnSubTransactionDoubleTapped(object sender, TappedEventArgs e)
     {
         if (sender is Control { DataContext: BaseTransactionDto item } && DataContext is TransactionControlVM vm)
         {
-            vm.EditSubTransactionCommand.Execute(item);
+            await vm.EditSubTransactionCommand.ExecuteAsync(item);
         }
     }
 }
