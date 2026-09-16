@@ -39,6 +39,8 @@ namespace Financisto.Common.Model
         [Column("card_issuer")]
         public string CardIssuer { get; set; }
 
+        public override string ToString() => Title;
+
         [Column("issuer")]
         public string Issuer { get; set; }
     }

@@ -29,8 +29,8 @@ namespace Financisto.Common.Filters
 
             FromDatePicker.SelectedDateChanged += (_, _) => MergeDate(isFrom: true, FromDatePicker.SelectedDate);
             ToDatePicker.SelectedDateChanged += (_, _) => MergeDate(isFrom: false, ToDatePicker.SelectedDate);
-            FromTimePicker.SelectedTimeChanged += (_, _) => MergeTime(isFrom: true, FromTimePicker.SelectedTime);
-            ToTimePicker.SelectedTimeChanged += (_, _) => MergeTime(isFrom: false, ToTimePicker.SelectedTime);
+            //FromTimePicker.SelectedTimeChanged += (_, _) => MergeTime(isFrom: true, FromTimePicker.SelectedTime);
+            //ToTimePicker.SelectedTimeChanged += (_, _) => MergeTime(isFrom: false, ToTimePicker.SelectedTime);
         }
 
         public PeriodType SelectedPeriodType
@@ -70,14 +70,14 @@ namespace Financisto.Common.Filters
                 From = dates.from;
                 To = dates.to;
             }
-            else if (change.Property == FromProperty)
-            {
-                SyncPickers(FromDatePicker, FromTimePicker, From);
-            }
-            else if (change.Property == ToProperty)
-            {
-                SyncPickers(ToDatePicker, ToTimePicker, To);
-            }
+            //else if (change.Property == FromProperty)
+            //{
+            //    SyncPickers(FromDatePicker, FromTimePicker, From);
+            //}
+            //else if (change.Property == ToProperty)
+            //{
+            //    SyncPickers(ToDatePicker, ToTimePicker, To);
+            //}
         }
 
         private void MergeDate(bool isFrom, DateTimeOffset? date)

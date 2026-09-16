@@ -35,5 +35,7 @@ namespace Financisto.Common.Model
             Left = cat.Left;
             Right = cat.Right;
         }
+
+        public override string ToString() => Title;
     }
 }

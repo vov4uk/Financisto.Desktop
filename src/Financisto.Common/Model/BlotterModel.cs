@@ -83,6 +83,10 @@ namespace Financisto.Common.Model
         public long ToAmount { get; set; }
         public string TransactionTitle => TransactionTitleUtils.GenerateTransactionTitle(Payee, Note, LocationId > 0 ? Location : string.Empty, CategoryId, CategoryTitle, ToAccountId);
 
+        public bool ShowProjectSeparator => Project != null;
+
+
+
         public string Type
         {
             get

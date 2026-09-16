@@ -14,5 +14,7 @@ namespace Financisto.Common.Model
 
         [Column("is_active")]
         public bool IsActive { get; set; }
+
+        override public string ToString() => Title;
     }
 }
