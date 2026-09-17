@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using Financisto.Converters;
+using Financisto.Common.Converters;
 
 namespace Financisto.Common.Entities
 {

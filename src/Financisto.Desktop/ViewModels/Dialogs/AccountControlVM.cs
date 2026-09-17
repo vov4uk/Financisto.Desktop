@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Financisto.Common.Entities;
 using Financisto.Common.Model;
 using Financisto.Desktop.Data;
@@ -18,7 +19,7 @@ namespace Financisto.Desktop.ViewModels.Dialogs
         {
             Entity = entity;
             IsNew = isNew;
-            Currencies = DbManual.Currencies;
+            Currencies = DbManual.Currencies.Where(x => x.Id > 0).ToList();
 
             InitSelections();
 

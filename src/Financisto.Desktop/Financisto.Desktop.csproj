@@ -18,6 +18,12 @@
     </ItemGroup>
 
     <ItemGroup>
+      <AvaloniaResource Include="Assets\FinancistoIcon.png" />
+      <AvaloniaResource Include="Assets\ic_launcher.png" />
+      <AvaloniaResource Include="Assets\ic_launcher.ico" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Avalonia" />
         <PackageReference Include="Avalonia.Controls.DataGrid" />
         <PackageReference Include="Avalonia.Desktop" />

@@ -1,70 +1,88 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <!-- These UserControls bind against whatever ViewModel the consuming app supplies (no fixed x:DataType), like the original WPF loosely-typed bindings. -->
-    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <!-- Default (English) resources — code-gen produces Resources.Designer.cs with public access -->
-    <EmbeddedResource Update="Localization\Resources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <!-- Polish satellite resources — culture detected from filename suffix (.pl) -->
-    <EmbeddedResource Update="Localization\Resources.pl.resx">
-      <DependentUpon>Resources.resx</DependentUpon>
-    </EmbeddedResource>
-    <!-- Ukrainian satellite resources — culture detected from filename suffix (.uk) -->
-    <EmbeddedResource Update="Localization\Resources.uk.resx">
-      <DependentUpon>Resources.resx</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Localization\ResourcesMcc.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>ResourcesMcc.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Localization\ResourcesMcc.pl.resx">
-      <DependentUpon>ResourcesMcc.resx</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Localization\ResourcesMcc.uk.resx">
-      <DependentUpon>ResourcesMcc.resx</DependentUpon>
-    </EmbeddedResource>
-    <!-- Link the designer file to its parent .resx so VS nests it correctly -->
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Avalonia" />
-    <PackageReference Include="Avalonia.Controls.DataGrid" />
-    <PackageReference Include="Prism.Core" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Financisto.DataAccess\Financisto.DataAccess.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Localization\Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Update="Localization\ResourcesMcc.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>ResourcesMcc.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>Financisto.Desktop.Tests</_Parameter1>
-    </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>Financisto.Reports.Tests</_Parameter1>
-    </AssemblyAttribute>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Assets\currencies.csv" />
-  </ItemGroup>
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<!-- These UserControls bind against whatever ViewModel the consuming app supplies (no fixed x:DataType), like the original WPF loosely-typed bindings. -->
+		<AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+	</PropertyGroup>
+	<ItemGroup>
+		<!-- Default (English) resources — code-gen produces Resources.Designer.cs with public access -->
+		<EmbeddedResource Update="Localization\Resources.resx">
+			<Generator>PublicResXFileCodeGenerator</Generator>
+			<LastGenOutput>Resources.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+		<!-- Polish satellite resources — culture detected from filename suffix (.pl) -->
+		<EmbeddedResource Update="Localization\Resources.pl.resx">
+			<DependentUpon>Resources.resx</DependentUpon>
+		</EmbeddedResource>
+		<!-- Ukrainian satellite resources — culture detected from filename suffix (.uk) -->
+		<EmbeddedResource Update="Localization\Resources.uk.resx">
+			<DependentUpon>Resources.resx</DependentUpon>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Localization\ResourcesMcc.resx">
+			<Generator>ResXFileCodeGenerator</Generator>
+			<LastGenOutput>ResourcesMcc.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Localization\ResourcesMcc.pl.resx">
+			<DependentUpon>ResourcesMcc.resx</DependentUpon>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Localization\ResourcesMcc.uk.resx">
+			<DependentUpon>ResourcesMcc.resx</DependentUpon>
+		</EmbeddedResource>
+		<!-- Link the designer file to its parent .resx so VS nests it correctly -->
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Avalonia"/>
+		<PackageReference Include="Avalonia.Controls.DataGrid"/>
+		<PackageReference Include="Prism.Core"/>
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Financisto.DataAccess\Financisto.DataAccess.csproj"/>
+	</ItemGroup>
+	<ItemGroup>
+		<Compile Update="Localization\Resources.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Resources.resx</DependentUpon>
+		</Compile>
+		<Compile Update="Localization\ResourcesMcc.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>ResourcesMcc.resx</DependentUpon>
+		</Compile>
+	</ItemGroup>
+	<ItemGroup>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+			<_Parameter1>Financisto.Desktop.Tests</_Parameter1>
+		</AssemblyAttribute>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+			<_Parameter1>Financisto.Reports.Tests</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="Assets\currencies.csv"/>
+	</ItemGroup>
+	<ItemGroup>
+		<AvaloniaResource Include="Assets\AccountType\account_type_asset.png"/>
+		<AvaloniaResource Include="Assets\AccountType\account_type_bank.png"/>
+		<AvaloniaResource Include="Assets\AccountType\account_type_card.png"/>
+		<AvaloniaResource Include="Assets\AccountType\account_type_card_amex.png"/>
+		<AvaloniaResource Include="Assets\AccountType\account_type_card_cirrus.png"/>
+		<AvaloniaResource Include="Assets\AccountType\account_type_card_default.png"/>
+		<AvaloniaResource Include="Assets\AccountType\account_type_card_diners.png"/>
+		<AvaloniaResource Include="Assets\AccountType\account_type_card_discover.png"/>
+		<AvaloniaResource Include="Assets\AccountType\account_type_card_hipercard.png"/>
+		<AvaloniaResource Include="Assets\AccountType\account_type_card_jcb.png"/>
+		<AvaloniaResource Include="Assets\AccountType\account_type_card_maestro.png"/>
+		<AvaloniaResource Include="Assets\AccountType\account_type_card_mastercard.png"/>
+		<AvaloniaResource Include="Assets\AccountType\account_type_card_mir.png"/>
+		<AvaloniaResource Include="Assets\AccountType\account_type_card_nets.png"/>
+		<AvaloniaResource Include="Assets\AccountType\account_type_card_rupay.png"/>
+		<AvaloniaResource Include="Assets\AccountType\account_type_card_unionpay.png"/>
+		<AvaloniaResource Include="Assets\AccountType\account_type_card_visa.png"/>
+		<AvaloniaResource Include="Assets\AccountType\account_type_card_visa_electron.png"/>
+		<AvaloniaResource Include="Assets\AccountType\account_type_cash.png"/>
+		<AvaloniaResource Include="Assets\AccountType\account_type_electronic.png"/>
+		<AvaloniaResource Include="Assets\AccountType\account_type_liability.png"/>
+		<AvaloniaResource Include="Assets\AccountType\account_type_other.png"/>
+	</ItemGroup>
 </Project>

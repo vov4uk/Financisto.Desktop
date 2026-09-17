@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Text;
-using Financisto.Converters;
+using Financisto.Common.Converters;
 
 namespace Financisto.Common.Entities
 {

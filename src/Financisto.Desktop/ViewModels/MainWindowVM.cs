@@ -193,20 +193,20 @@ namespace Financisto.Desktop.ViewModels
         public ObservableCollection<ListItemTemplate> ItemsTop { get; } = new()
         {
             //new(typeof(DashboardPageViewModel), "Dashboard", "glance_regular"),
-            new(typeof(AccountModel), "Accounts", "IconWallet"),
-            new(typeof(CategoryTreeModel), "Categories", "IconFolderTree"),
-            new(typeof(ProjectModel), "Projects", "IconListCheck"),
-            new(typeof(PayeeModel), "Payees", "IconAddressBook"),
-            new(typeof(LocationModel), "Locations", "IconMap"),
-            new(typeof(CurrencyModel), "Currencies", "IconDollarSign"),
-            new(typeof(ExchangeRateModel), "Exchange Rates", "IconArrowTrendUp"),
-            new(typeof(BlotterModel), "Transactions", "IconReceipt"),
+            new(typeof(AccountModel), LocalizationService.Instance.accounts, "IconWallet"),
+            new(typeof(CategoryTreeModel), LocalizationService.Instance.categories, "IconFolderTree"),
+            new(typeof(ProjectModel), LocalizationService.Instance.projects, "IconListCheck"),
+            new(typeof(PayeeModel), LocalizationService.Instance.payees, "IconAddressBook"),
+            new(typeof(LocationModel), LocalizationService.Instance.locations, "IconMap"),
+            new(typeof(CurrencyModel), LocalizationService.Instance.currencies, "IconDollarSign"),
+            new(typeof(ExchangeRateModel), LocalizationService.Instance.exchange_rates, "IconArrowTrendUp"),
+            new(typeof(BlotterModel), LocalizationService.Instance.blotter, "IconReceipt"),
             //new(typeof(ReportsVM), "Reports", "book_pulse_regular"),
         };
 
         public ObservableCollection<ListItemTemplate> ItemsBottom { get; } = new()
         {
-            new(typeof(SettingsVM), "Configurations", "IconGear"),
+            new(typeof(SettingsVM), LocalizationService.Instance.settings, "IconGear"),
         };
 
         public IAsyncCommand<Type> MenuNavigateCommand => _menuNavigateCommand ??= new AsyncCommand<Type>(NavigateToType);

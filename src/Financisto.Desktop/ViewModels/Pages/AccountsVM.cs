@@ -11,7 +11,6 @@ using Financisto.DataAccess.Data;
 using Financisto.Desktop.Data;
 using Financisto.Desktop.Helpers;
 using Financisto.Desktop.ViewModels.Dialogs;
-using Financisto.Desktop.Views.Dialogs;
 
 namespace Financisto.Desktop.ViewModels.Pages
 {
@@ -78,7 +77,7 @@ namespace Financisto.Desktop.ViewModels.Pages
             }
 
             var vm = new AccountControlVM(dto, isNew);
-            var result = await dialogWrapper.ShowDialogAsync<AmountControl>(
+            var result = await dialogWrapper.ShowDialogAsync<AccountControl>(
                 vm, 580, 560, LocalizationService.Instance["account"]);
 
             if (result is not AccountDto updated)

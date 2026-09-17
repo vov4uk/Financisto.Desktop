@@ -6,7 +6,6 @@
              x:Class="Financisto.Desktop.Views.TransactionsPageView"
              xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
              xmlns:filters="clr-namespace:Financisto.Common.Filters;assembly=Financisto.Common"
-             xmlns:converters="clr-namespace:Financisto.Converters;assembly=Financisto.Common"
              x:DataType="vm:BlotterVM">
     <UserControl.Resources>
         <ResourceDictionary>
@@ -24,7 +23,7 @@
 
         <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto" Margin="0,0,0,10">
             <TextBlock Grid.Column="0"
-                       Text="Transactions"
+                       Text="{loc:Translate Key=blotter}"
                        FontSize="20"
                        FontWeight="Bold"
                        VerticalAlignment="Center" />
@@ -97,7 +96,7 @@
                             Width="24"
                             BorderThickness="0"
                             Background="Transparent"
-                            Grid.Column="1"                            
+                            Grid.Column="1"
                             Command="{Binding ClearFiltersCommand}"
                             Margin="4">
                         <Image Source="{StaticResource ResourceKey=IconClearFilters}" Width="16" Height="16"/>
@@ -107,8 +106,7 @@
             
         </Expander>
 
-            <DataGrid Grid.Row="2"
- 
+            <DataGrid Grid.Row="2" 
                       Margin="5"
                       x:Name="TransactionsGrid"
                       ItemsSource="{Binding Path=Entities}"
@@ -124,8 +122,8 @@
                     <DataGridTextColumn Binding="{Binding Path=Id}"
                                         />
                     <DataGridTemplateColumn Header=""
-                                        ClipboardContentBinding="{Binding Path=Type}"
-                                        >
+                                            ClipboardContentBinding="{Binding Path=Type}"
+                                            >
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Image Name="MyImage"

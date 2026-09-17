@@ -46,6 +46,10 @@
     <Style Selector="Button.icon:pressed">
       <Setter Property="Background" Value="{StaticResource ButtonBackgroundPressed}" />
     </Style>
+    <Style Selector="Button.icon:disabled">
+      <Setter Property="Opacity" Value="0.35" />
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
 
     </Styles>
 

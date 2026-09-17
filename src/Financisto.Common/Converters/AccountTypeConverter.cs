@@ -41,15 +41,15 @@ namespace Financisto.Converters
 
         private static Uri GetImageUri(string type, string card_issuer)
         {
-            if (!string.IsNullOrEmpty(type) && type.Contains("card") && !string.IsNullOrEmpty(card_issuer))
+            if (!string.IsNullOrEmpty(type) && type.Contains("card") && !string.IsNullOrEmpty(card_issuer) && card_issuer != "(unset)")
             {
-                return new Uri($"avares://Financisto.Common/Assets/Images/AccountType/account_type_card_{card_issuer}.png");
+                return new Uri($"avares://Financisto.Common/Assets/AccountType/account_type_card_{card_issuer}.png");
             }
             if (!string.IsNullOrEmpty(type) && KnownTypes.Contains(type))
             {
-                return new Uri($"avares://Financisto.Common/Assets/Images/AccountType/account_type_{type}.png");
+                return new Uri($"avares://Financisto.Common/Assets/AccountType/account_type_{type}.png");
             }
-            return new Uri("avares://Financisto.Common/Assets/Images/AccountType/account_type_other.png");
+            return new Uri("avares://Financisto.Common/Assets/AccountType/account_type_other.png");
         }
     }
 }

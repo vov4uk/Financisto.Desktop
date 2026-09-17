@@ -128,6 +128,13 @@ public sealed class LocalizationService : INotifyPropertyChanged
     public string location => Get();
     public string currency => Get();
     public string currencies => Get();
+    public string accounts => Get();
+    public string projects => Get();
+    public string payees => Get();
+    public string locations => Get();
+    public string exchange_rates => Get();
+    public string blotter => Get();
+    public string categories => Get();
     // RecipesWizard Page1
     public string recipe_wizard_total_format => Get();
     // MainWindow Messages

@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
-namespace Financisto.Converters
+namespace Financisto.Common.Converters
 {
     public class EnumDescriptionTypeConverter : EnumConverter
     {

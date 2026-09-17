@@ -12,6 +12,7 @@
              d:DesignWidth="880">
     <UserControl.Resources>
         <conv:DateTimeToDateTimeOffsetConverter x:Key="DateTimeToDateTimeOffsetConverter" />
+        <conv:EnumDescriptionConverter x:Key="EnumDescriptionConverter" />
     </UserControl.Resources>
     <WrapPanel Orientation="{Binding ElementName=PeriodFilterInstance, Path=Orientation}">
         <StackPanel Margin="4">
@@ -21,6 +22,11 @@
                       Width="150"
                       IsEditable="False"
                       SelectedItem="{Binding Path=SelectedPeriodType, ElementName=PeriodFilterInstance, Mode=TwoWay}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Converter={StaticResource EnumDescriptionConverter}}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
             </ComboBox>
         </StackPanel>
         <StackPanel Margin="4">
