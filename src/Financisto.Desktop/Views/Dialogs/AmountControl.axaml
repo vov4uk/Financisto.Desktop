@@ -49,7 +49,7 @@
             <TextBlock.Text>
                 <MultiBinding Converter="{StaticResource localizedFormatConverter}">
                     <Binding Source="{x:Static loc:LocalizationService.Instance}" Path="[amount]" />
-                    <Binding Path="Transaction.OriginalCurrency.Name" />
+                    <Binding Path="Transaction?.OriginalCurrency?.Name" />
                 </MultiBinding>
             </TextBlock.Text>
         </TextBlock>

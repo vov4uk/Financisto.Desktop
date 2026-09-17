@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -7,6 +8,7 @@ using Financisto.Common;
 using Financisto.Common.Entities;
 using Financisto.Common.Localization;
 using Financisto.Common.Model;
+using Financisto.Common.Utils;
 using Financisto.Converters;
 using Financisto.DataAccess.Abstractions;
 using Financisto.DataAccess.Data;
@@ -27,7 +29,7 @@ namespace Financisto.Desktop.ViewModels.Pages
         private IAsyncCommand _duplicateCommand;
         private IAsyncCommand _clearFiltersCommand;
         private IAsyncCommand _infoCommand;
-        //private Prism.Commands.DelegateCommand<IList<DataGridCellInfo>> _selectionChangedCommand;
+        private IAsyncCommand<IList> _selectionChangedCommand;
         private string _selectionSummary;
         private DateTime? _from;
         private DateTime? _to;
@@ -145,30 +147,31 @@ namespace Financisto.Desktop.ViewModels.Pages
             private set => SetProperty(ref _selectionSummary, value);
         }
 
-        //public Prism.Commands.DelegateCommand<IList<DataGridCellInfo>> SelectionChangedCommand =>
-        //    _selectionChangedCommand ??= new Prism.Commands.DelegateCommand<IList<DataGridCellInfo>>(OnSelectionChanged);
+        public IAsyncCommand<IList> SelectionChangedCommand =>
+            _selectionChangedCommand ??= new AsyncCommand<IList>(OnSelectionChanged);
 
-        //private void OnSelectionChanged(IList<DataGridCellInfo> selectedCells)
-        //{
-        //    var selectedItems = (selectedCells ?? Array.Empty<DataGridCellInfo>())
-        //        .Select(c => c.Item)
-        //        .OfType<BlotterModel>()
-        //        .Distinct()
-        //        .ToList();
+        private Task OnSelectionChanged(IList selectedItems)
+        {
+            var selectedRows = (selectedItems ?? Array.Empty<object>())
+                .Cast<object>()
+                .OfType<BlotterModel>()
+                .Distinct()
+                .ToList();
 
-        //    if (selectedItems.Count < 2)
-        //    {
-        //        SelectionSummary = string.Empty;
-        //        return;
-        //    }
+            if (selectedRows.Count < 2)
+            {
+                SelectionSummary = string.Empty;
+                return Task.CompletedTask;
+            }
 
-        //    var totalsByCurrency = selectedItems
-        //        .Where(item => item.ToAccountId == null || item.ToAccountId == 0)
-        //        .GroupBy(item => item.FromAccountCurrency)
-        //        .Select(g => BlotterUtils.SetAmountText(g.Key, g.Sum(i => i.FromAmount), true));
+            var totalsByCurrency = selectedRows
+                .Where(item => item.ToAccountId == null || item.ToAccountId == 0)
+                .GroupBy(item => item.FromAccountCurrency)
+                .Select(g => BlotterUtils.SetAmountText(g.Key, g.Sum(i => i.FromAmount), true));
 
-        //    SelectionSummary = string.Join("   ", totalsByCurrency);
-        //}
+            SelectionSummary = string.Join("   ", totalsByCurrency);
+            return Task.CompletedTask;
+        }
 
         private async Task ClearFilters()
         {

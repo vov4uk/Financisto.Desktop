@@ -2,14 +2,22 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Financisto.Desktop.ViewModels.Pages"
              xmlns:conv="using:Financisto.Converters"
+             xmlns:behaviors="using:Financisto.Common.Behaviors"
              x:Class="Financisto.Desktop.Views.TransactionsPageView"
              xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
              xmlns:filters="clr-namespace:Financisto.Common.Filters;assembly=Financisto.Common"
              xmlns:converters="clr-namespace:Financisto.Converters;assembly=Financisto.Common"
              x:DataType="vm:BlotterVM">
-
     <UserControl.Resources>
-        <conv:UnixTimeConverter x:Key="UnixTimeConverter" />
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <conv:UnixTimeConverter x:Key="UnixTimeConverter" />
+            <conv:TransactionTypeBrushConverter x:Key="TransactionTypeBrushConverter" />
+            <conv:TransactionTypeIconConverter x:Key="TransactionTypeIconConverter" />
+            <conv:NoCategoryBackgroundConverter x:Key="NoCategoryBackgroundConverter" />
+        </ResourceDictionary>
     </UserControl.Resources>
 
     <Grid Margin="10" RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="*">
@@ -21,11 +29,31 @@
                        FontWeight="Bold"
                        VerticalAlignment="Center" />
 
-            <Button Content="Add Expense" Grid.Column="2" Command="{Binding AddCommand}" />
-            <Button Content="Add Transfer" Grid.Column="3" Command="{Binding AddTransferCommand}" />
-            <Button Content="Edit" Grid.Column="4" Command="{Binding EditCommand}" />
-            <Button Content="Duplicate" Grid.Column="5" Command="{Binding DuplicateCommand}" />
-            <Button Content="Delete" Grid.Column="6"  Command="{Binding DeleteCommand}" />
+            <Button Content="{loc:Translate Key=add_expense}"
+                    Classes="icon"
+                    Tag="{StaticResource IconPlus}"
+                    Grid.Column="2"
+                    Command="{Binding AddCommand}" />
+            <Button Content="{loc:Translate Key=add_transfer}"
+                    Grid.Column="3"
+                    Classes="icon"
+                    Tag="{StaticResource IconArrowRightArrowLeft}"
+                    Command="{Binding AddTransferCommand}" />
+            <Button Content="{loc:Translate Key=edit}"
+                    Classes="icon"
+                    Grid.Column="4"
+                    Tag="{StaticResource IconPencil}"
+                    Command="{Binding EditCommand}" />
+            <Button Content="{loc:Translate Key=duplicate}"
+                    Classes="icon"
+                    Grid.Column="5"
+                    Tag="{StaticResource IconCopy}"
+                    Command="{Binding DuplicateCommand}" />
+            <Button Content="{loc:Translate Key=delete}"
+                    Classes="icon"
+                    Tag="{StaticResource IconTrash}"
+                    Grid.Column="6"
+                    Command="{Binding DeleteCommand}" />
         </Grid>
         <Expander Grid.Row="1"
                   IsExpanded="True"
@@ -69,7 +97,7 @@
                             Width="24"
                             BorderThickness="0"
                             Background="Transparent"
-                            Grid.Column="1"
+                            Grid.Column="1"                            
                             Command="{Binding ClearFiltersCommand}"
                             Margin="4">
                         <Image Source="{StaticResource ResourceKey=IconClearFilters}" Width="16" Height="16"/>
@@ -89,69 +117,48 @@
                       IsReadOnly="True"
                       SelectionMode="Extended"
                       ClipboardCopyMode="ExcludeHeader"
+                      behaviors:CommandBehavior.DoubleTappedCommand="{Binding EditCommand}"
+                      behaviors:DataGridSelectionBehavior.SelectionChangedCommand="{Binding SelectionChangedCommand}"
                       FontSize="14">
-                <!--<i:Interaction.Triggers>
-                    <i:EventTrigger EventName="SelectedCellsChanged">
-                        <i:InvokeCommandAction Command="{Binding SelectionChangedCommand}"
-                                               CommandParameter="{Binding SelectedCells, ElementName=TransactionsGrid}" />
-                    </i:EventTrigger>
-                </i:Interaction.Triggers>-->
-                <!--<DataGrid.InputBindings>
-                    <MouseBinding
-                        MouseAction="LeftDoubleClick"
-                        Command="{Binding EditCommand}"
-                        CommandParameter="{Binding SelectedValue}" />
-                </DataGrid.InputBindings>-->
                 <DataGrid.Columns>
                     <DataGridTextColumn Binding="{Binding Path=Id}"
                                         />
-                    <DataGridTextColumn Header=""
+                    <DataGridTemplateColumn Header=""
                                         ClipboardContentBinding="{Binding Path=Type}"
                                         >
-                        <!--<DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <Image Name="MyImage" Source="{StaticResource IconSquareUpRight}" Width="20" Height="20" />
-                                <DataTemplate.Triggers>
-                                    <DataTrigger Binding="{Binding Path=Type}" Value="Transfer">
-                                        <Setter TargetName="MyImage" Property="Source" Value="{StaticResource IconUpRightAndDownLeftFromCenter}" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding Path=Type}" Value="Income">
-                                        <Setter TargetName="MyImage" Property="Source" Value="{StaticResource IconSquareDownRight}" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding Path=Type}" Value="Share">
-                                        <Setter TargetName="MyImage" Property="Source" Value="{StaticResource IconShareNodesRed}" />
-                                    </DataTrigger>
-                                </DataTemplate.Triggers>
+                                <Image Name="MyImage"
+                                       Source="{Binding Path=Type, Converter={StaticResource TransactionTypeIconConverter}}"
+                                       Width="20" Height="20" />
                             </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>-->
-                    </DataGridTextColumn>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                     <DataGridTextColumn Header="{loc:Translate Key=time}"
                                         Binding="{Binding Path=Datetime, Converter= {StaticResource UnixTimeConverter}}" />
                     <DataGridTextColumn Header=""
                                         Binding="{Binding Path=AccountTitle}" />
                     <DataGridTemplateColumn Header=""
-                                        ClipboardContentBinding="{Binding Path=TransactionTitle}">
+                                            ClipboardContentBinding="{Binding Path=TransactionTitle}">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding Path=TransactionTitle}" x:Name="Cell"/>
+                                <StackPanel Orientation="Horizontal"
+                                            VerticalAlignment="Stretch"
+                                            Background="{Binding Path=HasNoCategory, Converter={StaticResource NoCategoryBackgroundConverter}}">
+                                    <TextBlock Text="{Binding Path=TransactionTitle}" x:Name="Cell"
+                                               VerticalAlignment="Center"
+                                               />
                                     <TextBlock x:Name="Separator"
                                                Text=" | "
+                                               VerticalAlignment="Center"
                                                IsVisible="{Binding ShowProjectSeparator}"
                                            />
-                                    <!--IsVisible="{Binding !Project}"-->
-                                    <TextBlock x:Name="prj" IsVisible="{Binding ShowProjectSeparator}" Text="{Binding Project.Title}" Foreground="DarkGreen" />
+                                      <TextBlock x:Name="prj"
+                                               IsVisible="{Binding ShowProjectSeparator}"
+                                               Text="{Binding Project?.Title}"
+                                               VerticalAlignment="Center"
+                                               Foreground="{Binding Project?.IsActive, Converter={StaticResource activeStatusBrush}}" />
                                 </StackPanel>
-                                <!--<DataTemplate.Triggers>
-                                    <DataTrigger Binding="{Binding Path=HasNoCategory}" Value="True">
-                                        <Setter TargetName="Cell" Property="Background" Value="Pink" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding Project.IsActive}" Value="False">
-                                        <DataTrigger.Setters>
-                                            <Setter TargetName="prj" Property="Foreground" Value="DarkRed"/>
-                                        </DataTrigger.Setters>
-                                    </DataTrigger>
-                                </DataTemplate.Triggers>-->
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
@@ -160,21 +167,9 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock Name="MyText" Text="{Binding Path=AmountTitle}"
-                                           HorizontalAlignment="Right"/>
-                                <!--<DataTemplate.Triggers>
-                                    <DataTrigger Binding="{Binding Path=Type}" Value="Transfer">
-                                        <Setter TargetName="MyText" Property="Foreground" Value="DarkOrange" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding Path=Type}" Value="Income">
-                                        <Setter TargetName="MyText" Property="Foreground" Value="DarkGreen" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding Path=Type}" Value="Share">
-                                        <Setter TargetName="MyText" Property="Foreground" Value="DarkRed" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding Path=Type}" Value="Expense">
-                                        <Setter TargetName="MyText" Property="Foreground" Value="DarkRed" />
-                                    </DataTrigger>
-                                </DataTemplate.Triggers>-->
+                                           Foreground="{Binding Path=Type, Converter={StaticResource TransactionTypeBrushConverter}}"
+                                           HorizontalAlignment="Right"
+                                           VerticalAlignment="Center"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
@@ -183,6 +178,7 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock Name="MyText" Text="{Binding Path=BalanceTitle}"
+                                           VerticalAlignment="Center"
                                            HorizontalAlignment="Right"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
@@ -190,7 +186,6 @@
                 </DataGrid.Columns>
             </DataGrid>
             <Border Grid.Row="3"
-                    Margin="5,0,5,5"
                     Background="#FFF0F0F0"
                     BorderBrush="#FFCCCCCC"
                     BorderThickness="1">
