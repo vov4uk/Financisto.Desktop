@@ -26,7 +26,6 @@ namespace Financisto.Common.Entities
         private static List<ProjectModel> _project;
         private static List<YearMonths> _yearMonths;
         private static List<Years> _years;
-        private static List<RuleModel> _rules = new List<RuleModel>();
         private static Dictionary<Mcc, int[]> _mccEnums;
         private static Dictionary<string, Mcc> _mccTitles;
         private static Dictionary<int, Mcc> _mccCodes;
@@ -192,8 +191,6 @@ ORDER  BY 1 DESC ");
 
         public static List<LocationModel> Location => _location ?? new();
 
-        public static List<RuleModel> Rules => _rules;
-
         public static Dictionary<Mcc, int[]> MCCEnums
         {
             get
@@ -312,41 +309,6 @@ ORDER  BY 1 DESC ");
             }
         }
 
-        public static async Task LoadRulesAsync()
-        {
-            try
-            {
-                var directory = Environment.CurrentDirectory;
-                var path = Path.Combine(directory, "rules.json");
-                if (File.Exists(path))
-                {
-                    string rulesJson = await File.ReadAllTextAsync(path);
-                    var rules = JsonConvert.DeserializeObject<List<RuleModel>>(rulesJson);
-                    if (rules?.Any() == true)
-                    {
-                        _rules = rules;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _rules = new List<RuleModel>();
-                Logger.Error(ex, "Error occurred while loading rules.");
-            }
-
-        }
-        public static async Task SaveRulesAsync()
-        {
-            var directory = Environment.CurrentDirectory;
-            var path = Path.Combine(directory, "rules.json");
-            if (!File.Exists(path))
-            {
-                File.Create(path).Dispose();
-            }
-            string rulesJson = JsonConvert.SerializeObject(_rules);
-            await File.WriteAllTextAsync(path, rulesJson);
-        }
-
         internal static void SetupTests(List<CategoryModel> categories)
         {
             _category = categories;
@@ -376,11 +338,6 @@ ORDER  BY 1 DESC ");
         internal static void SetupTests(List<ProjectModel> pj)
         {
             _project = pj;
-        }
-
-        internal static void SetupTests(List<RuleModel> rl)
-        {
-            _rules = rl;
         }
 
         private static void InitializaMccCodes()

@@ -44,7 +44,6 @@ namespace Financisto.Desktop.Services
 
             DbManual.ResetAllDatabaseManuals();
             await DbManual.SetupAsync(CurrentDatabase);
-            await DbManual.LoadRulesAsync();
 
             return materialized.Count;
         }

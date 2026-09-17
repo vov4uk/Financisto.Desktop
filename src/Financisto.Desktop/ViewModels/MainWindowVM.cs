@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
 using Financisto.Adapter;
 using Financisto.Common;
 using Financisto.Common.Entities;
@@ -63,7 +62,6 @@ namespace Financisto.Desktop.ViewModels
         private bool isLoading;
         private PayeesVM payeesVm;
         private ProjectsVM projectsVm;
-        private RulesVM rulesVm;
         private ListItemTemplate? selectedItemBottom;
         private ListItemTemplate? selectedItemTop;
         private bool isPanelOpen = true;
@@ -151,12 +149,6 @@ namespace Financisto.Desktop.ViewModels
             private set => SetProperty(ref projectsVm, value);
         }
 
-        public RulesVM Rules
-        {
-            get => rulesVm;
-            private set => SetProperty(ref rulesVm, value);
-        }
-
         public bool IsLoading
         {
             get => isLoading;
@@ -210,7 +202,6 @@ namespace Financisto.Desktop.ViewModels
             new(typeof(ExchangeRateModel), "Exchange Rates", "IconArrowTrendUp"),
             new(typeof(BlotterModel), "Transactions", "IconReceipt"),
             //new(typeof(ReportsVM), "Reports", "book_pulse_regular"),
-            new(typeof(RuleModel), "Rules", "IconBoltLightning"),
         };
 
         public ObservableCollection<ListItemTemplate> ItemsBottom { get; } = new()
@@ -268,7 +259,6 @@ namespace Financisto.Desktop.ViewModels
 
                 DbManual.ResetAllDatabaseManuals();
                 await DbManual.SetupAsync(db);
-                await DbManual.LoadRulesAsync();
 
                 stopwatch.Stop();
                 int entitiesCount = entities?.Count() ?? 0;
@@ -333,7 +323,6 @@ namespace Financisto.Desktop.ViewModels
             Locations = null;
             Payees = null;
             Projects = null;
-            Rules = null;
         }
 
         private void CreatePages()
@@ -345,7 +334,6 @@ namespace Financisto.Desktop.ViewModels
             Locations = new LocationsVM(db, dialogWrapper);
             Payees = new PayeesVM(db, dialogWrapper);
             Projects = new ProjectsVM(db, dialogWrapper);
-            Rules = new RulesVM(db, dialogWrapper);
 
             _pages.TryAdd(typeof(AccountModel), Accounts);
             _pages.TryAdd(typeof(BlotterModel), Blotter);
@@ -354,7 +342,6 @@ namespace Financisto.Desktop.ViewModels
             _pages.TryAdd(typeof(LocationModel), Locations);
             _pages.TryAdd(typeof(PayeeModel), Payees);
             _pages.TryAdd(typeof(ProjectModel), Projects);
-            _pages.TryAdd(typeof(RuleModel), Rules);
         }
 
         private BindableBase GetOrCreatePage(Type type)
@@ -377,8 +364,6 @@ namespace Financisto.Desktop.ViewModels
                     return Categories ??= GetOrCreatePage<CategoryTreeModel, CategoriesVM>();
                 case nameof(ExchangeRateModel):
                     return GetOrCreatePage<ExchangeRateModel, ExchangeRatesVM>();
-                case nameof(RuleModel):
-                    return Rules ??= GetOrCreatePage<RuleModel, RulesVM>();
                 //case nameof(ReportsControlVM):
                 //    return _pages.GetOrAdd(type, _ => new ReportsControlVM(db));
                 case nameof(SettingsVM):
