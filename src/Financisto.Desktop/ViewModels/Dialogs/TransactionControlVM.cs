@@ -18,7 +18,6 @@ public class TransactionControlVM : SubTransactionControlVM
     private DelegateCommand _clearLocationCommand;
     private DelegateCommand _clearPayeeCommand;
     private DelegateCommand<BaseTransactionDto> _deleteSubTransactionCommand;
-    private DelegateCommand _openRecipesDialogCommand;
     private AsyncCommand<BaseTransactionDto> _editSubTransaction;
 
     public TransactionControlVM(
@@ -43,8 +42,6 @@ public class TransactionControlVM : SubTransactionControlVM
     });
 
     public AsyncCommand<BaseTransactionDto> EditSubTransactionCommand => _editSubTransaction ??= new AsyncCommand<BaseTransactionDto>(EditSubTransaction);
-
-    //public DelegateCommand OpenRecipesDialogCommand => _openRecipesDialogCommand ??= new DelegateCommand(ShowRecepiesDialog);
 
     protected override bool CanSaveCommandExecute() => Transaction.FromAccount != null && Transaction.FromAmount != 0;
 
@@ -71,26 +68,6 @@ public class TransactionControlVM : SubTransactionControlVM
         original.Date = modifiedCopy.DateTime.Date;
         original.Time = modifiedCopy.DateTime;
     }
-
-    //private void ShowRecepiesDialog()
-    //{
-    //    var vm = new RecipesVM(Transaction.RealFromAmount / 100.0);
-
-    //    var output = dialogWrapper.ShowWizard(vm);
-
-    //    var outputTransactions = output as List<TransactionDto>;
-    //    if (outputTransactions != null)
-    //    {
-    //        foreach (var item in outputTransactions)
-    //        {
-    //            item.Category = DbManual.Category?.Find(x => x.Id == item.CategoryId);
-    //            Transaction.SubTransactions.Add(item);
-    //        }
-    //        Transaction.RecalculateUnSplitAmount();
-    //        SaveCommand.RaiseCanExecuteChanged();
-    //    }
-    //}
-
 
     private async Task EditSubTransaction(BaseTransactionDto original)
     {

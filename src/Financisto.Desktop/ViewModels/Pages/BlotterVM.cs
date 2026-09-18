@@ -474,8 +474,8 @@ namespace Financisto.Desktop.ViewModels.Pages
                     FromAccountBalance = x.FromAccountBalance,
                     ToAccountBalance = x.ToAccountBalance,
                     FromAccountCurrency = DbManual.CurrencyIds.GetValueOrDefault(x.FromAccountCurrencyId),
-                    ToAccountCurrency = x.ToAccountCurrency == null ? default : DbManual.CurrencyIds.GetValueOrDefault(x.ToAccountCurrencyId.Value),
-                    OriginalCurrency = x.OriginalCurrency == null ? default : DbManual.CurrencyIds.GetValueOrDefault(x.OriginalCurrencyId.Value)
+                    ToAccountCurrency = x.ToAccountCurrencyId == null ? default : DbManual.CurrencyIds.GetValueOrDefault(x.ToAccountCurrencyId.Value),
+                    OriginalCurrency = x.OriginalCurrencyId == null ? default : DbManual.CurrencyIds.GetValueOrDefault(x.OriginalCurrencyId.Value)
                 });
 
             if (items != null)

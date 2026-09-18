@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Financisto.Adapter;
@@ -57,15 +58,22 @@ public partial class MainWindow : Window
                 },
                 General = new SettingsGeneralDto
                 {
-                    CheckForUpdatesOnStart = true
+                    CheckForUpdatesOnStart = true,
+                    Language = Language.English,
+                    CurrentAppTheme = AppThemeType.System,
                 }
             };
             SettingsService.Current.Save();
         }
 
-        LocalizationService.Instance.ApplyLanguage(SettingsService.Current.Settings?.General.Language ?? Common.Localization.Language.English);
+        if (Application.Current != null)
+        {
+            Application.Current.RequestedThemeVariant = SettingsService.Current.Settings?.General.ThemeVariant;
+        }
+
+        LocalizationService.Instance.ApplyLanguage(SettingsService.Current.Settings?.General.Language ?? Language.English);
         var bakupFolder = SettingsService.Current.DefaultBackupDir ?? @$"C:\Users\{Environment.UserName}\Dropbox\apps\Financisto Holo";
-        ViewModel.DefaultBackupDirectory = SettingsService.Current.DefaultBackupDir;
+        ViewModel.DefaultBackupDirectory = SettingsService.Current.DefaultBackupDir!;
 
         if (Directory.Exists(bakupFolder))
         {

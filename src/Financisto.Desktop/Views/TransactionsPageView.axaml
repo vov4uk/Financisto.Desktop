@@ -184,8 +184,8 @@
                 </DataGrid.Columns>
             </DataGrid>
             <Border Grid.Row="3"
-                    Background="#FFF0F0F0"
-                    BorderBrush="#FFCCCCCC"
+                    Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
                     BorderThickness="1">
                 <TextBlock Text="{Binding SelectionSummary}"
                            FontSize="14"

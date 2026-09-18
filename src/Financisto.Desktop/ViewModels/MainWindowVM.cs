@@ -44,7 +44,6 @@ namespace Financisto.Desktop.ViewModels
         private IAsyncCommand _openBackupCommand;
         private IAsyncCommand _saveBackupCommand;
         private IAsyncCommand _saveBackupAsDbCommand;
-        private IAsyncCommand _settingsCommand;
         private IAsyncCommand _refreshExchangeRatesCommand;
         private IAsyncCommand _checkForUpdateCommand;
         private IAsyncCommand _openPanelCommand;
@@ -193,20 +192,20 @@ namespace Financisto.Desktop.ViewModels
         public ObservableCollection<ListItemTemplate> ItemsTop { get; } = new()
         {
             //new(typeof(DashboardPageViewModel), "Dashboard", "glance_regular"),
-            new(typeof(AccountModel), LocalizationService.Instance.accounts, "IconWallet"),
-            new(typeof(CategoryTreeModel), LocalizationService.Instance.categories, "IconFolderTree"),
-            new(typeof(ProjectModel), LocalizationService.Instance.projects, "IconListCheck"),
-            new(typeof(PayeeModel), LocalizationService.Instance.payees, "IconAddressBook"),
-            new(typeof(LocationModel), LocalizationService.Instance.locations, "IconMap"),
-            new(typeof(CurrencyModel), LocalizationService.Instance.currencies, "IconDollarSign"),
-            new(typeof(ExchangeRateModel), LocalizationService.Instance.exchange_rates, "IconArrowTrendUp"),
-            new(typeof(BlotterModel), LocalizationService.Instance.blotter, "IconReceipt"),
+            new(typeof(AccountModel), () => LocalizationService.Instance.accounts, "IconWallet"),
+            new(typeof(CategoryTreeModel), () => LocalizationService.Instance.categories, "IconFolderTree"),
+            new(typeof(ProjectModel), () => LocalizationService.Instance.projects, "IconListCheck"),
+            new(typeof(PayeeModel), () => LocalizationService.Instance.payees, "IconAddressBook"),
+            new(typeof(LocationModel), () => LocalizationService.Instance.locations, "IconMap"),
+            new(typeof(CurrencyModel), () => LocalizationService.Instance.currencies, "IconDollarSign"),
+            new(typeof(ExchangeRateModel), () => LocalizationService.Instance.exchange_rates, "IconArrowTrendUp"),
+            new(typeof(BlotterModel), () => LocalizationService.Instance.blotter, "IconReceipt"),
             //new(typeof(ReportsVM), "Reports", "book_pulse_regular"),
         };
 
         public ObservableCollection<ListItemTemplate> ItemsBottom { get; } = new()
         {
-            new(typeof(SettingsVM), LocalizationService.Instance.settings, "IconGear"),
+            new(typeof(SettingsVM), () => LocalizationService.Instance.settings, "IconGear"),
         };
 
         public IAsyncCommand<Type> MenuNavigateCommand => _menuNavigateCommand ??= new AsyncCommand<Type>(NavigateToType);
@@ -218,8 +217,6 @@ namespace Financisto.Desktop.ViewModels
         public IAsyncCommand SaveBackupCommand => _saveBackupCommand ??= new AsyncCommand(SaveBackup_Click);
 
         public IAsyncCommand SaveBackupAsDbCommand => _saveBackupAsDbCommand ??= new AsyncCommand(SaveBackupAsDb);
-
-        public IAsyncCommand SettingsCommand => _settingsCommand ??= new AsyncCommand(Settings_Click);
 
         public IAsyncCommand RefreshExchangeRatesCommand => _refreshExchangeRatesCommand ??= new AsyncCommand(RefreshExchangeRates_Click);
 
@@ -367,7 +364,7 @@ namespace Financisto.Desktop.ViewModels
                 //case nameof(ReportsControlVM):
                 //    return _pages.GetOrAdd(type, _ => new ReportsControlVM(db));
                 case nameof(SettingsVM):
-                    return _pages.GetOrAdd(type, _ => new SettingsVM(new SettingsDto()));
+                    return _pages.GetOrAdd(type, _ => new SettingsVM(db, notifier));
 
                 default: throw new NotSupportedException($"{type.FullName} not supported");
             }
@@ -510,29 +507,6 @@ namespace Financisto.Desktop.ViewModels
                 notifier.ShowMessage(string.Format(LocalizationService.Instance.saved_message, backupPath));
                 Logger.Info($"Backup done. Saved {backupPath}");
             }
-        }
-
-        private async Task Settings_Click()
-        {
-            //SettingsDto settings = SettingsService.Current.Settings.Clone() is SettingsDto clone ? clone : new SettingsDto();
-
-            //DialogBaseVM vm = new SettingsVM(settings);
-            //if (await dialogWrapper.ShowDialogAsync<SettingsControl>(vm, 300, 400, LocalizationService.Instance.settings) is SettingsDto updated)
-            //{
-            //    Language before = SettingsService.Current.Settings.General.Language;
-            //    SettingsService.Current.Settings = updated;
-            //    SettingsService.Current.Save();
-
-            //    if (before != updated.General.Language)
-            //    {
-            //        LocalizationService.Instance.ApplyLanguage(updated.General.Language);
-
-            //        DbManual.ResetManuals(nameof(DbManual.MCCEnums));
-            //        DbManual.ResetManuals(nameof(DbManual.MCCTitles));
-            //        DbManual.ResetManuals(nameof(DbManual.Currencies));
-            //        await DbManual.SetupAsync(db);
-            //    }
-            //}
         }
 
         private async Task RefreshExchangeRates_Click()

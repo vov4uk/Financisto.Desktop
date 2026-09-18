@@ -15,7 +15,7 @@ namespace Financisto.Common.Localization;
 /// </summary>
 /// <remarks>
 /// Register via DI as a singleton, or reference via <see cref="Instance"/>.
-/// The <c>Item[]</c> property-changed notification refreshes all active indexer
+/// The <c>Item</c> property-changed notification refreshes all active indexer
 /// bindings without requiring an IValueConverter.
 /// </remarks>
 public sealed class LocalizationService : INotifyPropertyChanged
@@ -38,7 +38,7 @@ public sealed class LocalizationService : INotifyPropertyChanged
 
     /// <summary>
     /// Gets or sets the active culture.  Setting a new value fires
-    /// <see cref="PropertyChanged"/> for <c>Item[]</c>, which refreshes every
+    /// <see cref="PropertyChanged"/> for <c>Item</c>, which refreshes every
     /// bound <c>{local:Translate}</c> extension simultaneously.
     /// </summary>
     public CultureInfo CurrentCulture
@@ -51,8 +51,10 @@ public sealed class LocalizationService : INotifyPropertyChanged
 
             _currentCulture = value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentCulture)));
-            // Raise Item[] to refresh every active indexer binding at once.
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Item[]"));
+            // Avalonia's reflection indexer binding (unlike WPF's "Item[]" convention) only
+            // re-fetches the value when the raised PropertyName is exactly "Item" - verified
+            // empirically, since "Item[]"/""/null are all silently ignored by its accessor.
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Item"));
         }
     }
 
@@ -68,9 +70,16 @@ public sealed class LocalizationService : INotifyPropertyChanged
 
         if (culture != CurrentCulture)
         {
+            CultureInfo.CurrentCulture = culture;
+            CultureInfo.CurrentUICulture = culture;
+            Thread.CurrentThread.CurrentCulture = culture;
+            Thread.CurrentThread.CurrentUICulture = culture;
+            CultureInfo.DefaultThreadCurrentCulture = culture;
+            CultureInfo.DefaultThreadCurrentUICulture = culture;
+
+            // Raising CurrentCulture triggers the Item[] PropertyChanged notification,
+            // which refreshes every active {local:Translate} indexer binding on the fly.
             CurrentCulture = culture;
-            Thread.CurrentThread.CurrentCulture = CurrentCulture;
-            Thread.CurrentThread.CurrentUICulture = CurrentCulture;
         }
     }
 

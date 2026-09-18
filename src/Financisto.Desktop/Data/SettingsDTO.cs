@@ -1,4 +1,5 @@
 ﻿using System;
+using Avalonia.Styling;
 using Financisto.Common.Entities;
 using Financisto.Common.Localization;
 using Prism.Mvvm;
@@ -26,6 +27,8 @@ namespace Financisto.Desktop.Data
         private bool checkForUpdatesOnStart;
         private Language language;
 
+        private AppThemeType currentAppTheme;
+
         public bool CheckForUpdatesOnStart
         {
             get => checkForUpdatesOnStart;
@@ -52,12 +55,37 @@ namespace Financisto.Desktop.Data
             }
         }
 
+        public AppThemeType CurrentAppTheme
+        {
+            get => currentAppTheme;
+            set
+            {
+                if (currentAppTheme != value)
+                {
+                    currentAppTheme = value;
+                    RaisePropertyChanged(nameof(CurrentAppTheme));
+                }
+            }
+        }
+
+        public ThemeVariant ThemeVariant
+        {
+            get => CurrentAppTheme switch
+            {
+                AppThemeType.Dark => ThemeVariant.Dark,
+                AppThemeType.Light => ThemeVariant.Light,
+                AppThemeType.System => ThemeVariant.Default,
+                _ => ThemeVariant.Light
+            };
+        }
+
         public object Clone()
         {
             return new SettingsGeneralDto
             {
                 CheckForUpdatesOnStart = CheckForUpdatesOnStart,
-                Language = Language
+                Language = Language,
+                CurrentAppTheme = CurrentAppTheme
             };
         }
     }

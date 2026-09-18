@@ -1,123 +1,130 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="using:Financisto.Desktop.ViewModels.Pages"
-             mc:Ignorable="d"
-             d:DesignWidth="800"
-             d:DesignHeight="450"
-             x:Class="Financisto.Desktop.Views.ConfigurationsPageView"
-             x:DataType="vm:SettingsVM">
-
-    <StackPanel Spacing="12" Margin="12">
-
-        <!-- TÍTULO -->
-        <TextBlock Text="Configurations"
+﻿<UserControl
+    x:Class="Financisto.Desktop.Views.ConfigurationsPageView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:conv="using:Financisto.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:ent="clr-namespace:Financisto.Common.Entities;assembly=Financisto.Common"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:Financisto.Desktop.ViewModels.Pages"
+    d:DesignHeight="800"
+    d:DesignWidth="800"
+    x:DataType="vm:SettingsVM"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <conv:EnumDescriptionConverter x:Key="EnumDescriptionConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" RowDefinitions="Auto,*" Margin="0,0,0,10">
+        <TextBlock Grid.Row="0"
+                   Grid.Column="0"
+                   Margin="4"
                    FontSize="20"
                    FontWeight="Bold"
-                   Margin="4"/>
+                   Text="{loc:Translate Key=configurations}" />
 
-        <!-- CARD: TEMA -->
-        <!--<Border Padding="14"
-                CornerRadius="8"
-                BorderThickness="1"
-                BorderBrush="#1F000000"
-                Background="{DynamicResource BackgroundColor}">
+        <Button Grid.Row="0"
+                Grid.Column="1"
+                Margin="4"
+                Padding="8,4"
+                Command="{Binding SaveCommand}"
+                Content="{loc:Translate Key=save}" />
 
-            <Grid ColumnDefinitions="Auto,*,Auto"
-                  ColumnSpacing="12"
-                  VerticalAlignment="Center">
-
-                --><!-- ÍCONE --><!--
-                --><!--<Border Width="32"
-                        Height="32"
-                        CornerRadius="16"
-                        Background="#14000000"
-                        VerticalAlignment="Center"
-                        HorizontalAlignment="Center">
-
-                    <PathIcon Data="{StaticResource dark_theme_regular}"
-                              Width="16"
-                              Height="16"
-                              VerticalAlignment="Center"
-                              HorizontalAlignment="Center"/>
-                </Border>--><!--
-
-                --><!-- TEXTO --><!--
-                --><!--<StackPanel Grid.Column="1"
+        <StackPanel Margin="12" Spacing="12"
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="2"
+                    >
+            <GroupBox Name="general" Header="{loc:Translate Key=general}"
+                      Background="{DynamicResource BackgroundColor}"
+                      BorderBrush="#1F000000">
+                <StackPanel>
+                    <GroupBox
+                        BorderThickness="0"
+                        Header="{loc:Translate Key=language}">
+                        <ComboBox
+                            Width="180"
+                            HorizontalAlignment="Left"
+                            ItemsSource="{Binding Source={loc:EnumBinding {x:Type loc:Language}}}"
+                            SelectedItem="{Binding Entity.General.Language, Mode=TwoWay}" />
+                    </GroupBox>
+                    <GroupBox
+                        BorderThickness="0"
+                        Header="{loc:Translate Key=theme}">
+                        <ComboBox
+                            Width="140"
                             VerticalAlignment="Center"
-                            Spacing="2">
+                            ItemsSource="{Binding Source={loc:EnumBinding {x:Type ent:AppThemeType}}}"
+                            SelectedItem="{Binding Entity.General.CurrentAppTheme, Mode=TwoWay}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={StaticResource EnumDescriptionConverter}}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </GroupBox>
+                    <CheckBox  Margin="10,0,0,0"
+                               Content="{loc:Translate Key=check_for_updates_on_start}"
+                               IsChecked="{Binding Entity.General.CheckForUpdatesOnStart, Mode=TwoWay}" />
+                </StackPanel>
+            </GroupBox>
 
-                    <TextBlock Text="Tema"
-                               FontSize="14"
-                               FontWeight="SemiBold"/>
 
-                    <TextBlock Text="Escolha entre sistema, claro ou escuro"
-                               FontSize="12"
-                               Opacity="0.6"/>
-                </StackPanel>--><!--
+            <GroupBox Name="data" Header="{loc:Translate Key=exchange_rates}"
+                      Background="{DynamicResource BackgroundColor}"
+                      BorderBrush="#1F000000">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <GroupBox
+                        BorderThickness="0"
+                        Grid.Row="0"
+                        Header="{loc:Translate Key=providers}">
+                        <ComboBox 
+                            Width="200"
+                            HorizontalAlignment="Left"
+                            ItemsSource="{loc:EnumBinding {x:Type ent:ExchangeRatesProviders}}"
+                            SelectedItem="{Binding SelectedProvider, Mode=TwoWay}" />
+                    </GroupBox>
+                    <GroupBox Grid.Row="1"
+                              BorderThickness="0"
+                        Header="{loc:Translate Key=app_id}"
+                        IsVisible="{Binding IsOpenExchangeRatesProviderSelected, UpdateSourceTrigger=PropertyChanged}">
+                        <TextBox Text="{Binding Entity.ExchangeRates.OpenExchangeRatesProviderAppId, Mode=TwoWay}" />
+                    </GroupBox>
+                    <CheckBox Grid.Row="2"
+                              Margin="10,0,0,0"
+                        Content="{loc:Translate Key=update_exchange_rates_on_start}"
+                        IsChecked="{Binding Entity.ExchangeRates.UpdateOnStart, Mode=TwoWay}" />
+                </Grid>
+            </GroupBox>
 
-                --><!-- COMBO --><!--
-                --><!--<ComboBox Grid.Column="2"
-                          Width="140"
-                          VerticalAlignment="Center"
-                          SelectedItem="{Binding CurrentAppTheme}"
-                          ItemsSource="{Binding AppThemes}"/>--><!--
-            </Grid>
-        </Border>-->
-
-        <!-- CARD: DADOS -->
-        <!--<Border Padding="14"
-                CornerRadius="8"
-                BorderThickness="1"
+            <GroupBox
+                Padding="14"
+                Background="{DynamicResource BackgroundColor}"
                 BorderBrush="#1F000000"
-                Background="{DynamicResource BackgroundColor}">
-
-            <StackPanel Spacing="10">
-
-                <TextBlock Text="Data"
-                           FontSize="14"
-                           FontWeight="SemiBold"/>
-
-                <RepeatButton Command="{Binding ResetarDadosCommand}"
-                              Interval="1500"
-                              Delay="300">
-
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <PathIcon Data="{StaticResource arrow_sync_regular}" />
-                        <TextBlock Text="Resetar dados" />
-                    </StackPanel>
-                </RepeatButton>
-                
-                
-
-
-                <TextBlock Text="{Binding Message}"
-                           Foreground="{Binding MessageColor}"/>
-            </StackPanel>
-        </Border>-->
-
-        <!-- CARD: Information -->
-        <Border Padding="14"
-                CornerRadius="8"
                 BorderThickness="1"
-                BorderBrush="#1F000000"
-                Background="{DynamicResource BackgroundColor}">
+                CornerRadius="8"
+                Header="{loc:Translate Key=information}">
 
-            <StackPanel Spacing="6">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Financisto Desktop" />
+                    <TextBlock Text="Version: 0.0.1" />
+                    <TextBlock Text="Developer: vov4uk" />
 
-                <TextBlock Text="Information"
-                           FontSize="14"
-                           FontWeight="SemiBold"/>
+                    <HyperlinkButton Content="{loc:Translate Key=repository}" NavigateUri="https://github.com/vov4uk/Financisto.Desktop" />
+                </StackPanel>
+            </GroupBox>
 
-                <TextBlock Text="Financisto Desktop"/>
-                <TextBlock Text="Version: 0.0.1"/>
-                <TextBlock Text="Developer: vov4uk"/>
+        </StackPanel>
+    </Grid>
 
-                <HyperlinkButton Content="Repository"
-                                 NavigateUri="https://github.com/vov4uk"/>
-            </StackPanel>
-        </Border>
-
-    </StackPanel>
 </UserControl>
