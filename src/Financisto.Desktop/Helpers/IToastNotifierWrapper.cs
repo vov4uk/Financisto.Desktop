@@ -1,8 +1,5 @@
-﻿//using ToastNotifications;
-//using ToastNotifications.Core;
-//using ToastNotifications.Lifetime;
-//using ToastNotifications.Messages;
-//using ToastNotifications.Position;
+﻿using System;
+using Message.Avalonia;
 
 namespace Financisto.Desktop.Helpers
 {
@@ -14,33 +11,16 @@ namespace Financisto.Desktop.Helpers
 
     public class ToastNotifierWrapper : IToastNotifierWrapper
     {
-        //private readonly Notifier notifier;
         public ToastNotifierWrapper()
         {
-            //this.notifier = new Notifier(cfg =>
-            //{
-            //    cfg.PositionProvider = new WindowPositionProvider(
-            //        parentWindow: Application.Current.MainWindow,
-            //        corner: Corner.BottomRight,
-            //        offsetX: 10,
-            //        offsetY: 10);
-
-            //    cfg.LifetimeSupervisor = new TimeAndCountBasedLifetimeSupervisor(
-            //        notificationLifetime: TimeSpan.FromSeconds(10),
-            //        maximumNotificationCount: MaximumNotificationCount.FromCount(3));
-
-            //    cfg.Dispatcher = Application.Current.Dispatcher;
-
-            //    cfg.DisplayOptions.Width = 250;
-            //});
         }
         public void ShowMessage(string message)
         {
-            //Application.Current?.Dispatcher.Invoke(() => { notifier?.Notify(() => new CustomNotification(message, new MessageOptions { ShowCloseButton = true })); });
+            MessageManager.Default.ShowInformationMessage(message, new Message.Avalonia.Models.MessageOptions { Duration = TimeSpan.FromSeconds(5) });
         }
         public void ShowWarning(string message)
         {
-            //Application.Current?.Dispatcher.Invoke(() => { notifier?.ShowWarning(message, new MessageOptions { ShowCloseButton = true }); });
+            MessageManager.Default.ShowWarningMessage(message, new Message.Avalonia.Models.MessageOptions { Duration = TimeSpan.FromSeconds(5) });
         }
     }
 }

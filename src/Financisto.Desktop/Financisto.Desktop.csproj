@@ -42,6 +42,7 @@
         <PackageReference Include="LiveChartsCore" />
         <PackageReference Include="LiveChartsCore.SkiaSharpView" />
         <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" />
+        <PackageReference Include="Message.Avalonia" />
         <PackageReference Include="Onova" />
         <PackageReference Include="System.Security.Cryptography.ProtectedData" />
     </ItemGroup>
