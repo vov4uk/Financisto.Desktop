@@ -1,14 +1,12 @@
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
 using Financisto.Desktop.ViewModels.Dialogs;
-using Financisto.Desktop.ViewModels.Wizards;
 using Financisto.Desktop.Views.Dialogs;
-using Financisto.Desktop.Views.Wizards;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading.Tasks;
 
 namespace Financisto.Desktop.Helpers;
 
@@ -73,19 +71,6 @@ public class DialogWrapper : IDialogWrapper
         });
 
         return file != null ? file.Path.LocalPath : string.Empty;
-    }
-
-    public async Task<object?> ShowWizardAsync(WizardBaseVM context)
-    {
-        var owner = GetOwner();
-        if (owner == null)
-            return null;
-
-        var dialog = new WizardWindow { DataContext = context };
-
-        context.RequestClose += (sender, save) => dialog.Close(save ? sender : null);
-
-        return await dialog.ShowDialog<object>(owner);
     }
 
     public async Task<bool> ShowMessageBoxAsync(string text, string caption, bool yesNoButtons = false)

@@ -11,7 +11,6 @@ using Financisto.Common.Localization;
 using Financisto.DataAccess;
 using Financisto.Desktop.Data;
 using Financisto.Desktop.Helpers;
-using Financisto.Desktop.Helpers.BankHelper;
 using Financisto.Desktop.Services;
 using Financisto.Desktop.ViewModels;
 
@@ -29,7 +28,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        this.ViewModel = new MainWindowVM(new DialogWrapper(), new FinancistoDatabaseFactory(), new EntityReader(), new BackupWriter(), notificator, new BankHelperFactory(), new UpdateService());
+        this.ViewModel = new MainWindowVM(new DialogWrapper(), new FinancistoDatabaseFactory(), new EntityReader(), new BackupWriter(), notificator, new UpdateService());
 
         DataContext = ViewModel;
         var version = typeof(MainWindow).Assembly.GetName().Version;

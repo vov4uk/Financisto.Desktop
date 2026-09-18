@@ -14,13 +14,9 @@ using Financisto.Common.Model;
 using Financisto.DataAccess.Abstractions;
 using Financisto.DataAccess.Data;
 using Financisto.DataAccess.Utils;
-using Financisto.Desktop.Data;
 using Financisto.Desktop.Helpers;
-using Financisto.Desktop.Helpers.BankHelper;
 using Financisto.Desktop.Services;
 using Financisto.Desktop.ViewModels.Pages;
-using Financisto.Desktop.Wizards;
-using Microsoft.EntityFrameworkCore;
 using Prism.Mvvm;
 using IAsyncCommand = Financisto.Common.IAsyncCommand;
 
@@ -31,7 +27,6 @@ namespace Financisto.Desktop.ViewModels
         private const string Backup = "backup";
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private readonly ConcurrentDictionary<Type, BindableBase> _pages = new ConcurrentDictionary<Type, BindableBase>();
-        private readonly IBankHelperFactory bankFactory;
         private readonly IFinancistoDatabaseFactory dbFactory;
         private readonly IDialogWrapper dialogWrapper;
         private readonly List<Entity> keyLessEntities = new();
@@ -40,25 +35,22 @@ namespace Financisto.Desktop.ViewModels
         private BackupVersion _backupVersion;
         private Dictionary<string, List<string>> _entityColumnsOrder;
         private IAsyncCommand<Type> _menuNavigateCommand;
-        private IAsyncCommand<WizardTypes> _importCommand;
         private IAsyncCommand _openBackupCommand;
         private IAsyncCommand _saveBackupCommand;
         private IAsyncCommand _saveBackupAsDbCommand;
         private IAsyncCommand _checkForUpdateCommand;
+
+        private IAsyncCommand _openPanelCommand;
         private readonly IBackupWriter backupWriter;
-        private AccountsVM accountsVm;
-        private BlotterVM blotterVm;
-        private CategoriesVM categoriesVm;
         private BindableBase currentPage;
-        private CurrenciesVM currenciesVm;
         private IFinancistoDatabase db;
         private readonly IEntityReader entityReader;
-        private LocationsVM locationsVm;
         private string openBackupPath;
         private string defaultBackupDirectory;
         private bool isLoading;
-        private PayeesVM payeesVm;
-        private ProjectsVM projectsVm;
+
+        private bool isPanelOpen = true;
+
         private ListItemTemplate? selectedItemBottom;
         private ListItemTemplate? selectedItemTop;
         public MainWindowVM(IDialogWrapper dialogWrapper,
@@ -66,7 +58,6 @@ namespace Financisto.Desktop.ViewModels
             IEntityReader entityReader,
             IBackupWriter backupWriter,
             IToastNotifierWrapper notifier,
-            IBankHelperFactory bankFactory,
             UpdateService updateService)
         {
             this.dialogWrapper = dialogWrapper;
@@ -74,35 +65,8 @@ namespace Financisto.Desktop.ViewModels
             this.entityReader = entityReader;
             this.backupWriter = backupWriter;
             this.notifier = notifier;
-            this.bankFactory = bankFactory;
             this.updateService = updateService;
             db = dbFactory.CreateDatabase();
-
-            CreatePages();
-        }
-
-        public AccountsVM Accounts
-        {
-            get => accountsVm;
-            private set => SetProperty(ref accountsVm, value);
-        }
-
-        public BlotterVM Blotter
-        {
-            get => blotterVm;
-            private set => SetProperty(ref blotterVm, value);
-        }
-
-        public CategoriesVM Categories
-        {
-            get => categoriesVm;
-            private set => SetProperty(ref categoriesVm, value);
-        }
-
-        public CurrenciesVM Currencies
-        {
-            get => currenciesVm;
-            private set => SetProperty(ref currenciesVm, value);
         }
 
         public BindableBase CurrentPage
@@ -124,24 +88,6 @@ namespace Financisto.Desktop.ViewModels
         {
             get => defaultBackupDirectory;
             internal set => SetProperty(ref defaultBackupDirectory, value);
-        }
-
-        public LocationsVM Locations
-        {
-            get => locationsVm;
-            private set => SetProperty(ref locationsVm, value);
-        }
-
-        public PayeesVM Payees
-        {
-            get => payeesVm;
-            private set => SetProperty(ref payeesVm, value);
-        }
-
-        public ProjectsVM Projects
-        {
-            get => projectsVm;
-            private set => SetProperty(ref projectsVm, value);
         }
 
         public bool IsLoading
@@ -179,6 +125,12 @@ namespace Financisto.Desktop.ViewModels
             }
         }
 
+        public bool IsPanelOpen
+        {
+            get => isPanelOpen;
+            private set => SetProperty(ref isPanelOpen, value);
+        }
+
         public ObservableCollection<ListItemTemplate> ItemsTop { get; } = new()
         {
             //new(typeof(DashboardPageViewModel), "Dashboard", "glance_regular"),
@@ -200,8 +152,6 @@ namespace Financisto.Desktop.ViewModels
 
         public IAsyncCommand<Type> MenuNavigateCommand => _menuNavigateCommand ??= new AsyncCommand<Type>(NavigateToType);
 
-        public IAsyncCommand<WizardTypes> ImportCommand => _importCommand ??= new AsyncCommand<WizardTypes>(OpenImportWizardAsync);
-
         public IAsyncCommand OpenBackupCommand => _openBackupCommand ??= new AsyncCommand(OpenBackup_Click);
 
         public IAsyncCommand SaveBackupCommand => _saveBackupCommand ??= new AsyncCommand(SaveBackup_Click);
@@ -210,13 +160,21 @@ namespace Financisto.Desktop.ViewModels
 
         public IAsyncCommand CheckForUpdateCommand => _checkForUpdateCommand ??= new AsyncCommand(CheckForUpdatesAsync);
 
+        public IAsyncCommand OpenPanelCommand => _openPanelCommand ??= new AsyncCommand(OpenPanelAsync);
+
+        private Task OpenPanelAsync()
+        {
+            IsPanelOpen = !IsPanelOpen;
+            return Task.CompletedTask;
+        }
+
         public async Task OpenBackup(string backupPath)
         {
             try
             {
                 OpenBackupPath = backupPath;
                 IsLoading = true;
-                ClearPages();
+                _pages.Clear();
                 Stopwatch stopwatch = Stopwatch.StartNew();
                 var (entities, backupVersion, columnsOrder) = await entityReader.ParseBackupFileAsync(backupPath);
                 entities = entities as IReadOnlyCollection<Entity> ?? entities.ToList();
@@ -292,55 +250,24 @@ namespace Financisto.Desktop.ViewModels
             keyLessEntities.AddRange(materialized);
         }
 
-        private void ClearPages()
-        {
-            _pages?.Clear();
-            Accounts = null;
-            Blotter = null;
-            Categories = null;
-            Currencies = null;
-            Locations = null;
-            Payees = null;
-            Projects = null;
-        }
-
-        private void CreatePages()
-        {
-            Accounts = new AccountsVM(db, dialogWrapper);
-            Blotter = new BlotterVM(db, dialogWrapper);
-            Categories = new CategoriesVM(db, dialogWrapper);
-            Currencies = new CurrenciesVM(db, dialogWrapper);
-            Locations = new LocationsVM(db, dialogWrapper);
-            Payees = new PayeesVM(db, dialogWrapper);
-            Projects = new ProjectsVM(db, dialogWrapper);
-
-            _pages.TryAdd(typeof(AccountModel), Accounts);
-            _pages.TryAdd(typeof(BlotterModel), Blotter);
-            _pages.TryAdd(typeof(CategoryTreeModel), Categories);
-            _pages.TryAdd(typeof(CurrencyModel), Currencies);
-            _pages.TryAdd(typeof(LocationModel), Locations);
-            _pages.TryAdd(typeof(PayeeModel), Payees);
-            _pages.TryAdd(typeof(ProjectModel), Projects);
-        }
-
         private BindableBase GetOrCreatePage(Type type)
         {
             switch (type.Name)
             {
                 case nameof(AccountModel):
-                    return Accounts ??= GetOrCreatePage<AccountModel, AccountsVM>();
+                    return GetOrCreatePage<AccountModel, AccountsVM>();
                 case nameof(CurrencyModel):
-                    return Currencies ??= GetOrCreatePage<CurrencyModel, CurrenciesVM>();
+                    return GetOrCreatePage<CurrencyModel, CurrenciesVM>();
                 case nameof(ProjectModel):
-                    return Projects ??= GetOrCreatePage<ProjectModel, ProjectsVM>();
+                    return GetOrCreatePage<ProjectModel, ProjectsVM>();
                 case nameof(LocationModel):
-                    return Locations ??= GetOrCreatePage<LocationModel, LocationsVM>();
+                    return GetOrCreatePage<LocationModel, LocationsVM>();
                 case nameof(PayeeModel):
-                    return Payees ??= GetOrCreatePage<PayeeModel, PayeesVM>();
+                    return GetOrCreatePage<PayeeModel, PayeesVM>();
                 case nameof(BlotterModel):
-                    return Blotter ??= GetOrCreatePage<BlotterModel, BlotterVM>();
+                    return GetOrCreatePage<BlotterModel, BlotterVM>();
                 case nameof(CategoryTreeModel):
-                    return Categories ??= GetOrCreatePage<CategoryTreeModel, CategoriesVM>();
+                    return  GetOrCreatePage<CategoryTreeModel, CategoriesVM>();
                 case nameof(ExchangeRateModel):
                     return _pages.GetOrAdd(type, _ => new ExchangeRatesVM(db, dialogWrapper, notifier));
                 //case nameof(ReportsControlVM):
@@ -376,80 +303,6 @@ namespace Financisto.Desktop.ViewModels
                 await OpenBackup(backupPath);
             }
         }
-
-        private async Task OpenImportWizardAsync(WizardTypes bankType)
-        {
-            //var fileExtension = bankType.GetEnumDescription();
-            //var fileName = await dialogWrapper.OpenFileDialogAsync(fileExtension);
-            //Logger.Info($"{fileExtension} fileName -> {fileName}");
-            //if (!string.IsNullOrEmpty(fileName))
-            //{
-            //    var importHelper = this.bankFactory.CreateBankHelper(bankType);
-            //    var sourceData = importHelper.ParseReport(fileName);
-
-            //    Dictionary<int, BlotterModel> lastTransactions = new();
-            //    var blotterEntitiesById = Blotter.Entities.ToDictionary(x => x.Id);
-            //    foreach (var acc in DbManual.Account.Where(x => x.Id.HasValue))
-            //    {
-            //        blotterEntitiesById.TryGetValue(acc.LastTransactionId, out var last);
-            //        lastTransactions.Add(acc.Id.Value, last);
-            //    }
-
-            //    var vm = new MonoWizardVM(importHelper.BankTitle, sourceData, lastTransactions, dialogWrapper);
-
-            //    var output = await dialogWrapper.ShowWizardAsync(vm);
-
-            //    var outputTransactions = output as List<Transaction>;
-            //    if (outputTransactions != null)
-            //    {
-            //        using var blotter = db.CreateUnitOfWork();
-            //        var times = outputTransactions.Select(x => x.DateTime).Distinct().ToArray();
-            //        var transactionRepo = blotter.GetRepository<Transaction>();
-            //        List<Transaction> accTransactions = await transactionRepo.FindManyAsync(predicate: x => times.Contains(x.DateTime));
-
-            //        var accTransactionKeys = accTransactions
-            //            .Select(x => (x.FromAccountId, x.DateTime, x.FromAmount))
-            //            .ToHashSet();
-
-            //        List<Transaction> monoToImport = outputTransactions.Where(item =>
-            //        !accTransactionKeys.Contains((item.FromAccountId, item.DateTime, item.FromAmount))).ToList();
-
-            //        var duplicatesCount = outputTransactions.Count - monoToImport.Count;
-
-            //        await db.AddTransactionsAsync(monoToImport);
-
-            //        await RefreshAffectedAccounts(monoToImport);
-            //        await RefreshCurrentPage();
-
-            //        var message = duplicatesCount > 0
-            //            ? string.Format(LocalizationService.Instance.import_result_with_duplicates, monoToImport.Count, duplicatesCount)
-            //            : string.Format(LocalizationService.Instance.import_result, monoToImport.Count);
-
-            //        this.notifier.ShowMessage(string.Format(message, $"{importHelper.BankTitle} {LocalizationService.Instance.import}"));
-
-            //        Logger.Info($"Imported {monoToImport.Count} transactions. Found duplicates : {duplicatesCount}");
-            //    }
-            //}
-        }
-
-        //private async Task RefreshAffectedAccounts(List<Transaction> transactions)
-        //{
-        //    var accountIds = transactions
-        //        .Where(x => x.ToAccountId > 0)
-        //        .Select(x => x.ToAccountId).Union(
-        //        transactions
-        //        .Where(x => x.FromAccountId > 0)
-        //        .Select(x => x.FromAccountId))
-        //        .Distinct();
-
-        //    foreach (var accId in accountIds)
-        //    {
-        //        await db.RebuildAccountBalanceAsync(accId);
-        //    }
-
-        //    DbManual.ResetManuals(nameof(DbManual.Account));
-        //    await DbManual.SetupAsync(db);
-        //}
 
         private async Task RefreshCurrentPage()
         {
@@ -523,7 +376,7 @@ namespace Financisto.Desktop.ViewModels
                     await Task.Delay(3000);
                     updateService.FinalizeUpdate(true);
                     await Task.Delay(3000);
-                    //System.Windows.Application.Current.Shutdown();
+                    Process.GetCurrentProcess().CloseMainWindow();
                 }
             }
             catch (Exception ex)

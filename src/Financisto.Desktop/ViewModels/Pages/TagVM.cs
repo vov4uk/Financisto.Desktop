@@ -40,7 +40,7 @@ namespace Financisto.Desktop.ViewModels.Pages
         protected TagBaseVM(IFinancistoDatabase db, IDialogWrapper dialogWrapper)
             : base(db, dialogWrapper)
         {
-            LocalizationService.Instance.PropertyChanged += OnLocalizationCultureChanged;
+            LocalizationService.Instance.PropertyChanged += OnLocalizationCultureChanged!;
         }
 
         /// <summary>Localization resource key used for the page header.</summary>
