@@ -1,20 +1,69 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="using:Financisto.Desktop.ViewModels.Pages"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
-             x:Class="Financisto.Desktop.Views.CurrenciesPageView"
-             x:DataType="vm:CurrenciesVM">
+<UserControl
+    x:Class="Financisto.Desktop.Views.CurrenciesPageView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviors="using:Financisto.Common.Behaviors"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:Financisto.Desktop.ViewModels.Pages"
+    d:DesignHeight="600"
+    d:DesignWidth="800"
+    x:DataType="vm:CurrenciesVM"
+    mc:Ignorable="d">
 
-    <StackPanel Margin="10" Spacing="10">
-
-        <TextBlock Text="Currencies"
-                   FontSize="20"
-                   FontWeight="Bold"/>
-
-        <TextBlock Text="This section is under construction."
-                   Foreground="Gray"/>
-
-    </StackPanel>
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid
+        Margin="0,0,0,10"
+        ColumnDefinitions="*,Auto,Auto,Auto"
+        Grid.RowDefinitions="Auto,*">
+        <TextBlock
+            Grid.Column="0"
+            VerticalAlignment="Center"
+            FontSize="20"
+            FontWeight="Bold"
+            Text="{loc:Translate Key=currencies}" />
+        <Button
+            Grid.Column="1"
+            Classes="icon"
+            Command="{Binding AddCommand}"
+            Content="{loc:Translate Key=add}"
+            Tag="{StaticResource IconPlus}" />
+        <Button
+            Grid.Column="2"
+            Classes="icon"
+            Command="{Binding EditCommand}"
+            Content="{loc:Translate Key=edit}"
+            Tag="{StaticResource IconPencil}" />
+        <Button
+            Grid.Column="3"
+            Classes="icon"
+            Command="{Binding DeleteCommand}"
+            Content="{loc:Translate Key=delete}"
+            Tag="{StaticResource IconTrash}" />
+        <DataGrid
+            Grid.Row="1"
+            Grid.ColumnSpan="4"
+            Margin="5"
+            behaviors:CommandBehavior.DoubleTappedCommand="{Binding EditCommand}"
+            AutoGenerateColumns="False"
+            FontSize="14"
+            IsReadOnly="True"
+            ItemsSource="{Binding Path=Entities}"
+            SelectedItem="{Binding SelectedValue}">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn CellTemplate="{StaticResource ResourceKey=IActiveCell}" Header="{loc:Translate Key=active}" />
+                <DataGridTextColumn Binding="{Binding Path=Title}" Header="{loc:Translate Key=title}" />
+                <DataGridTextColumn Binding="{Binding Path=Name}" Header="{loc:Translate Key=name}" />
+                <DataGridTextColumn Binding="{Binding Path=Symbol}" Header="{loc:Translate Key=symbol}" />
+                <DataGridCheckBoxColumn Binding="{Binding Path=IsDefault}" Header="{loc:Translate Key=is_default}" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
 </UserControl>

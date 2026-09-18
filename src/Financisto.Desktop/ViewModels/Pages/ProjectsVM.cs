@@ -18,6 +18,8 @@ namespace Financisto.Desktop.ViewModels.Pages
         {
         }
 
+        protected override string TitleKey => "projects";
+
         protected override Task OnAdd() => OpenTagDialogAsync<Project>(0);
 
         protected override Task OnDelete(ProjectModel item) => throw new System.NotImplementedException();

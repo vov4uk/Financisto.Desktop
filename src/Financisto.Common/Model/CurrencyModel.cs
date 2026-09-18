@@ -65,6 +65,8 @@ namespace Financisto.Common.Model
             Decimals = currency.Decimals;
         }
 
+        public override string ToString() => Name;
+
         [NotMapped]
         private volatile NumberFormatInfo format;
 

@@ -4,11 +4,15 @@ using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
+using Financisto.Common;
 using Financisto.Common.Entities;
+using Financisto.Common.Localization;
 using Financisto.Common.Model;
 using Financisto.DataAccess.Abstractions;
 using Financisto.DataAccess.Data;
 using Financisto.Desktop.Helpers;
+using Financisto.Desktop.Services;
+using Microsoft.EntityFrameworkCore;
 //using OxyPlot;
 //using OxyPlot.Axes;
 //using OxyPlot.Series;
@@ -18,14 +22,19 @@ namespace Financisto.Desktop.ViewModels.Pages
     [ExcludeFromCodeCoverage]
     public class ExchangeRatesVM : EntityBaseVM<ExchangeRateModel>
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
+        private readonly IToastNotifierWrapper notifier;
+        private IAsyncCommand _refreshExchangeRatesCommand;
         private CurrencyModel _from;
         private CurrencyModel _to;
 
         //private PlotModel plotModel;
 
-        public ExchangeRatesVM(IFinancistoDatabase db, IDialogWrapper dialogWrapper)
+        public ExchangeRatesVM(IFinancistoDatabase db, IDialogWrapper dialogWrapper, IToastNotifierWrapper notifier)
             : base(db, dialogWrapper)
         {
+            this.notifier = notifier;
         }
 
         public CurrencyModel From
@@ -64,6 +73,9 @@ namespace Financisto.Desktop.ViewModels.Pages
                 }
             }
         }
+
+        public IAsyncCommand RefreshExchangeRatesCommand => _refreshExchangeRatesCommand ??= new AsyncCommand(RefreshExchangeRates_Click);
+
         public IEnumerable<CurrencyModel> ToCurrencies =>
             DbManual.Currencies.Where(x => x.Id > 0 && x.Id != _from?.Id);
         protected override Task OnAdd() => throw new NotImplementedException();
@@ -136,6 +148,67 @@ namespace Financisto.Desktop.ViewModels.Pages
 
             //PlotModel = model;
 
+        }
+
+        private async Task RefreshExchangeRates_Click()
+        {
+            var erSettings = SettingsService.Current.Settings.ExchangeRates;
+
+            if (erSettings.Provider != ExchangeRatesProviders.None)
+            {
+                var exchangeRateLoader = new ExchangeRatesService();
+                List<CurrencyExchangeRate> exchangeRates = new List<CurrencyExchangeRate>();
+
+                switch (erSettings.Provider)
+                {
+                    case ExchangeRatesProviders.FreeCurrencyRates:
+                        exchangeRates = await exchangeRateLoader.LoadFreeCurrencyRates();
+                        break;
+                    case ExchangeRatesProviders.OpenExchangeRates:
+                        exchangeRates = await exchangeRateLoader.LoadOpenExchangeRates(erSettings.OpenExchangeRatesProviderAppId);
+                        break;
+                    case ExchangeRatesProviders.Monobank:
+                        exchangeRates = await exchangeRateLoader.LoadMonobankRates();
+                        break;
+                }
+
+                if (exchangeRates.Any())
+                {
+                    using var uow = db.CreateUnitOfWork();
+                    var currencyExchangeRepo = uow.GetRepository<CurrencyExchangeRate>();
+                    await currencyExchangeRepo.AddRangeAsync(exchangeRates);
+                    try
+                    {
+                        await uow.SaveChangesAsync();
+                        await RefreshData();
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        string msg = ex?.InnerException?.Message!;
+                        if (!string.IsNullOrEmpty(msg) && msg.Contains("UNIQUE constraint failed", StringComparison.OrdinalIgnoreCase))
+                        {
+                            notifier?.ShowWarning(LocalizationService.Instance.exchange_rates_exist);
+                        }
+                        else
+                        {
+                            notifier?.ShowWarning(LocalizationService.Instance.exchange_rates_not_updated);
+                        }
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error(ex, "Error saving exchange rates to database.");
+                        notifier?.ShowWarning(LocalizationService.Instance.exchange_rates_not_updated);
+                        return;
+                    }
+
+                    notifier?.ShowMessage(string.Format(LocalizationService.Instance.exchange_rates_updated, erSettings.Provider));
+                }
+            }
+            else
+            {
+                notifier?.ShowWarning(LocalizationService.Instance.exchange_rates_provider_not_configured);
+            }
         }
     }
 }

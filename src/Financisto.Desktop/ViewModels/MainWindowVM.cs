@@ -44,9 +44,7 @@ namespace Financisto.Desktop.ViewModels
         private IAsyncCommand _openBackupCommand;
         private IAsyncCommand _saveBackupCommand;
         private IAsyncCommand _saveBackupAsDbCommand;
-        private IAsyncCommand _refreshExchangeRatesCommand;
         private IAsyncCommand _checkForUpdateCommand;
-        private IAsyncCommand _openPanelCommand;
         private readonly IBackupWriter backupWriter;
         private AccountsVM accountsVm;
         private BlotterVM blotterVm;
@@ -63,8 +61,6 @@ namespace Financisto.Desktop.ViewModels
         private ProjectsVM projectsVm;
         private ListItemTemplate? selectedItemBottom;
         private ListItemTemplate? selectedItemTop;
-        private bool isPanelOpen = true;
-
         public MainWindowVM(IDialogWrapper dialogWrapper,
             IFinancistoDatabaseFactory dbFactory,
             IEntityReader entityReader,
@@ -183,12 +179,6 @@ namespace Financisto.Desktop.ViewModels
             }
         }
 
-        public bool IsPanelOpen
-        {
-            get => isPanelOpen;
-            private set => SetProperty(ref isPanelOpen, value);
-        }
-
         public ObservableCollection<ListItemTemplate> ItemsTop { get; } = new()
         {
             //new(typeof(DashboardPageViewModel), "Dashboard", "glance_regular"),
@@ -218,16 +208,7 @@ namespace Financisto.Desktop.ViewModels
 
         public IAsyncCommand SaveBackupAsDbCommand => _saveBackupAsDbCommand ??= new AsyncCommand(SaveBackupAsDb);
 
-        public IAsyncCommand RefreshExchangeRatesCommand => _refreshExchangeRatesCommand ??= new AsyncCommand(RefreshExchangeRates_Click);
-
         public IAsyncCommand CheckForUpdateCommand => _checkForUpdateCommand ??= new AsyncCommand(CheckForUpdatesAsync);
-        public IAsyncCommand OpenPanelCommand => _openPanelCommand ??= new AsyncCommand(OpenPanelAsync);
-
-        private Task OpenPanelAsync()
-        {
-            IsPanelOpen = !IsPanelOpen;
-            return Task.CompletedTask;
-        }
 
         public async Task OpenBackup(string backupPath)
         {
@@ -267,7 +248,8 @@ namespace Financisto.Desktop.ViewModels
 
                 if (SettingsService.Current.Settings?.ExchangeRates.UpdateOnStart == true)
                 {
-                    await RefreshExchangeRatesCommand.ExecuteAsync();
+                    var exchangeRatesVM = _pages.GetOrAdd(typeof(ExchangeRateModel), _ => new ExchangeRatesVM(db, dialogWrapper, notifier!)) as ExchangeRatesVM;
+                    await exchangeRatesVM?.RefreshExchangeRatesCommand?.ExecuteAsync()!;
                 }
             }
             catch (Exception ex)
@@ -360,7 +342,7 @@ namespace Financisto.Desktop.ViewModels
                 case nameof(CategoryTreeModel):
                     return Categories ??= GetOrCreatePage<CategoryTreeModel, CategoriesVM>();
                 case nameof(ExchangeRateModel):
-                    return GetOrCreatePage<ExchangeRateModel, ExchangeRatesVM>();
+                    return _pages.GetOrAdd(type, _ => new ExchangeRatesVM(db, dialogWrapper, notifier));
                 //case nameof(ReportsControlVM):
                 //    return _pages.GetOrAdd(type, _ => new ReportsControlVM(db));
                 case nameof(SettingsVM):
@@ -506,66 +488,6 @@ namespace Financisto.Desktop.ViewModels
 
                 notifier.ShowMessage(string.Format(LocalizationService.Instance.saved_message, backupPath));
                 Logger.Info($"Backup done. Saved {backupPath}");
-            }
-        }
-
-        private async Task RefreshExchangeRates_Click()
-        {
-            var erSettings = SettingsService.Current.Settings.ExchangeRates;
-
-            if (erSettings.Provider != ExchangeRatesProviders.None)
-            {
-                var exchangeRateLoader = new ExchangeRatesService();
-                List<CurrencyExchangeRate> exchangeRates = new List<CurrencyExchangeRate>();
-
-                switch (erSettings.Provider)
-                {
-                    case ExchangeRatesProviders.FreeCurrencyRates:
-                        exchangeRates = await exchangeRateLoader.LoadFreeCurrencyRates();
-                        break;
-                    case ExchangeRatesProviders.OpenExchangeRates:
-                        exchangeRates = await exchangeRateLoader.LoadOpenExchangeRates(erSettings.OpenExchangeRatesProviderAppId);
-                        break;
-                    case ExchangeRatesProviders.Monobank:
-                        exchangeRates = await exchangeRateLoader.LoadMonobankRates();
-                        break;
-                }
-
-                if (exchangeRates.Any())
-                {
-                    using var uow = db.CreateUnitOfWork();
-                    var currencyExchangeRepo = uow.GetRepository<CurrencyExchangeRate>();
-                    await currencyExchangeRepo.AddRangeAsync(exchangeRates);
-                    try
-                    {
-                        await uow.SaveChangesAsync();
-                    }
-                    catch (DbUpdateException ex)
-                    {
-                        string msg = ex?.InnerException?.Message;
-                        if (!string.IsNullOrEmpty(msg) && msg.Contains("UNIQUE constraint failed", StringComparison.OrdinalIgnoreCase))
-                        {
-                            notifier?.ShowWarning(LocalizationService.Instance.exchange_rates_exist);
-                        }
-                        else
-                        {
-                            notifier?.ShowWarning(LocalizationService.Instance.exchange_rates_not_updated);
-                        }
-                        return;
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Error(ex, "Error saving exchange rates to database.");
-                        notifier?.ShowWarning(LocalizationService.Instance.exchange_rates_not_updated);
-                        return;
-                    }
-
-                    notifier?.ShowMessage(string.Format(LocalizationService.Instance.exchange_rates_updated, erSettings.Provider));
-                }
-            }
-            else
-            {
-                notifier?.ShowWarning(LocalizationService.Instance.exchange_rates_provider_not_configured);
             }
         }
 

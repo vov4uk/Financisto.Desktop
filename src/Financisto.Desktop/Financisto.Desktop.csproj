@@ -52,4 +52,10 @@
         <ProjectReference Include="..\Financisto.DataAccess\Financisto.DataAccess.csproj" />
         <ProjectReference Include="..\Financisto.Adapter\Financisto.Adapter.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Views\TagPageView.axaml.cs">
+        <DependentUpon>TagPageView.axaml</DependentUpon>
+      </Compile>
+    </ItemGroup>
 </Project>
