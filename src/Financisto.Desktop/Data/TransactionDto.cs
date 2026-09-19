@@ -1,0 +1,283 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using Financisto.Common.Entities;
+using Financisto.Common.Model;
+using Financisto.Common.Utils;
+using Financisto.Converters;
+using Financisto.DataAccess.Data;
+
+namespace Financisto.Desktop.Data
+{
+    public class TransactionDto : BaseTransactionDto
+    {
+        private CategoryModel category;
+        private int? categoryId;
+        private CurrencyModel currency;
+        private AccountFilterModel fromAccount;
+        private int fromAccountId;
+        private long fromAmount;
+        private bool isAmountNegative;
+        private int? locationId;
+        private int? originalCurrencyId;
+        private long? originalFromAmount;
+        private long parentTransactionSplitAmount;
+        private int? payeeId;
+        private int? projectId;
+        private ObservableCollection<BaseTransactionDto> subTransactions = new ObservableCollection<BaseTransactionDto>();
+        private long unSplitAmount;
+
+        public TransactionDto() { }
+
+        public TransactionDto(Transaction transaction, IEnumerable<Transaction> subTransactions)
+            : this(transaction)
+        {
+            var list = new List<BaseTransactionDto>();
+            foreach (var t in subTransactions)
+            {
+                if (t.ToAccountId > 0 && t.CategoryId == 0 && t.FromAccountId > 0)
+                {
+                    list.Add(new TransferDto(t));
+                }
+                else
+                {
+                    var tr = new TransactionDto(t);
+
+                    // if transaction not in home currency, replace FromAmount with OriginalFromAmount to show correct values
+                    if (IsOriginalFromAmountVisible)
+                    {
+                        tr.FromAmount = tr.OriginalFromAmount ?? 0;
+                    }
+                    list.Add(tr);
+                }
+            }
+
+
+            SubTransactions = new ObservableCollection<BaseTransactionDto>(list);
+        }
+
+        public TransactionDto(Transaction transaction)
+        {
+            id = transaction.Id;
+            fromAccountId = transaction.FromAccountId;
+            categoryId = transaction.CategoryId;
+            payeeId = transaction.PayeeId;
+            originalCurrencyId = transaction.OriginalCurrencyId;
+            originalFromAmount = transaction.OriginalFromAmount;
+            locationId = transaction.LocationId;
+            projectId = transaction.ProjectId;
+            note = transaction.Note;
+            fromAmount = transaction.FromAmount;
+            isAmountNegative = transaction.FromAmount <= 0;
+            date = UnixTimeConverter.Convert(transaction.DateTime).Date;
+            time = UnixTimeConverter.Convert(transaction.DateTime);
+        }
+
+        public CategoryModel Category
+        {
+            get => category ??= DbManual.Category?.Find(x => x.Id == CategoryId);
+            set
+            {
+                if (SetProperty(ref category, value))
+                {
+                    RaisePropertyChanged(nameof(Category));
+                }
+                if (category is { Id: > 0 })
+                {
+                    IsAmountNegative = category.Type == 0;
+                }
+            }
+        }
+
+        public int? CategoryId
+        {
+            get => categoryId;
+            set
+            {
+                if (SetProperty(ref categoryId, value))
+                {
+                    RaisePropertyChanged(nameof(CategoryId));
+                    RaisePropertyChanged(nameof(IsSplitCategory));
+                }
+            }
+        }
+
+        public AccountFilterModel FromAccount
+        {
+            get => fromAccount ??= DbManual.Account?.Find(x => x.Id == FromAccountId);
+            set
+            {
+                if (SetProperty(ref fromAccount, value))
+                {
+                    RaisePropertyChanged(nameof(FromAccount));
+                    RaisePropertyChanged(nameof(IsOriginalFromAmountVisible));
+                    RaisePropertyChanged(nameof(RateString));
+                    RaisePropertyChanged(nameof(FromAccountCurrency));
+                }
+            }
+        }
+
+        public CurrencyModel FromAccountCurrency
+        {
+            get => DbManual.Currencies?.Find(x => x.Id == (FromAccount != null ? FromAccount.CurrencyId : 0));
+        }
+
+        public int FromAccountId
+        {
+            get => fromAccountId;
+            set
+            {
+                if (SetProperty(ref fromAccountId, value))
+                {
+                    RaisePropertyChanged(nameof(FromAccountId));
+                }
+            }
+        }
+        public long FromAmount
+        {
+            get => fromAmount;
+            set
+            {
+                if (SetProperty(ref fromAmount, value))
+                {
+                    RaisePropertyChanged(nameof(FromAmount));
+                    RecalculateRate();
+                    RecalculateUnSplitAmount();
+                }
+            }
+        }
+
+        public override bool IsAmountNegative
+        {
+            get => isAmountNegative;
+            set
+            {
+                if (SetProperty(ref isAmountNegative, value))
+                {
+                    RaisePropertyChanged(nameof(IsAmountNegative));
+                    RecalculateUnSplitAmount();
+                }
+            }
+        }
+
+        public bool IsOriginalFromAmountVisible => OriginalCurrency != null && OriginalCurrency.Id != null && FromAccount != null && OriginalCurrency.Id != FromAccount.CurrencyId;
+
+        public bool IsSplitCategory => categoryId == -1;
+
+        public int? LocationId
+        {
+            get => locationId;
+            set { SetProperty(ref locationId, value, nameof(LocationId)); }
+        }
+
+        public CurrencyModel OriginalCurrency
+        {
+            get => currency ??= DbManual.Currencies?.Find(x => x.Id == OriginalCurrencyId);
+            set
+            {
+                if (SetProperty(ref currency, value))
+                {
+                    RaisePropertyChanged(nameof(OriginalCurrency));
+                    RaisePropertyChanged(nameof(IsOriginalFromAmountVisible));
+                    RaisePropertyChanged(nameof(RateString));
+                }
+            }
+        }
+
+        public int? OriginalCurrencyId
+        {
+            get => originalCurrencyId;
+            set { SetProperty(ref originalCurrencyId, value, nameof(OriginalCurrencyId)); }
+        }
+
+        public long? OriginalFromAmount
+        {
+            get => originalFromAmount;
+            set
+            {
+                if (SetProperty(ref originalFromAmount, value))
+                {
+                    RaisePropertyChanged(nameof(OriginalFromAmount));
+                    RecalculateRate();
+                }
+            }
+        }
+
+        public long ParentTransactionUnSplitAmount
+        {
+            get => parentTransactionSplitAmount;
+            set
+            {
+                if (SetProperty(ref parentTransactionSplitAmount, value))
+                {
+                    RaisePropertyChanged(nameof(ParentTransactionUnSplitAmount));
+                    RecalculateUnSplitAmount();
+                }
+            }
+        }
+
+        public int? PayeeId
+        {
+            get => payeeId;
+            set { SetProperty(ref payeeId, value, nameof(PayeeId)); }
+        }
+
+        public int? ProjectId
+        {
+            get => projectId;
+            set { SetProperty(ref projectId, value, nameof(ProjectId)); }
+        }
+
+        public string RateString
+        {
+            get
+            {
+                if (DoubleUtils.DoubleNotEqual(Rate, 0))
+                {
+                    var d = 1.0 / Rate;
+                    var localCurrency = DbManual.Currencies?.Find(x => x.Id == fromAccount?.Id);
+                    return $"1{currency?.Name}={Rate:F5}{localCurrency?.Name}, 1{localCurrency?.Name}={d:F5}{currency?.Name}";
+                }
+
+                return "N/A";
+            }
+        }
+
+        public override long RealFromAmount => Math.Abs(IsOriginalFromAmountVisible ? (OriginalFromAmount ?? 0 ): FromAmount) * (IsAmountNegative ? -1 : 1);
+
+        public long SplitAmount => subTransactions?.Sum(x => x.RealFromAmount) ?? 0;
+        public ObservableCollection<BaseTransactionDto> SubTransactions
+        {
+            get => subTransactions;
+            private set
+            {
+                if (SetProperty(ref subTransactions, value))
+                {
+                    RaisePropertyChanged(nameof(SubTransactions));
+                    RecalculateUnSplitAmount();
+                }
+            }
+        }
+
+        public override string SubTransactionTitle => Category?.Title ?? string.Empty;
+        public long UnsplitAmount
+        {
+            get => unSplitAmount;
+            private set { SetProperty(ref unSplitAmount, value, nameof(UnsplitAmount)); }
+        }
+
+        public void RecalculateUnSplitAmount()
+        {
+            UnsplitAmount = !IsSubTransaction ? RealFromAmount - SplitAmount : ParentTransactionUnSplitAmount - RealFromAmount;
+        }
+
+        internal void RecalculateRate()
+        {
+            if (originalFromAmount != null && originalFromAmount != 0)
+            {
+                Rate = Math.Abs(fromAmount / 100.0 / (originalFromAmount.Value / 100.0));
+            }
+        }
+    }
+}

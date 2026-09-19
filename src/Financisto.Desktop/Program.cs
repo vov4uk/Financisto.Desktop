@@ -1,8 +1,7 @@
 ﻿using Avalonia;
-using Financisto.Desktop;
 using System;
 
-namespace Monetria;
+namespace Financisto.Desktop;
 
 sealed class Program
 {
@@ -19,5 +18,6 @@ sealed class Program
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .WithInterFont()
+            .WithDataAnnotationsValidation()
             .LogToTrace();
 }

@@ -1,0 +1,36 @@
+﻿using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Threading.Tasks;
+using Financisto.Common.Entities;
+using Financisto.Common.Model;
+using Financisto.DataAccess.Abstractions;
+using Financisto.DataAccess.Data;
+using Financisto.Desktop.Helpers;
+
+namespace Financisto.Desktop.ViewModels.Pages
+{
+    [ExcludeFromCodeCoverage]
+    public class PayeesPageVM : TagBasePageVM<PayeeModel>
+    {
+        public PayeesPageVM(IFinancistoDatabase db, IDialogWrapper dialogWrapper)
+            : base(db, dialogWrapper)
+        {
+        }
+
+        protected override string TitleKey => "payees";
+
+        protected override Task OnAdd() => OpenTagDialogAsync<Payee>(0);
+
+        protected override Task OnDelete(PayeeModel item) => throw new System.NotImplementedException();
+
+        protected override Task OnEdit(PayeeModel item) => OpenTagDialogAsync<Payee>(item.Id ?? 0);
+
+        protected override async Task RefreshData()
+        {
+            DbManual.ResetManuals(nameof(DbManual.Payee));
+            await DbManual.SetupAsync(db);
+            Entities = new ObservableCollection<PayeeModel>(DbManual.Payee.Where(x => x.Id > 0).OrderByDescending(x => x.IsActive).ThenBy(x => x.Id));
+        }
+    }
+}

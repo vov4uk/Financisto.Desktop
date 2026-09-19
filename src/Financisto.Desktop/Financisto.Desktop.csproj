@@ -18,27 +18,33 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia" Version="11.3.22" />
-        <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.13" />
-        <PackageReference Include="Avalonia.Desktop" Version="11.3.22" />
-        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.22" />
-        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.22" />
+        <PackageReference Include="Avalonia" />
+        <PackageReference Include="Avalonia.Controls.DataGrid" />
+        <PackageReference Include="Avalonia.Desktop" />
+        <PackageReference Include="Avalonia.Themes.Fluent" />
+        <PackageReference Include="Avalonia.Fonts.Inter" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Include="Avalonia.Diagnostics" Version="11.3.22">
+        <PackageReference Include="Avalonia.Diagnostics">
             <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="AvaloniaWASM.Storage" Version="1.0.0" />
-        <PackageReference Include="ClosedXML" Version="0.105.1" />
-        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-        <PackageReference Include="LiveChartsCore" Version="2.0.5" />
-        <PackageReference Include="LiveChartsCore.SkiaSharpView" Version="2.0.5" />
-        <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.0.5" />
+        <PackageReference Include="AvaloniaWASM.Storage" />
+        <PackageReference Include="ClosedXML" />
+        <PackageReference Include="Cogwheel" />
+        <PackageReference Include="CommunityToolkit.Mvvm" />
+        <PackageReference Include="CsvHelper" />
+        <PackageReference Include="LiveChartsCore" />
+        <PackageReference Include="LiveChartsCore.SkiaSharpView" />
+        <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" />
+        <PackageReference Include="Message.Avalonia" />
+        <PackageReference Include="Onova" />
+        <PackageReference Include="System.Security.Cryptography.ProtectedData" />
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Update="Views\ConfigurationsPageView.axaml.cs">
-        <DependentUpon>ConfigurationsPageView.axaml</DependentUpon>
-      </Compile>
+        <ProjectReference Include="..\Financisto.Common\Financisto.Common.csproj" />
+        <ProjectReference Include="..\Financisto.DataAccess\Financisto.DataAccess.csproj" />
+        <ProjectReference Include="..\Financisto.Adapter\Financisto.Adapter.csproj" />
     </ItemGroup>
+
 </Project>
