@@ -1,14 +1,17 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="using:Financisto.Desktop.ViewModels.Pages"
-             xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
-             xmlns:conv="using:Financisto.Converters"
-             xmlns:behaviors="using:Financisto.Common.Behaviors"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
-             x:Class="Financisto.Desktop.Views.AccountsPageView"
-             x:DataType="vm:AccountsVM">
+<UserControl
+    x:Class="Financisto.Desktop.Views.AccountsPageView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviors="using:Financisto.Common.Behaviors"
+    xmlns:conv="using:Financisto.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:Financisto.Desktop.ViewModels.Pages"
+    d:DesignHeight="600"
+    d:DesignWidth="800"
+    x:DataType="vm:AccountsPageVM"
+    mc:Ignorable="d">
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -24,79 +27,85 @@
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
         <Style Selector="TextBlock.totalAmount.negative">
-            <Setter Property="Foreground" Value="DarkRed"/>
-            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="DarkRed" />
+            <Setter Property="FontWeight" Value="Bold" />
         </Style>
         <Style Selector="TextBlock.totalAmount.positive">
-            <Setter Property="Foreground" Value="DarkGreen"/>
+            <Setter Property="Foreground" Value="DarkGreen" />
         </Style>
     </UserControl.Styles>
     <Grid Margin="10" RowDefinitions="Auto,*">
-        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,0,0,10">
-            <TextBlock Grid.Column="0"
-                       Text="{loc:Translate Key=accounts}"
-                       FontSize="20"
-                       FontWeight="Bold"
-                       VerticalAlignment="Center" />
-            <Button Content="{loc:Translate Key=add}"
-                    Classes="icon"
-                    Tag="{StaticResource IconPlus}"
-                    Grid.Column="1"
-                    Command="{Binding AddCommand}" />
-            <Button Content="{loc:Translate Key=edit}"
-                    Classes="icon"
-                    Grid.Column="2"
-                    Tag="{StaticResource IconPencil}"
-                    Command="{Binding EditCommand}" />
-            <Button Content="{loc:Translate Key=delete}"
-                    Classes="icon"
-                    Tag="{StaticResource IconTrash}"
-                    Grid.Column="3"
-                    Command="{Binding DeleteCommand}" />
+        <Grid
+            Grid.Row="0"
+            Margin="0,0,0,10"
+            ColumnDefinitions="*,Auto,Auto,Auto">
+            <TextBlock
+                Grid.Column="0"
+                VerticalAlignment="Center"
+                FontSize="20"
+                FontWeight="Bold"
+                Text="{loc:Translate Key=accounts}" />
+            <Button
+                Grid.Column="1"
+                Classes="icon"
+                Command="{Binding AddCommand}"
+                Content="{loc:Translate Key=add}"
+                Tag="{StaticResource IconPlus}" />
+            <Button
+                Grid.Column="2"
+                Classes="icon"
+                Command="{Binding EditCommand}"
+                Content="{loc:Translate Key=edit}"
+                Tag="{StaticResource IconPencil}" />
+            <Button
+                Grid.Column="3"
+                Classes="icon"
+                Command="{Binding DeleteCommand}"
+                Content="{loc:Translate Key=delete}"
+                Tag="{StaticResource IconTrash}" />
         </Grid>
-        <DataGrid Margin="5"
-                  Grid.Row="1"
-                  ItemsSource="{Binding Path=Entities}"
-                  SelectedItem="{Binding SelectedValue, UpdateSourceTrigger=PropertyChanged}"
-                  AutoGenerateColumns="False"
-                  FontSize="18"
-                  VerticalAlignment="Center"
-                  IsReadOnly="True"
-                  behaviors:CommandBehavior.DoubleTappedCommand="{Binding EditCommand}">
-    <DataGrid.Columns>
-        <DataGridTemplateColumn Header="{loc:Translate Key=active}" CellTemplate="{StaticResource ResourceKey=IActiveCell}"/>
-        <DataGridTemplateColumn Header="">
-            <DataGridTemplateColumn.CellTemplate>
-                <DataTemplate>
-                    <Image Height="64"
-                           Width="64">
-                        <Image.Source>
-                            <MultiBinding Converter="{StaticResource AccountTypeConverter}">
-                                <Binding Path="Type" />
-                                <Binding Path="CardIssuer" />
-                            </MultiBinding>
-                        </Image.Source>
-                    </Image>
-                </DataTemplate>
-            </DataGridTemplateColumn.CellTemplate>
-        </DataGridTemplateColumn>
-        <DataGridTextColumn Header="{loc:Translate Key=title}" Binding="{Binding Path=Title}"/>
-        <DataGridTextColumn Header="{loc:Translate Key=description}" Binding="{Binding Path=AccountDescription}"/>
-        <DataGridTemplateColumn Header="{loc:Translate Key=total_amount}">
-            <DataGridTemplateColumn.CellTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding Path=AmountTitle}"
-                               Classes="totalAmount"
-                               Classes.negative="{Binding IsTotalAmountNegative}"
-                               Classes.positive="{Binding !IsTotalAmountNegative}" />
-                </DataTemplate>
-            </DataGridTemplateColumn.CellTemplate>
-        </DataGridTemplateColumn>
-        <DataGridCheckBoxColumn Header="{loc:Translate Key=include}"
-                                Binding="{Binding Path=IsIncludeIntoTotals}"/>
-        <DataGridTextColumn Header="{loc:Translate Key=last_transaction}"
-                            Binding="{Binding Path=LastTransactionDate, Converter= {StaticResource UnixTimeConverter}}" />
-    </DataGrid.Columns>
-</DataGrid>
+        <DataGrid
+            Grid.Row="1"
+            Margin="5"
+            VerticalAlignment="Center"
+            behaviors:CommandBehavior.DoubleTappedCommand="{Binding EditCommand}"
+            AutoGenerateColumns="False"
+            FontSize="18"
+            IsReadOnly="True"
+            ItemsSource="{Binding Path=Entities}"
+            SelectedItem="{Binding SelectedValue, UpdateSourceTrigger=PropertyChanged}">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn CellTemplate="{StaticResource ResourceKey=IActiveCell}" Header="{loc:Translate Key=active}" />
+                <DataGridTemplateColumn Header="">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Image Width="64" Height="64">
+                                <Image.Source>
+                                    <MultiBinding Converter="{StaticResource AccountTypeConverter}">
+                                        <Binding Path="Type" />
+                                        <Binding Path="CardIssuer" />
+                                    </MultiBinding>
+                                </Image.Source>
+                            </Image>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Binding="{Binding Path=Title}" Header="{loc:Translate Key=title}" />
+                <DataGridTextColumn Binding="{Binding Path=AccountDescription}" Header="{loc:Translate Key=description}" />
+                <DataGridTemplateColumn Header="{loc:Translate Key=total_amount}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock
+                                Classes="totalAmount"
+                                Classes.negative="{Binding IsTotalAmountNegative}"
+                                Classes.positive="{Binding !IsTotalAmountNegative}"
+                                Text="{Binding Path=AmountTitle}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridCheckBoxColumn Binding="{Binding Path=IsIncludeIntoTotals}" Header="{loc:Translate Key=include}" />
+                <DataGridTextColumn Binding="{Binding Path=LastTransactionDate, Converter={StaticResource UnixTimeConverter}}" Header="{loc:Translate Key=last_transaction}" />
+            </DataGrid.Columns>
+        </DataGrid>
     </Grid>
 </UserControl>

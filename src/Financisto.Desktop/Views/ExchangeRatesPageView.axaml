@@ -10,7 +10,7 @@
     xmlns:vm="using:Financisto.Desktop.ViewModels.Pages"
     d:DesignHeight="600"
     d:DesignWidth="800"
-    x:DataType="vm:ExchangeRatesVM"
+    x:DataType="vm:ExchangeRatesPageVM"
     mc:Ignorable="d">
 
     <UserControl.Resources>
@@ -38,7 +38,7 @@
             Command="{Binding RefreshExchangeRatesCommand}"
             Content="{loc:Translate Key=download}"
             Tag="{StaticResource IconDownload}" />
-        <Grid Grid.ColumnSpan="2" Grid.Row="1">
+        <Grid Grid.Row="1" Grid.ColumnSpan="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
@@ -50,7 +50,7 @@
                     Header="{loc:Translate Key=from}">
                     <ComboBox
                         Margin="2,0"
-                        ItemsSource="{Binding Source={x:Static vm:ExchangeRatesVM.FromCurrencies}, Mode=OneWay}"
+                        ItemsSource="{Binding Source={x:Static vm:ExchangeRatesPageVM.FromCurrencies}, Mode=OneWay}"
                         SelectedItem="{Binding Path=From}" />
                 </GroupBox>
                 <GroupBox

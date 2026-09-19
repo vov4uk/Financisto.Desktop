@@ -1,0 +1,197 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Financisto.Desktop.ViewModels.Pages"
+             xmlns:conv="using:Financisto.Converters"
+             xmlns:behaviors="using:Financisto.Common.Behaviors"
+             x:Class="Financisto.Desktop.Views.BlotterPageView"
+             xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+             xmlns:filters="clr-namespace:Financisto.Common.Filters;assembly=Financisto.Common"
+             x:DataType="vm:BlotterPageVM">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <conv:UnixTimeConverter x:Key="UnixTimeConverter" />
+            <conv:TransactionTypeBrushConverter x:Key="TransactionTypeBrushConverter" />
+            <conv:TransactionTypeIconConverter x:Key="TransactionTypeIconConverter" />
+            <conv:NoCategoryBackgroundConverter x:Key="NoCategoryBackgroundConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid Margin="10" RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="*">
+
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto" Margin="0,0,0,10">
+            <TextBlock Grid.Column="0"
+                       Text="{loc:Translate Key=blotter}"
+                       FontSize="20"
+                       FontWeight="Bold"
+                       VerticalAlignment="Center" />
+
+            <Button Content="{loc:Translate Key=add_expense}"
+                    Classes="icon"
+                    Tag="{StaticResource IconPlus}"
+                    Grid.Column="2"
+                    Command="{Binding AddCommand}" />
+            <Button Content="{loc:Translate Key=add_transfer}"
+                    Grid.Column="3"
+                    Classes="icon"
+                    Tag="{StaticResource IconArrowRightArrowLeft}"
+                    Command="{Binding AddTransferCommand}" />
+            <Button Content="{loc:Translate Key=edit}"
+                    Classes="icon"
+                    Grid.Column="4"
+                    Tag="{StaticResource IconPencil}"
+                    Command="{Binding EditCommand}" />
+            <Button Content="{loc:Translate Key=duplicate}"
+                    Classes="icon"
+                    Grid.Column="5"
+                    Tag="{StaticResource IconCopy}"
+                    Command="{Binding DuplicateCommand}" />
+            <Button Content="{loc:Translate Key=delete}"
+                    Classes="icon"
+                    Tag="{StaticResource IconTrash}"
+                    Grid.Column="6"
+                    Command="{Binding DeleteCommand}" />
+        </Grid>
+        <Expander Grid.Row="1"
+                  IsExpanded="True"
+                  ExpandDirection="Down"
+                  HorizontalAlignment="Stretch"
+                  VerticalContentAlignment="Top"
+                  Background="Transparent"
+                  >
+            <Grid ColumnDefinitions="*,Auto">
+                <WrapPanel Orientation="Horizontal"
+                           Grid.Column="0">
+                    <filters:PeriodFilter Margin="0"
+                                          SelectedPeriodType="{Binding PeriodType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          DataContext="{Binding}"
+                                          Orientation="Horizontal"/>
+                    <filters:AccountFilter Margin="4" MinWidth="120" />
+                    <filters:CategoryFilter Margin="4" MinWidth="120" />
+                    <filters:ProjectFilter Margin="4" MinWidth="120" />
+                    <filters:PayeeFilter Margin="4" MinWidth="120" />
+                    <filters:LocationFilter Margin="4" MinWidth="120" />
+                    
+
+                </WrapPanel>
+                <Grid Grid.Column="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Button ToolTip.Tip="{loc:Translate Key=refresh}"
+                            Height="24"
+                            Width="24"
+                            BorderThickness="0"
+                            Background="Transparent"
+                            Grid.Column="0"
+                            Command="{Binding RefreshDataCommand}"
+                            Margin="4">
+                        <Image Source="{StaticResource ResourceKey=IconRefresh}" Width="16" Height="16"/>
+                    </Button>
+                    <Button ToolTip.Tip="{loc:Translate Key=clear}"
+                            Height="24"
+                            Width="24"
+                            BorderThickness="0"
+                            Background="Transparent"
+                            Grid.Column="1"
+                            Command="{Binding ClearFiltersCommand}"
+                            Margin="4">
+                        <Image Source="{StaticResource ResourceKey=IconClearFilters}" Width="16" Height="16"/>
+                    </Button>
+                </Grid>
+            </Grid>
+            
+        </Expander>
+
+            <DataGrid Grid.Row="2" 
+                      Margin="5"
+                      x:Name="TransactionsGrid"
+                      ItemsSource="{Binding Path=Entities}"
+                      AutoGenerateColumns="False"
+                      SelectedItem="{Binding SelectedValue, UpdateSourceTrigger=Default}"
+                      IsReadOnly="True"
+                      SelectionMode="Extended"
+                      ClipboardCopyMode="ExcludeHeader"
+                      behaviors:CommandBehavior.DoubleTappedCommand="{Binding EditCommand}"
+                      behaviors:DataGridSelectionBehavior.SelectionChangedCommand="{Binding SelectionChangedCommand}"
+                      FontSize="14">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Binding="{Binding Path=Id}"
+                                        />
+                    <DataGridTemplateColumn Header=""
+                                            ClipboardContentBinding="{Binding Path=Type}"
+                                            >
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Image Name="MyImage"
+                                       Source="{Binding Path=Type, Converter={StaticResource TransactionTypeIconConverter}}"
+                                       Width="20" Height="20" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="{loc:Translate Key=time}"
+                                        Binding="{Binding Path=Datetime, Converter= {StaticResource UnixTimeConverter}}" />
+                    <DataGridTextColumn Header=""
+                                        Binding="{Binding Path=AccountTitle}" />
+                    <DataGridTemplateColumn Header=""
+                                            ClipboardContentBinding="{Binding Path=TransactionTitle}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal"
+                                            VerticalAlignment="Stretch"
+                                            Background="{Binding Path=HasNoCategory, Converter={StaticResource NoCategoryBackgroundConverter}}">
+                                    <TextBlock Text="{Binding Path=TransactionTitle}" x:Name="Cell"
+                                               VerticalAlignment="Center"
+                                               />
+                                    <TextBlock x:Name="Separator"
+                                               Text=" | "
+                                               VerticalAlignment="Center"
+                                               IsVisible="{Binding ShowProjectSeparator}"
+                                           />
+                                      <TextBlock x:Name="prj"
+                                               IsVisible="{Binding ShowProjectSeparator}"
+                                               Text="{Binding Project?.Title}"
+                                               VerticalAlignment="Center"
+                                               Foreground="{Binding Project?.IsActive, Converter={StaticResource activeStatusBrush}}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="{loc:Translate Key=amount}"
+                                            ClipboardContentBinding="{Binding Path=AmountClipboardText}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Name="MyText" Text="{Binding Path=AmountTitle}"
+                                           Foreground="{Binding Path=Type, Converter={StaticResource TransactionTypeBrushConverter}}"
+                                           HorizontalAlignment="Right"
+                                           VerticalAlignment="Center"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="{loc:Translate Key=balance}"
+                                        >
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Name="MyText" Text="{Binding Path=BalanceTitle}"
+                                           VerticalAlignment="Center"
+                                           HorizontalAlignment="Right"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+            <Border Grid.Row="3"
+                    Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                    BorderThickness="1">
+                <TextBlock Text="{Binding SelectionSummary}"
+                           FontSize="14"
+                           FontWeight="Bold"
+                           HorizontalAlignment="Right" />
+            </Border>
+        </Grid>
+    
+</UserControl>

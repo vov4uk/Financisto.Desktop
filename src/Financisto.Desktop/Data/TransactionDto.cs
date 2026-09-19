@@ -7,7 +7,6 @@ using Financisto.Common.Model;
 using Financisto.Common.Utils;
 using Financisto.Converters;
 using Financisto.DataAccess.Data;
-using Financisto.Desktop.Wizards;
 
 namespace Financisto.Desktop.Data
 {
@@ -30,20 +29,6 @@ namespace Financisto.Desktop.Data
         private long unSplitAmount;
 
         public TransactionDto() { }
-
-        public TransactionDto(FinancierTransactionDto x)
-        {
-            id = 0;
-            fromAmount = x.FromAmount;
-            isAmountNegative = x.FromAmount < 0;
-            OriginalFromAmount = x.OriginalFromAmount ?? 0;
-            OriginalCurrencyId = x.OriginalCurrencyId;
-            note = x.Note;
-            locationId = x.LocationId;
-            projectId = x.ProjectId;
-            categoryId = x.CategoryId;
-            category = default;
-        }
 
         public TransactionDto(Transaction transaction, IEnumerable<Transaction> subTransactions)
             : this(transaction)

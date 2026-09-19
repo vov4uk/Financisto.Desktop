@@ -9,7 +9,7 @@
     xmlns:vm="using:Financisto.Desktop.ViewModels.Pages"
     d:DesignHeight="600"
     d:DesignWidth="800"
-    x:DataType="vm:CurrenciesVM"
+    x:DataType="vm:CurrenciesPageVM"
     mc:Ignorable="d">
 
     <UserControl.Resources>

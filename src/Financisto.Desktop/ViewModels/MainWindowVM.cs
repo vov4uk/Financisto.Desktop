@@ -147,7 +147,7 @@ namespace Financisto.Desktop.ViewModels
 
         public ObservableCollection<ListItemTemplate> ItemsBottom { get; } = new()
         {
-            new(typeof(SettingsVM), () => LocalizationService.Instance.settings, "IconGear"),
+            new(typeof(SettingsPageVM), () => LocalizationService.Instance.settings, "IconGear"),
         };
 
         public IAsyncCommand<Type> MenuNavigateCommand => _menuNavigateCommand ??= new AsyncCommand<Type>(NavigateToType);
@@ -206,7 +206,7 @@ namespace Financisto.Desktop.ViewModels
 
                 if (SettingsService.Current.Settings?.ExchangeRates.UpdateOnStart == true)
                 {
-                    var exchangeRatesVM = _pages.GetOrAdd(typeof(ExchangeRateModel), _ => new ExchangeRatesVM(db, dialogWrapper, notifier!)) as ExchangeRatesVM;
+                    var exchangeRatesVM = _pages.GetOrAdd(typeof(ExchangeRateModel), _ => new ExchangeRatesPageVM(db, dialogWrapper, notifier!)) as ExchangeRatesPageVM;
                     await exchangeRatesVM?.RefreshExchangeRatesCommand?.ExecuteAsync()!;
                 }
             }
@@ -255,25 +255,25 @@ namespace Financisto.Desktop.ViewModels
             switch (type.Name)
             {
                 case nameof(AccountModel):
-                    return GetOrCreatePage<AccountModel, AccountsVM>();
+                    return GetOrCreatePage<AccountModel, AccountsPageVM>();
                 case nameof(CurrencyModel):
-                    return GetOrCreatePage<CurrencyModel, CurrenciesVM>();
+                    return GetOrCreatePage<CurrencyModel, CurrenciesPageVM>();
                 case nameof(ProjectModel):
-                    return GetOrCreatePage<ProjectModel, ProjectsVM>();
+                    return GetOrCreatePage<ProjectModel, ProjectsPageVM>();
                 case nameof(LocationModel):
-                    return GetOrCreatePage<LocationModel, LocationsVM>();
+                    return GetOrCreatePage<LocationModel, LocationsPageVM>();
                 case nameof(PayeeModel):
-                    return GetOrCreatePage<PayeeModel, PayeesVM>();
+                    return GetOrCreatePage<PayeeModel, PayeesPageVM>();
                 case nameof(BlotterModel):
-                    return GetOrCreatePage<BlotterModel, BlotterVM>();
+                    return GetOrCreatePage<BlotterModel, BlotterPageVM>();
                 case nameof(CategoryTreeModel):
-                    return  GetOrCreatePage<CategoryTreeModel, CategoriesVM>();
+                    return  GetOrCreatePage<CategoryTreeModel, CategoriesPageVM>();
                 case nameof(ExchangeRateModel):
-                    return _pages.GetOrAdd(type, _ => new ExchangeRatesVM(db, dialogWrapper, notifier));
+                    return _pages.GetOrAdd(type, _ => new ExchangeRatesPageVM(db, dialogWrapper, notifier));
                 //case nameof(ReportsControlVM):
                 //    return _pages.GetOrAdd(type, _ => new ReportsControlVM(db));
-                case nameof(SettingsVM):
-                    return _pages.GetOrAdd(type, _ => new SettingsVM(db, notifier));
+                case nameof(SettingsPageVM):
+                    return _pages.GetOrAdd(type, _ => new SettingsPageVM(db, notifier));
 
                 default: throw new NotSupportedException($"{type.FullName} not supported");
             }

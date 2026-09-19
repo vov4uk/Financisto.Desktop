@@ -21,15 +21,15 @@ public class ViewLocator : IDataTemplate
     // don't follow the "XyzViewModel" -> "XyzView" naming convention below, so they're mapped explicitly.
     private static readonly Dictionary<Type, Type> PageViews = new()
     {
-        [typeof(AccountsVM)] = typeof(AccountsPageView),
-        [typeof(CategoriesVM)] = typeof(CategoriesPageView),
-        [typeof(CurrenciesVM)] = typeof(CurrenciesPageView),
-        [typeof(ExchangeRatesVM)] = typeof(ExchangeRatesPageView),
-        [typeof(LocationsVM)] = typeof(LocationsPageView),
-        [typeof(PayeesVM)] = typeof(TagPageView),
-        [typeof(ProjectsVM)] = typeof(TagPageView),
-        [typeof(BlotterVM)] = typeof(TransactionsPageView),
-        [typeof(SettingsVM)] = typeof(ConfigurationsPageView),
+        [typeof(AccountsPageVM)] = typeof(AccountsPageView),
+        [typeof(CategoriesPageVM)] = typeof(CategoriesPageView),
+        [typeof(CurrenciesPageVM)] = typeof(CurrenciesPageView),
+        [typeof(ExchangeRatesPageVM)] = typeof(ExchangeRatesPageView),
+        [typeof(LocationsPageVM)] = typeof(LocationsPageView),
+        [typeof(PayeesPageVM)] = typeof(TagPageView),
+        [typeof(ProjectsPageVM)] = typeof(TagPageView),
+        [typeof(BlotterPageVM)] = typeof(BlotterPageView),
+        [typeof(SettingsPageVM)] = typeof(SettingsPageView),
     };
 
     public Control? Build(object? param)
