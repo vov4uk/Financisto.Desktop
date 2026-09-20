@@ -71,8 +71,7 @@ public partial class MainWindow : Window
         }
 
         LocalizationService.Instance.ApplyLanguage(SettingsService.Current.Settings?.General.Language ?? Language.English);
-        var bakupFolder = SettingsService.Current.DefaultBackupDir ?? @$"C:\Users\{Environment.UserName}\Dropbox\apps\Financisto Holo";
-        ViewModel.DefaultBackupDirectory = SettingsService.Current.DefaultBackupDir!;
+        var bakupFolder = !string.IsNullOrEmpty(SettingsService.Current.Settings?.General.DefaultBackupDir) ? SettingsService.Current.Settings.General.DefaultBackupDir : @$"C:\Users\{Environment.UserName}\Dropbox\apps\Financisto Holo";
 
         if (Directory.Exists(bakupFolder))
         {
@@ -85,7 +84,7 @@ public partial class MainWindow : Window
 
             if (SettingsService.Current.Settings?.General.CheckForUpdatesOnStart == true)
             {
-                await ViewModel.CheckForUpdateCommand.ExecuteAsync();
+                await Task.Run(() => ViewModel.CheckForUpdatesAsync());
             }
         }
     }

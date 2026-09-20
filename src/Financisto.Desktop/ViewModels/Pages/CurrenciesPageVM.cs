@@ -100,7 +100,7 @@ namespace Financisto.Desktop.ViewModels.Pages
                 dto.UpdateExchangeRate = true;
 
             var vm = new CurrencyDialogVM(dto);
-            var result = await dialogWrapper.ShowDialogAsync<NewCurrencyDialog>(vm, 340, 440, LocalizationService.Instance.currency);
+            var result = await dialogWrapper.ShowDialogAsync<CurrencyDialog>(vm, 440, 700, LocalizationService.Instance.currency);
 
             var updated = result as CurrencyDto;
             if (updated == null)
@@ -130,6 +130,7 @@ namespace Financisto.Desktop.ViewModels.Pages
             entity.Decimals = int.TryParse(template[3], out int d) ? System.Math.Clamp(d, 0, 3) : 2;
             entity.DecimalSeparator = template[4];
             entity.GroupSeparator = template[5];
+            entity.SymbolFormat = SymbolFormat.RS.ToString();
             entity.IsActive = true;
             entity.IsDefault = !DbManual.Currencies.Any(x => x.Id.HasValue);
 

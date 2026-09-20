@@ -13,5 +13,7 @@ public interface IDialogWrapper
 
     Task<string> SaveFileDialogAsync(string fileExtention, string defaultPath = "");
 
+    Task<string> OpenFolderDialogAsync(string defaultPath = "");
+
     Task<bool> ShowMessageBoxAsync(string text, string caption, bool yesNoButtons = false);
 }

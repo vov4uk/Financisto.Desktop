@@ -27,7 +27,7 @@
     <GroupBox
         Margin="3"
         Background="{StaticResource WindowBackgroundBrush}"
-        FontSize="12"
+        FontSize="14"
         Header="{loc:Translate Key=transfer_details}">
         <GroupBox.Resources>
             <!--<Style TargetType="{x:Type Image}">

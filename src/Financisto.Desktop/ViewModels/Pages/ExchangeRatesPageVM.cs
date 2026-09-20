@@ -35,6 +35,8 @@ namespace Financisto.Desktop.ViewModels.Pages
             : base(db, dialogWrapper)
         {
             this.notifier = notifier;
+            _from = FromCurrencies.FirstOrDefault();
+            _to = ToCurrencies.FirstOrDefault();
         }
 
         public CurrencyModel From

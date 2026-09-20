@@ -43,7 +43,7 @@ public class TransactionDialogVM : SubTransactionDialogVM
 
     public AsyncCommand<BaseTransactionDto> EditSubTransactionCommand => _editSubTransaction ??= new AsyncCommand<BaseTransactionDto>(EditSubTransaction);
 
-    protected override bool CanSaveCommandExecute() => Transaction.FromAccount != null && Transaction.FromAmount != 0;
+    protected override bool CanSaveCommandExecute() => Transaction.FromAccount != null && Transaction.FromAmount != 0 && Transaction.UnsplitAmount == 0;
 
     private static void CopySubTransaction(TransactionDto original, TransactionDto modifiedCopy)
     {

@@ -19,7 +19,7 @@
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid
-        Margin="0,0,0,10"
+        Margin="10"
         ColumnDefinitions="*,Auto,Auto,Auto"
         Grid.RowDefinitions="Auto,*">
         <TextBlock
@@ -30,18 +30,21 @@
             Text="{Binding PageTitle}" />
         <Button
             Grid.Column="1"
+            Margin="4,2"
             Classes="icon"
             Command="{Binding AddCommand}"
             Content="{loc:Translate Key=add}"
             Tag="{StaticResource IconPlus}" />
         <Button
             Grid.Column="2"
+            Margin="4,2"
             Classes="icon"
             Command="{Binding EditCommand}"
             Content="{loc:Translate Key=edit}"
             Tag="{StaticResource IconPencil}" />
         <Button
             Grid.Column="3"
+            Margin="4,2"
             Classes="icon"
             Command="{Binding DeleteCommand}"
             Content="{loc:Translate Key=delete}"

@@ -105,6 +105,7 @@ namespace Financisto.Desktop.Data
                     RaisePropertyChanged(nameof(RateString));
                     RaisePropertyChanged(nameof(IsToAmountVisible));
                     RaisePropertyChanged(nameof(ToAccountCurrency));
+                    RaisePropertyChanged(nameof(SubTransactionTitle));
                 }
             }
         }

@@ -57,6 +57,12 @@ namespace Financisto.Common.Behaviors
             {
                 command.Execute(parameter);
             }
+
+            // DoubleTapped is a routed (bubbling) event. Without marking it handled, a double tap on a
+            // nested item (e.g. TreeViewItem) would bubble up and re-trigger the command on every ancestor
+            // that also has this attached property set (e.g. parent TreeViewItems), causing the command
+            // to execute multiple times.
+            e.Handled = true;
         }
     }
 }

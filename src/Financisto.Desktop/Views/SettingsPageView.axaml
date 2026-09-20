@@ -21,8 +21,7 @@
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid
-        Grid.Row="0"
-        Margin="0,0,0,10"
+        Margin="10"
         ColumnDefinitions="*,Auto"
         RowDefinitions="Auto,*">
         <TextBlock
@@ -73,10 +72,31 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
                     </GroupBox>
-                    <CheckBox
-                        Margin="10,0,0,0"
-                        Content="{loc:Translate Key=check_for_updates_on_start}"
-                        IsChecked="{Binding Entity.General.CheckForUpdatesOnStart, Mode=TwoWay}" />
+                    <GroupBox BorderThickness="0" Header="{loc:Translate Key=default_backup_directory}">
+                        <Grid ColumnDefinitions="400,Auto">
+                            <TextBox
+                                Grid.Column="0"
+                                IsReadOnly="True"
+                                Text="{Binding Entity.General.DefaultBackupDir, Mode=TwoWay}" />
+                            <Button
+                                Grid.Column="1"
+                                Margin="4,0,0,0"
+                                Command="{Binding BrowseBackupDirCommand}"
+                                Content="..." />
+                        </Grid>
+                    </GroupBox>
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <CheckBox
+                            Margin="10,0,0,0"
+                            Content="{loc:Translate Key=check_for_updates_on_start}"
+                            IsChecked="{Binding Entity.General.CheckForUpdatesOnStart, Mode=TwoWay}" />
+                        <Button
+                            Padding="8,4"
+                            Classes="icon"
+                            Command="{Binding CheckForUpdateCommand}"
+                            Content="{loc:Translate Key=check_for_updates}"
+                            Tag="{StaticResource IconRefresh}" />
+                    </StackPanel>
                 </StackPanel>
             </GroupBox>
 

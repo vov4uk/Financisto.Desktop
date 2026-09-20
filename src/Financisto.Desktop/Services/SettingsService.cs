@@ -11,8 +11,6 @@ namespace Financisto.Desktop.Services
 
         public SettingsDto Settings { get; set; }
 
-        public string DefaultBackupDir { get; set; }
-
     }
 
     public partial class SettingsService

@@ -27,8 +27,10 @@ namespace Financisto.Desktop.ViewModels
         private const string Backup = "backup";
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private readonly ConcurrentDictionary<Type, BindableBase> _pages = new ConcurrentDictionary<Type, BindableBase>();
+        private readonly IBackupWriter backupWriter;
         private readonly IFinancistoDatabaseFactory dbFactory;
         private readonly IDialogWrapper dialogWrapper;
+        private readonly IEntityReader entityReader;
         private readonly List<Entity> keyLessEntities = new();
         private readonly IToastNotifierWrapper notifier;
         private readonly UpdateService updateService;
@@ -36,21 +38,14 @@ namespace Financisto.Desktop.ViewModels
         private Dictionary<string, List<string>> _entityColumnsOrder;
         private IAsyncCommand<Type> _menuNavigateCommand;
         private IAsyncCommand _openBackupCommand;
-        private IAsyncCommand _saveBackupCommand;
-        private IAsyncCommand _saveBackupAsDbCommand;
-        private IAsyncCommand _checkForUpdateCommand;
-
         private IAsyncCommand _openPanelCommand;
-        private readonly IBackupWriter backupWriter;
+        private IAsyncCommand _saveBackupAsDbCommand;
+        private IAsyncCommand _saveBackupCommand;
         private BindableBase currentPage;
         private IFinancistoDatabase db;
-        private readonly IEntityReader entityReader;
-        private string openBackupPath;
-        private string defaultBackupDirectory;
         private bool isLoading;
-
         private bool isPanelOpen = true;
-
+        private string openBackupPath;
         private ListItemTemplate? selectedItemBottom;
         private ListItemTemplate? selectedItemTop;
         public MainWindowVM(IDialogWrapper dialogWrapper,
@@ -79,22 +74,52 @@ namespace Financisto.Desktop.ViewModels
             }
         }
 
-        public string OpenBackupPath
-        {
-            get => openBackupPath;
-            private set => SetProperty(ref openBackupPath, value);
-        }
-        public string DefaultBackupDirectory
-        {
-            get => defaultBackupDirectory;
-            internal set => SetProperty(ref defaultBackupDirectory, value);
-        }
-
         public bool IsLoading
         {
             get => isLoading;
             private set => SetProperty(ref isLoading, value);
         }
+
+        public bool IsPanelOpen
+        {
+            get => isPanelOpen;
+            private set => SetProperty(ref isPanelOpen, value);
+        }
+
+        public ObservableCollection<ListItemTemplate> ItemsBottom { get; } = new()
+        {
+            new(typeof(SettingsPageVM), () => LocalizationService.Instance.settings, "IconGear"),
+        };
+
+        public ObservableCollection<ListItemTemplate> ItemsTop { get; } = new()
+        {
+            //new(typeof(DashboardPageViewModel), "Dashboard", "glance_regular"),
+            new(typeof(AccountModel), () => LocalizationService.Instance.accounts, "IconWallet"),
+            new(typeof(CategoryTreeModel), () => LocalizationService.Instance.categories, "IconFolderTree"),
+            new(typeof(ProjectModel), () => LocalizationService.Instance.projects, "IconListCheck"),
+            new(typeof(PayeeModel), () => LocalizationService.Instance.payees, "IconAddressBook"),
+            new(typeof(LocationModel), () => LocalizationService.Instance.locations, "IconMap"),
+            new(typeof(CurrencyModel), () => LocalizationService.Instance.currencies, "IconDollarSign"),
+            new(typeof(ExchangeRateModel), () => LocalizationService.Instance.exchange_rates, "IconArrowTrendUp"),
+            new(typeof(BlotterModel), () => LocalizationService.Instance.blotter, "IconReceipt"),
+            //new(typeof(ReportsVM), "Reports", "book_pulse_regular"),
+        };
+
+        public IAsyncCommand<Type> MenuNavigateCommand => _menuNavigateCommand ??= new AsyncCommand<Type>(NavigateToType);
+
+        public IAsyncCommand OpenBackupCommand => _openBackupCommand ??= new AsyncCommand(OpenBackup_Click);
+
+        public string OpenBackupPath
+        {
+            get => openBackupPath;
+            private set => SetProperty(ref openBackupPath, value);
+        }
+        public IAsyncCommand OpenPanelCommand => _openPanelCommand ??= new AsyncCommand(OpenPanelAsync);
+
+        public IAsyncCommand SaveBackupAsDbCommand => _saveBackupAsDbCommand ??= new AsyncCommand(SaveBackupAsDb);
+
+        public IAsyncCommand SaveBackupCommand => _saveBackupCommand ??= new AsyncCommand(SaveBackup_Click);
+
         public ListItemTemplate? SelectedItemBottom
         {
             get => selectedItemBottom;
@@ -124,48 +149,10 @@ namespace Financisto.Desktop.ViewModels
                 }
             }
         }
-
-        public bool IsPanelOpen
+        public async Task CheckForUpdatesAsync()
         {
-            get => isPanelOpen;
-            private set => SetProperty(ref isPanelOpen, value);
-        }
-
-        public ObservableCollection<ListItemTemplate> ItemsTop { get; } = new()
-        {
-            //new(typeof(DashboardPageViewModel), "Dashboard", "glance_regular"),
-            new(typeof(AccountModel), () => LocalizationService.Instance.accounts, "IconWallet"),
-            new(typeof(CategoryTreeModel), () => LocalizationService.Instance.categories, "IconFolderTree"),
-            new(typeof(ProjectModel), () => LocalizationService.Instance.projects, "IconListCheck"),
-            new(typeof(PayeeModel), () => LocalizationService.Instance.payees, "IconAddressBook"),
-            new(typeof(LocationModel), () => LocalizationService.Instance.locations, "IconMap"),
-            new(typeof(CurrencyModel), () => LocalizationService.Instance.currencies, "IconDollarSign"),
-            new(typeof(ExchangeRateModel), () => LocalizationService.Instance.exchange_rates, "IconArrowTrendUp"),
-            new(typeof(BlotterModel), () => LocalizationService.Instance.blotter, "IconReceipt"),
-            //new(typeof(ReportsVM), "Reports", "book_pulse_regular"),
-        };
-
-        public ObservableCollection<ListItemTemplate> ItemsBottom { get; } = new()
-        {
-            new(typeof(SettingsPageVM), () => LocalizationService.Instance.settings, "IconGear"),
-        };
-
-        public IAsyncCommand<Type> MenuNavigateCommand => _menuNavigateCommand ??= new AsyncCommand<Type>(NavigateToType);
-
-        public IAsyncCommand OpenBackupCommand => _openBackupCommand ??= new AsyncCommand(OpenBackup_Click);
-
-        public IAsyncCommand SaveBackupCommand => _saveBackupCommand ??= new AsyncCommand(SaveBackup_Click);
-
-        public IAsyncCommand SaveBackupAsDbCommand => _saveBackupAsDbCommand ??= new AsyncCommand(SaveBackupAsDb);
-
-        public IAsyncCommand CheckForUpdateCommand => _checkForUpdateCommand ??= new AsyncCommand(CheckForUpdatesAsync);
-
-        public IAsyncCommand OpenPanelCommand => _openPanelCommand ??= new AsyncCommand(OpenPanelAsync);
-
-        private Task OpenPanelAsync()
-        {
-            IsPanelOpen = !IsPanelOpen;
-            return Task.CompletedTask;
+            var settingsPageVM = _pages.GetOrAdd(typeof(SettingsPageVM), _ => new SettingsPageVM(db, dialogWrapper, notifier, updateService)) as SettingsPageVM;
+            await settingsPageVM?.CheckForUpdateCommand?.ExecuteAsync()!;
         }
 
         public async Task OpenBackup(string backupPath)
@@ -267,13 +254,13 @@ namespace Financisto.Desktop.ViewModels
                 case nameof(BlotterModel):
                     return GetOrCreatePage<BlotterModel, BlotterPageVM>();
                 case nameof(CategoryTreeModel):
-                    return  GetOrCreatePage<CategoryTreeModel, CategoriesPageVM>();
+                    return GetOrCreatePage<CategoryTreeModel, CategoriesPageVM>();
                 case nameof(ExchangeRateModel):
                     return _pages.GetOrAdd(type, _ => new ExchangeRatesPageVM(db, dialogWrapper, notifier));
                 //case nameof(ReportsControlVM):
                 //    return _pages.GetOrAdd(type, _ => new ReportsControlVM(db));
                 case nameof(SettingsPageVM):
-                    return _pages.GetOrAdd(type, _ => new SettingsPageVM(db, notifier));
+                    return _pages.GetOrAdd(type, _ => new SettingsPageVM(db, dialogWrapper, notifier, updateService));
 
                 default: throw new NotSupportedException($"{type.FullName} not supported");
             }
@@ -304,6 +291,11 @@ namespace Financisto.Desktop.ViewModels
             }
         }
 
+        private Task OpenPanelAsync()
+        {
+            IsPanelOpen = !IsPanelOpen;
+            return Task.CompletedTask;
+        }
         private async Task RefreshCurrentPage()
         {
             if (CurrentPage is not IDataRefresh page)
@@ -341,48 +333,6 @@ namespace Financisto.Desktop.ViewModels
 
                 notifier.ShowMessage(string.Format(LocalizationService.Instance.saved_message, backupPath));
                 Logger.Info($"Backup done. Saved {backupPath}");
-            }
-        }
-
-        private async Task CheckForUpdatesAsync()
-        {
-            try
-            {
-                if (updateService == null)
-                    return;
-
-                var updateVersion = await updateService.CheckForUpdatesAsync();
-                if (updateVersion is null)
-                {
-                    notifier.ShowMessage(LocalizationService.Instance.latest_version);
-                    return;
-                }
-
-                var result = await dialogWrapper.ShowMessageBoxAsync(
-                   LocalizationService.Instance.update_available_question,
-                   string.Format(LocalizationService.Instance.update_available, updateVersion),
-                   true);
-
-                if (result)
-                {
-
-                    notifier.ShowMessage(string.Format(LocalizationService.Instance.downloading_update,
-                        "Financisto.Desktop",
-                        updateVersion));
-
-                    await updateService.PrepareUpdateAsync(updateVersion);
-
-                    notifier.ShowMessage(LocalizationService.Instance.update_downloaded);
-                    await Task.Delay(3000);
-                    updateService.FinalizeUpdate(true);
-                    await Task.Delay(3000);
-                    Process.GetCurrentProcess().CloseMainWindow();
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex, ex.ToString());
-                notifier.ShowWarning(LocalizationService.Instance.update_failed);
             }
         }
     }

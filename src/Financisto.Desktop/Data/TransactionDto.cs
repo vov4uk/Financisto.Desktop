@@ -82,6 +82,7 @@ namespace Financisto.Desktop.Data
                 if (SetProperty(ref category, value))
                 {
                     RaisePropertyChanged(nameof(Category));
+                    RaisePropertyChanged(nameof(SubTransactionTitle));
                 }
                 if (category is { Id: > 0 })
                 {

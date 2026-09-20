@@ -73,6 +73,27 @@ public class DialogWrapper : IDialogWrapper
         return file != null ? file.Path.LocalPath : string.Empty;
     }
 
+    public async Task<string> OpenFolderDialogAsync(string defaultPath = "")
+    {
+        var owner = GetOwner();
+        if (owner == null)
+            return string.Empty;
+
+        IStorageFolder suggestedStartLocation = null;
+        if (!string.IsNullOrEmpty(defaultPath))
+        {
+            suggestedStartLocation = await owner.StorageProvider.TryGetFolderFromPathAsync(defaultPath);
+        }
+
+        var folders = await owner.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            AllowMultiple = false,
+            SuggestedStartLocation = suggestedStartLocation
+        });
+
+        return folders.Count > 0 ? folders[0].Path.LocalPath : string.Empty;
+    }
+
     public async Task<bool> ShowMessageBoxAsync(string text, string caption, bool yesNoButtons = false)
     {
         var owner = GetOwner();

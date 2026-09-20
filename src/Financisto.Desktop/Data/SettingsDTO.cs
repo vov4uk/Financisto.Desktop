@@ -29,6 +29,8 @@ namespace Financisto.Desktop.Data
 
         private AppThemeType currentAppTheme;
 
+        private string defaultBackupDir;
+
         public bool CheckForUpdatesOnStart
         {
             get => checkForUpdatesOnStart;
@@ -38,6 +40,19 @@ namespace Financisto.Desktop.Data
                 {
                     checkForUpdatesOnStart = value;
                     RaisePropertyChanged(nameof(CheckForUpdatesOnStart));
+                }
+            }
+        }
+
+        public string DefaultBackupDir
+        {
+            get => defaultBackupDir;
+            set
+            {
+                if (defaultBackupDir != value)
+                {
+                    defaultBackupDir = value;
+                    RaisePropertyChanged(nameof(DefaultBackupDir));
                 }
             }
         }
@@ -85,7 +100,8 @@ namespace Financisto.Desktop.Data
             {
                 CheckForUpdatesOnStart = CheckForUpdatesOnStart,
                 Language = Language,
-                CurrentAppTheme = CurrentAppTheme
+                CurrentAppTheme = CurrentAppTheme,
+                DefaultBackupDir = DefaultBackupDir
             };
         }
     }
@@ -95,8 +111,6 @@ namespace Financisto.Desktop.Data
         private ExchangeRatesProviders exchangeRatesProvider;
         private string openExchangeRatesProviderAppId;
         private bool updateOnStart;
-
-
 
         public ExchangeRatesProviders Provider
         {
