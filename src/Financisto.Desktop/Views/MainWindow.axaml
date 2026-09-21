@@ -122,11 +122,12 @@
                             HorizontalAlignment="Left"
                             HorizontalContentAlignment="Left"
                             Command="{Binding OpenPanelCommand}">
-                            <PathIcon
+                            <Image
                                 Width="24"
                                 Height="24"
-                                Data="{StaticResource line_horizontal_3_regular}"
-                                Foreground="{DynamicResource SystemControlForegroundBaseBrush}" />
+                                Source="{StaticResource Icon3HorizontalLines}"
+                                Stretch="Uniform"
+                                />
                         </Button>
 
 

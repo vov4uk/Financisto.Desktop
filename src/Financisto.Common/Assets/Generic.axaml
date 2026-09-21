@@ -25,6 +25,7 @@
             Height="14"
             Fill="{Binding IsActive, Converter={StaticResource activeStatusBrush}}" />
     </DataTemplate>
+
     <DataTemplate x:Key="CategoryTemplate" DataType="{x:Type data:CategoryModel}">
         <TextBlock x:Name="Txt">
             <TextBlock.Text>
@@ -35,6 +36,33 @@
             </TextBlock.Text>
         </TextBlock>
     </DataTemplate>
+    <DrawingImage x:Key="Icon3HorizontalLines">
+        <DrawingImage.Drawing>
+            <GeometryDrawing Brush="{StaticResource DefaultGray}">
+                <GeometryDrawing.Geometry>
+                    <PathGeometry Figures="M2 4.5C2 4.22386 2.22386 4 2.5 4H17.5C17.7761 4 18 4.22386 18 4.5C18 4.77614 17.7761 5 17.5 5H2.5C2.22386 5 2 4.77614 2 4.5Z M2 9.5C2 9.22386 2.22386 9 2.5 9H17.5C17.7761 9 18 9.22386 18 9.5C18 9.77614 17.7761 10 17.5 10H2.5C2.22386 10 2 9.77614 2 9.5Z M2.5 14C2.22386 14 2 14.2239 2 14.5C2 14.7761 2.22386 15 2.5 15H17.5C17.7761 15 18 14.7761 18 14.5C18 14.2239 17.7761 14 17.5 14H2.5Z" />
+                </GeometryDrawing.Geometry>
+            </GeometryDrawing>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+    <DrawingImage x:Key="IconHouse">
+        <DrawingImage.Drawing>
+            <GeometryDrawing Brush="{StaticResource DefaultGray}">
+                <GeometryDrawing.Geometry>
+                    <PathGeometry Figures="M298.2 72.6C310.5 61.2 329.5 61.2 341.7 72.6L432 156.3L432 144C432 126.3 446.3 112 464 112L496 112C513.7 112 528 126.3 528 144L528 245.5L565.8 280.6C575.4 289.6 578.6 303.5 573.8 315.7C569 327.9 557.2 336 544 336L528 336L528 512C528 547.3 499.3 576 464 576L176 576C140.7 576 112 547.3 112 512L112 336L96 336C82.8 336 71 327.9 66.2 315.7C61.4 303.5 64.6 289.5 74.2 280.6L298.2 72.6zM304 384C277.5 384 256 405.5 256 432L256 528L384 528L384 432C384 405.5 362.5 384 336 384L304 384z" />
+                </GeometryDrawing.Geometry>
+            </GeometryDrawing>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+    <DrawingImage x:Key="IconLock">
+        <DrawingImage.Drawing>
+            <GeometryDrawing Brush="{StaticResource DefaultGray}">
+                <GeometryDrawing.Geometry>
+                    <PathGeometry Figures="M25 12h-1v-3.816c0-4.589-3.32-8.184-8.037-8.184-4.736 0-7.963 3.671-7.963 8.184v3.816h-1c-2.206 0-4 1.794-4 4v12c0 2.206 1.794 4 4 4h18c2.206 0 4-1.794 4-4v-12c0-2.206-1.794-4-4-4zM10 8.184c0-3.409 2.33-6.184 5.963-6.184 3.596 0 6.037 2.716 6.037 6.184v3.816h-12v-3.816zM27 28c0 1.102-0.898 2-2 2h-18c-1.103 0-2-0.898-2-2v-12c0-1.102 0.897-2 2-2h18c1.102 0 2 0.898 2 2v12zM16 18c-1.104 0-2 0.895-2 2 0 0.738 0.405 1.376 1 1.723v3.277c0 0.552 0.448 1 1 1s1-0.448 1-1v-3.277c0.595-0.346 1-0.985 1-1.723 0-1.105-0.895-2-2-2z" />
+                </GeometryDrawing.Geometry>
+            </GeometryDrawing>
+        </DrawingImage.Drawing>
+    </DrawingImage>
     <DrawingImage x:Key="IconRefresh">
         <DrawingImage.Drawing>
             <GeometryDrawing Brush="{StaticResource DefaultGray}">

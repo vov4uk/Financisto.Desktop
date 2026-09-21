@@ -59,11 +59,32 @@
                     Margin="0,0,0,4"
                     BorderThickness="0"
                     Header="{loc:Translate Key=account_type}">
-                    <ComboBox ItemsSource="{Binding Source={loc:EnumBinding {x:Type ent:AccountType}}}" SelectedItem="{Binding SelectedAccountType, Mode=TwoWay}">
+                    <ComboBox
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{Binding Source={loc:EnumBinding {x:Type ent:AccountType}}}"
+                        SelectedItem="{Binding SelectedAccountType, Mode=TwoWay}">
                         <ComboBox.ItemTemplate>
-                            <DataTemplate>
+                            <!--<DataTemplate>
                                 <TextBlock Text="{Binding Converter={StaticResource EnumDescriptionConverter}}" />
+                            </DataTemplate>-->
+
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Image
+                                        Width="24"
+                                        Height="16"
+                                        Margin="0,0,6,0">
+                                        <Image.Source>
+                                            <MultiBinding Converter="{StaticResource AccountTypeConverter}">
+                                                <Binding />
+                                                <Binding />
+                                            </MultiBinding>
+                                        </Image.Source>
+                                    </Image>
+                                    <TextBlock VerticalAlignment="Center" Text="{Binding Converter={StaticResource EnumDescriptionConverter}}" />
+                                </StackPanel>
                             </DataTemplate>
+
                         </ComboBox.ItemTemplate>
                     </ComboBox>
                 </GroupBox>
@@ -133,10 +154,14 @@
                     Grid.Row="4"
                     Grid.ColumnSpan="2"
                     Margin="0,0,0,4"
+                    HorizontalAlignment="Stretch"
                     BorderThickness="0"
                     Header="{loc:Translate Key=electronic_payment_type}"
                     IsVisible="{Binding ShowElectronicType}">
-                    <ComboBox ItemsSource="{Binding Source={loc:EnumBinding {x:Type ent:ElectronicType}}}" SelectedItem="{Binding SelectedElectronicType, Mode=TwoWay}">
+                    <ComboBox
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{Binding Source={loc:EnumBinding {x:Type ent:ElectronicType}}}"
+                        SelectedItem="{Binding SelectedElectronicType, Mode=TwoWay}">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">

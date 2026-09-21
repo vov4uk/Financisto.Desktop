@@ -71,6 +71,7 @@
             Grid.Row="1"
             Margin="5"
             VerticalAlignment="Center"
+            Classes="activeStatus"
             behaviors:CommandBehavior.DoubleTappedCommand="{Binding EditCommand}"
             AutoGenerateColumns="False"
             FontSize="18"
@@ -78,18 +79,25 @@
             ItemsSource="{Binding Path=Entities}"
             SelectedItem="{Binding SelectedValue, UpdateSourceTrigger=PropertyChanged}">
             <DataGrid.Columns>
-                <DataGridTemplateColumn CellTemplate="{StaticResource ResourceKey=IActiveCell}" Header="{loc:Translate Key=active}" />
                 <DataGridTemplateColumn Header="">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Image Width="64" Height="64">
-                                <Image.Source>
-                                    <MultiBinding Converter="{StaticResource AccountTypeConverter}">
-                                        <Binding Path="Type" />
-                                        <Binding Path="CardIssuer" />
-                                    </MultiBinding>
-                                </Image.Source>
-                            </Image>
+                            <Panel Height="64">
+                                <Image Height="64">
+                                    <Image.Source>
+                                        <MultiBinding Converter="{StaticResource AccountTypeConverter}">
+                                            <Binding Path="Type" />
+                                            <Binding Path="CardIssuer" />
+                                        </MultiBinding>
+                                    </Image.Source>
+                                </Image>
+                                <Image
+                                    Height="24"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Bottom"
+                                    IsVisible="{Binding !IsActive}"
+                                    Source="{StaticResource IconLock}" />
+                            </Panel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

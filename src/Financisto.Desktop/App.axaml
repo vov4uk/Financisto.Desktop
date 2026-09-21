@@ -23,8 +23,9 @@
     <Application.Styles>
         <FluentTheme>
 
-            <StyleInclude Source="avares://Financisto.Desktop/Styles/EstilosIcones.axaml" />
             <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
+            <StyleInclude Source="avares://Financisto.Common/Assets/Styles.axaml" />
+            <StyleInclude Source="avares://Financisto.Common/Assets/DataGridStyles.axaml" />
             <FluentTheme />
 
         </FluentTheme>

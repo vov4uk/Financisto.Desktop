@@ -12,7 +12,7 @@ namespace Financisto.Converters
     [ExcludeFromCodeCoverage]
     public class AccountTypeConverter : IMultiValueConverter
     {
-        private static HashSet<string> KnownTypes = new HashSet<string> { "asset", "bank", "cash", "electronic", "liability" };
+        private static HashSet<string> KnownTypes = new HashSet<string> { "asset", "bank", "cash", "liability", "electronic", "credit_card", "debit_card" };
         public object Convert(IList<object> values, Type targetType, object parameter, CultureInfo culture)
         {
             string type = null;
@@ -41,14 +41,30 @@ namespace Financisto.Converters
 
         private static Uri GetImageUri(string type, string card_issuer)
         {
-            if (!string.IsNullOrEmpty(type) && type.Contains("card") && !string.IsNullOrEmpty(card_issuer) && card_issuer != "(unset)")
+            if (string.IsNullOrEmpty(type) || card_issuer == "(unset)")
+            {
+                return new Uri("avares://Financisto.Common/Assets/AccountType/account_type_other.png");
+            }
+
+            if (type.Contains("card") && !string.IsNullOrEmpty(card_issuer) && card_issuer != type)
             {
                 return new Uri($"avares://Financisto.Common/Assets/AccountType/account_type_card_{card_issuer}.png");
             }
-            if (!string.IsNullOrEmpty(type) && KnownTypes.Contains(type))
+
+            if ( type.Contains("electronic") && !string.IsNullOrEmpty(card_issuer) && card_issuer != type)
             {
+                return new Uri($"avares://Financisto.Common/Assets/ElectronicType/electronic_type_{card_issuer}.png");
+            }
+
+            if (KnownTypes.Contains(type))
+            {
+                if (type == "credit_card" || type == "debit_card")
+                {
+                    return new Uri("avares://Financisto.Common/Assets/AccountType/account_type_card.png");
+                }
                 return new Uri($"avares://Financisto.Common/Assets/AccountType/account_type_{type}.png");
             }
+
             return new Uri("avares://Financisto.Common/Assets/AccountType/account_type_other.png");
         }
     }

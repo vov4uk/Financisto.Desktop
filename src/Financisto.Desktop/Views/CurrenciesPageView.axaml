@@ -54,6 +54,7 @@
             Grid.Row="1"
             Grid.ColumnSpan="4"
             Margin="5"
+            Classes="activeStatus"
             behaviors:CommandBehavior.DoubleTappedCommand="{Binding EditCommand}"
             AutoGenerateColumns="False"
             FontSize="14"
@@ -61,11 +62,32 @@
             ItemsSource="{Binding Path=Entities}"
             SelectedItem="{Binding SelectedValue}">
             <DataGrid.Columns>
-                <DataGridTemplateColumn CellTemplate="{StaticResource ResourceKey=IActiveCell}" Header="{loc:Translate Key=active}" />
+                <DataGridCheckBoxColumn Binding="{Binding Path=IsActive}" Header="{loc:Translate Key=active}" />
+                <DataGridTemplateColumn Header="">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid ColumnDefinitions="24,*">
+                                <Image
+                                    Width="24"
+                                    Height="24"
+                                    HorizontalAlignment="Left"
+                                    IsVisible="{Binding IsDefault}"
+                                    Source="{StaticResource IconHouse}" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Margin="2,0"
+                                    VerticalAlignment="Center"
+                                    Text="{Binding Path=Title}" />
+                            </Grid>
+
+
+
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn Binding="{Binding Path=Title}" Header="{loc:Translate Key=title}" />
                 <DataGridTextColumn Binding="{Binding Path=Name}" Header="{loc:Translate Key=name}" />
-                <DataGridTextColumn Binding="{Binding Path=Symbol}" Header="{loc:Translate Key=symbol}" />
-                <DataGridCheckBoxColumn Binding="{Binding Path=IsDefault}" Header="{loc:Translate Key=is_default}" />
+                <DataGridTextColumn Binding="{Binding Path=AmountTitle}" Header="{loc:Translate Key=format}" />
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

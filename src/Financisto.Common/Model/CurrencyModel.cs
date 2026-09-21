@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using Financisto.Common.Utils;
 using Financisto.DataAccess.Data;
 
 namespace Financisto.Common.Model
@@ -47,6 +48,8 @@ namespace Financisto.Common.Model
 
         [Column("group_separator")]
         public string GroupSeparator { get; set; }
+
+        public string AmountTitle => BlotterUtils.SetAmountText(this, 100000, false);
 
         public CurrencyModel() { }
 

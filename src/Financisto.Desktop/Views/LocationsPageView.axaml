@@ -54,6 +54,7 @@
             Grid.Row="1"
             Grid.ColumnSpan="4"
             Margin="5"
+            Classes="activeStatus"
             behaviors:CommandBehavior.DoubleTappedCommand="{Binding EditCommand}"
             AutoGenerateColumns="False"
             FontSize="14"
@@ -61,7 +62,7 @@
             ItemsSource="{Binding Path=Entities}"
             SelectedItem="{Binding SelectedValue}">
             <DataGrid.Columns>
-                <DataGridTemplateColumn CellTemplate="{StaticResource ResourceKey=IActiveCell}" Header="{loc:Translate Key=active}" />
+                <DataGridCheckBoxColumn Binding="{Binding Path=IsActive}" Header="{loc:Translate Key=active}" />
                 <DataGridTextColumn Binding="{Binding Path=Title}" Header="{loc:Translate Key=name}" />
                 <DataGridTextColumn Binding="{Binding Path=Address}" Header="{loc:Translate Key=address}" />
             </DataGrid.Columns>
