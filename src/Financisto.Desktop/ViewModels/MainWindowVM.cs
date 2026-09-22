@@ -163,14 +163,19 @@ namespace Financisto.Desktop.ViewModels
                 IsLoading = true;
                 _pages.Clear();
                 Stopwatch stopwatch = Stopwatch.StartNew();
-                var (entities, backupVersion, columnsOrder) = await entityReader.ParseBackupFileAsync(backupPath);
+                var (entities, backupVersion, columnsOrder) = await Task.Run(() => entityReader.ParseBackupFileAsync(backupPath));
                 entities = entities as IReadOnlyCollection<Entity> ?? entities.ToList();
                 _backupVersion = backupVersion;
                 _entityColumnsOrder = columnsOrder;
 
-                db?.Dispose();
-                db = dbFactory.CreateDatabase();
-                await db.ImportEntitiesAsync(entities);
+                var previousDb = db;
+                db = await Task.Run(async () =>
+                {
+                    previousDb?.Dispose();
+                    var newDb = dbFactory.CreateDatabase();
+                    await newDb.ImportEntitiesAsync(entities);
+                    return newDb;
+                });
 
                 keyLessEntities.Clear();
 
@@ -178,16 +183,16 @@ namespace Financisto.Desktop.ViewModels
                 AddKeylessEntities(entities.OfType<CategoryAttribute>());
                 AddKeylessEntities(entities.OfType<TransactionAttribute>());
 
-                IsLoading = false;
-
                 DbManual.ResetAllDatabaseManuals();
-                await DbManual.SetupAsync(db);
+                await Task.Run(() => DbManual.SetupAsync(db));
 
                 stopwatch.Stop();
                 int entitiesCount = entities?.Count() ?? 0;
                 Logger.Info($"Backup loaded in {stopwatch.ElapsedMilliseconds} ms. Backup version : {_backupVersion}. Entities count : {entitiesCount}");
 
                 await NavigateToType(typeof(BlotterModel));
+
+                IsLoading = false;
 
                 notifier?.ShowMessage(string.Format(LocalizationService.Instance.entities_loaded, entitiesCount));
 
@@ -217,6 +222,7 @@ namespace Financisto.Desktop.ViewModels
                 itemsToBackup.AddRange((await uow.GetAllAsync<Location>()).Where(x => x.Id > 0));
                 itemsToBackup.AddRange(await uow.GetAllAsync<Payee>());
                 itemsToBackup.AddRange((await uow.GetAllAsync<Project>()).Where(x => x.Id > 0));
+                itemsToBackup.AddRange((await uow.GetAllAsync<Tag>()).Where(x => x.Id > 0));
                 itemsToBackup.AddRange(await uow.GetAllAsync<Transaction>());
                 itemsToBackup.AddRange((await uow.GetAllAsync<Account>()).OrderBy(x => x.Id));
                 itemsToBackup.AddRange((await uow.GetAllAsync<AttributeDefinition>()).Where(x => x.Id > 0));

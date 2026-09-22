@@ -3,6 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:behaviors="using:Financisto.Common.Behaviors"
+    xmlns:controls="using:Financisto.Common.Controls"
     xmlns:conv="using:Financisto.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dialogs="using:Financisto.Desktop.Views.Dialogs"
@@ -12,7 +13,7 @@
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xmlns:vm="using:Financisto.Desktop.ViewModels.Dialogs"
     d:DesignHeight="800"
-    d:DesignWidth="580"
+    d:DesignWidth="440"
     x:CompileBindings="False"
     x:DataType="vm:TransactionDialogVM"
     mc:Ignorable="d">
@@ -42,7 +43,7 @@
         Background="{StaticResource WindowBackgroundBrush}"
         FontSize="14"
         Header="{loc:Translate Key=transaction_details}">
-        <Grid>
+        <Grid Margin="0,0,6,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
                 <RowDefinition Height="36" />
@@ -79,6 +80,9 @@
                         <!--  project  -->
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="32" />
+                        <!--  tag  -->
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="32" />
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -97,11 +101,16 @@
                         <DatePicker
                             Grid.Row="0"
                             Grid.Column="0"
+                            MinWidth="150"
                             Margin="2"
-                            SelectedDate="{Binding Transaction.Date, Converter={StaticResource DateTimeToDateTimeOffsetConverter}}" />
+                            DayFormat="dd"
+                            MonthFormat="MM"
+                            SelectedDate="{Binding Transaction.Date, Converter={StaticResource DateTimeToDateTimeOffsetConverter}}"
+                            YearFormat="yyyy" />
                         <TimePicker
                             Grid.Row="0"
                             Grid.Column="1"
+                            MinWidth="110"
                             Margin="2"
                             HorizontalAlignment="Stretch"
                             SelectedTime="{Binding Transaction.Time, Converter={StaticResource DateTimeToTimeSpanConverter}}" />
@@ -400,6 +409,26 @@
                         Classes="icon"
                         Command="{Binding ClearProjectCommand}"
                         IsVisible="{Binding ElementName=ProjectIdBox, Path=IsVisible}"
+                        Tag="{StaticResource IconXmark}" />
+
+                    <TextBlock
+                        Grid.Row="19"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        Text="{loc:Translate Key=tag}" />
+
+                    <controls:TagSelector
+                        Grid.Row="20"
+                        Grid.Column="0"
+                        HorizontalAlignment="Stretch"
+                        SelectedTagsText="{Binding Transaction.Tags}" />
+                    <Button
+                        Grid.Row="20"
+                        Grid.Column="1"
+                        Width="32"
+                        Height="32"
+                        Classes="icon"
+                        Command="{Binding ClearTagCommand}"
                         Tag="{StaticResource IconXmark}" />
                 </Grid>
             </ScrollViewer>

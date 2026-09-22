@@ -8,15 +8,12 @@ using System.Threading.Tasks;
 using Financisto.Common.Attribute;
 using Financisto.Common.Model;
 using Financisto.DataAccess.Abstractions;
-using Newtonsoft.Json;
 
 namespace Financisto.Common.Entities
 {
     [ExcludeFromCodeCoverage]
     public static class DbManual
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-
         private static List<AccountFilterModel> _accounts;
         private static List<LocationModel> _location;
         private static List<CategoryModel> _category;
@@ -24,6 +21,7 @@ namespace Financisto.Common.Entities
         private static List<CurrencyModel> _currencies;
         private static List<PayeeModel> _payee;
         private static List<ProjectModel> _project;
+        private static List<TagModel> _tag;
         private static List<YearMonths> _yearMonths;
         private static List<Years> _years;
         private static Dictionary<Mcc, int[]> _mccEnums;
@@ -144,6 +142,20 @@ ORDER  BY is_active DESC, title ASC");
 
             }
 
+            if (_tag == null)
+            {
+                var tags = await FinancistoDatabase.ExecuteQuery<TagModel>(@"
+SELECT _id,
+       title,
+       is_active,
+       sort_order
+FROM   tag
+WHERE  title IS NOT NULL
+ORDER  BY is_active DESC, title ASC");
+                _tag = [.. tags];
+                _tag.Insert(0, new TagModel());
+            }
+
             if (_yearMonths == null)
             {
                 var yearMonths = await FinancistoDatabase.ExecuteQuery<YearMonths>(@"
@@ -180,6 +192,8 @@ ORDER  BY 1 DESC ");
         public static List<PayeeModel> Payee => _payee ?? new ();
 
         public static List<ProjectModel> Project => _project ?? new();
+
+        public static List<TagModel> Tag => _tag ?? new();
 
         public static Dictionary<int, ProjectModel> ProjectIds => _projectIds ?? new();
 

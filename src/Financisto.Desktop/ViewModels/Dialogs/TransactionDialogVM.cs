@@ -17,6 +17,7 @@ public class TransactionDialogVM : SubTransactionDialogVM
     private DelegateCommand _addSubTransferCommand;
     private DelegateCommand _clearLocationCommand;
     private DelegateCommand _clearPayeeCommand;
+    private DelegateCommand _clearTagCommand;
     private DelegateCommand<BaseTransactionDto> _deleteSubTransactionCommand;
     private AsyncCommand<BaseTransactionDto> _editSubTransaction;
 
@@ -34,6 +35,8 @@ public class TransactionDialogVM : SubTransactionDialogVM
     public DelegateCommand ClearLocationCommand => _clearLocationCommand ??= new DelegateCommand(() => { Transaction.LocationId = default; });
 
     public DelegateCommand ClearPayeeCommand => _clearPayeeCommand ??= new DelegateCommand(() => { Transaction.PayeeId = default; });
+
+    public DelegateCommand ClearTagCommand => _clearTagCommand ??= new DelegateCommand(() => { Transaction.Tags = default; });
 
     public DelegateCommand<BaseTransactionDto> DeleteSubTransactionCommand => _deleteSubTransactionCommand ??= new DelegateCommand<BaseTransactionDto>(tr =>
     {

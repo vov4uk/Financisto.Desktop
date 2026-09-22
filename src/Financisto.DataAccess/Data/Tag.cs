@@ -1,19 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace Financisto.DataAccess.Data
 {
-    public abstract class Tag : Entity, IIdentity
+    [DebuggerDisplay("{Title}")]
+    [Table(Backup.TAG_TABLE)]
+    public class Tag : TagBase
     {
-        [Column(Backup.IdColumn)]
-        public int Id { get; set; } = -1;
-
-        [Column(Backup.IsActiveColumn)]
-        public bool IsActive { get; set; } = true;
-
-        [Column(Backup.TitleColumn)]
-        public string Title { get; set; }
-
-        [Column(Backup.UpdatedOnColumn)]
-        public long UpdatedOn { get; set; }
+        [Column("sort_order")]
+        public int SortOrder { get; set; }
     }
 }

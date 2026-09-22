@@ -39,6 +39,7 @@ namespace Financisto.Desktop.ViewModels.Pages
         private PayeeModel _payee;
         private ProjectModel _project;
         private LocationModel _location;
+        private IList<TagModel> _tags = new List<TagModel>();
 
         public BlotterPageVM(IFinancistoDatabase db, IDialogWrapper dialogWrapper)
             : base(db, dialogWrapper)
@@ -131,6 +132,16 @@ namespace Financisto.Desktop.ViewModels.Pages
             }
         }
 
+        public IList<TagModel> Tags
+        {
+            get => _tags;
+            set
+            {
+                _tags = value ?? new List<TagModel>();
+                RaisePropertyChanged(nameof(Tags));
+            }
+        }
+
         public IAsyncCommand AddTemplateCommand => _addTemplateCommand ??= new AsyncCommand(() => Task.CompletedTask, () => false);
 
         public IAsyncCommand AddTransferCommand => _addTransferCommand ??= new AsyncCommand(AddTransfer);
@@ -183,6 +194,7 @@ namespace Financisto.Desktop.ViewModels.Pages
             Payee = default;
             Project = default;
             Location = default;
+            Tags = new List<TagModel>();
             await RefreshDataCommand.ExecuteAsync();
         }
 
@@ -271,7 +283,7 @@ namespace Financisto.Desktop.ViewModels.Pages
         {
             TransferDialogVM dialogVm = new TransferDialogVM(new TransferDto(transfer));
 
-            var result = await dialogWrapper.ShowDialogAsync<TransferDialog>(dialogVm, 400, 580, LocalizationService.Instance.transfer);
+            var result = await dialogWrapper.ShowDialogAsync<TransferDialog>(dialogVm, 400, 440, LocalizationService.Instance.transfer);
 
             var output = result as TransferDto;
             if (output != null)
@@ -317,7 +329,7 @@ namespace Financisto.Desktop.ViewModels.Pages
 
             TransactionDialogVM dialogVm = new TransactionDialogVM(transactionDto, dialogWrapper);
 
-            var result = await dialogWrapper.ShowDialogAsync<TransactionDialog>(dialogVm, 640, 580, LocalizationService.Instance.transaction);
+            var result = await dialogWrapper.ShowDialogAsync<TransactionDialog>(dialogVm, 640, 440, LocalizationService.Instance.transaction);
             var resultVm = result as TransactionDto;
             if (resultVm != null)
             {
@@ -449,6 +461,19 @@ namespace Financisto.Desktop.ViewModels.Pages
                 predicate = predicate.And(x => x.LocationId == _location.Id);
             }
 
+            var tagTitles = Tags.Where(t => !string.IsNullOrWhiteSpace(t?.Title)).Select(t => t.Title).ToList();
+            if (tagTitles.Count > 0)
+            {
+                Expression<Func<BlotterTransactions, bool>> tagsPredicate = null;
+                foreach (var title in tagTitles)
+                {
+                    Expression<Func<BlotterTransactions, bool>> hasTag = x => x.Tags != null && x.Tags.Contains(title);
+                    tagsPredicate = tagsPredicate == null ? hasTag : tagsPredicate.Or(hasTag);
+                }
+
+                predicate = predicate.And(tagsPredicate);
+            }
+
             var items = await repo.FindManyAndProjectAsync(
                 predicate: predicate,
                 projection: x => new BlotterModel
@@ -465,6 +490,7 @@ namespace Financisto.Desktop.ViewModels.Pages
                     Project = x.ProjectId > 0 ? DbManual.ProjectIds.GetValueOrDefault(x.ProjectId.Value) : default,
                     Location = x.Location,
                     Payee = x.Payee,
+                    Tags = x.Tags,
                     Note = x.Note,
                     FromAmount = x.FromAmount,
                     ToAmount = x.ToAmount,

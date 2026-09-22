@@ -22,7 +22,7 @@ namespace Financisto.Desktop.ViewModels.Pages
     {
         string PageTitle { get; }
 
-        IEnumerable<TagModel> Entities { get; }
+        IEnumerable<TagBaseModel> Entities { get; }
 
         object SelectedValue { get; set; }
 
@@ -34,7 +34,7 @@ namespace Financisto.Desktop.ViewModels.Pages
     }
 
     public abstract class TagBasePageVM<TEntity> : EntityBaseVM<TEntity>, ITagBaseVM
-        where TEntity : TagModel, new()
+        where TEntity : TagBaseModel, new()
     {
         protected TagBasePageVM(IFinancistoDatabase db, IDialogWrapper dialogWrapper)
             : base(db, dialogWrapper)
@@ -47,7 +47,7 @@ namespace Financisto.Desktop.ViewModels.Pages
 
         public string PageTitle => LocalizationService.Instance[TitleKey];
 
-        IEnumerable<TagModel> ITagBaseVM.Entities => Entities;
+        IEnumerable<TagBaseModel> ITagBaseVM.Entities => Entities;
 
         object ITagBaseVM.SelectedValue
         {
@@ -64,7 +64,7 @@ namespace Financisto.Desktop.ViewModels.Pages
         }
 
         protected async Task OpenTagDialogAsync<T>(int e)
-            where T : Tag, new()
+            where T : TagBase, new()
         {
             T selectedEntity = await db.GetOrCreateAsync<T>(e);
             TagDialogVM context = new TagDialogVM(new TagDto(selectedEntity));

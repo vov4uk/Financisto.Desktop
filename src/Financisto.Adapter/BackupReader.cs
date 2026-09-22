@@ -1,12 +1,11 @@
-﻿using Financisto.DataAccess.Data;
-using Financisto.Adapter;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Financisto.DataAccess.Data;
 
 namespace Financisto.Adapter
 {

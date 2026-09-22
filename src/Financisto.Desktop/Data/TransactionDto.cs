@@ -27,6 +27,7 @@ namespace Financisto.Desktop.Data
         private int? projectId;
         private ObservableCollection<BaseTransactionDto> subTransactions = new ObservableCollection<BaseTransactionDto>();
         private long unSplitAmount;
+        private string tags;
 
         public TransactionDto() { }
 
@@ -72,6 +73,7 @@ namespace Financisto.Desktop.Data
             isAmountNegative = transaction.FromAmount <= 0;
             date = UnixTimeConverter.Convert(transaction.DateTime).Date;
             time = UnixTimeConverter.Convert(transaction.DateTime);
+            tags = transaction.Tags;
         }
 
         public CategoryModel Category
@@ -266,6 +268,12 @@ namespace Financisto.Desktop.Data
         {
             get => unSplitAmount;
             private set { SetProperty(ref unSplitAmount, value, nameof(UnsplitAmount)); }
+        }
+
+        public string Tags
+        {
+            get => tags;
+            set { SetProperty(ref tags, value, nameof(Tags)); }
         }
 
         public void RecalculateUnSplitAmount()

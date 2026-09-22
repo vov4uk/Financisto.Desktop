@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Financisto.Common.Utils;
 
 namespace Financisto.Common.Model
@@ -75,6 +76,7 @@ namespace Financisto.Common.Model
         public int? OriginalCurrencyId { get; set; }
         public long OriginalFromAmount { get; set; }
         public string Payee { get; set; }
+        public string Tags { get; set; }
         public int? ToAccountBalance { get; set; }
         public CurrencyModel ToAccountCurrency { get; set; }
         public int? ToAccountCurrencyId { get; set; }
@@ -85,7 +87,9 @@ namespace Financisto.Common.Model
 
         public bool ShowProjectSeparator => Project != null;
 
+        public bool ShowTagsSeparator => !string.IsNullOrWhiteSpace(Tags);
 
+        public string TagsTitle => string.Join(" | ", (Tags ?? string.Empty).Split("\\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
 
         public string Type
         {
