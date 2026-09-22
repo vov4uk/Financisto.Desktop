@@ -9,7 +9,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:Financisto.Desktop.ViewModels.Dialogs"
     d:DesignHeight="480"
-    d:DesignWidth="580"
+    d:DesignWidth="440"
     x:CompileBindings="False"
     x:DataType="vm:TransferDialogVM"
     mc:Ignorable="d">
@@ -29,18 +29,6 @@
         Background="{StaticResource WindowBackgroundBrush}"
         FontSize="14"
         Header="{loc:Translate Key=transfer_details}">
-        <GroupBox.Resources>
-            <!--<Style TargetType="{x:Type Image}">
-                <Setter Property="Height" Value="20" />
-                <Setter Property="Width" Value="20" />
-            </Style>
-            <Style TargetType="{x:Type xctk:IconButton}">
-                <Setter Property="Height" Value="24" />
-                <Setter Property="Width" Value="24" />
-                <Setter Property="HorizontalAlignment" Value="Center" />
-                <Setter Property="VerticalAlignment" Value="Center" />
-            </Style>-->
-        </GroupBox.Resources>
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
@@ -75,29 +63,7 @@
                     <ColumnDefinition Width="32" />
                 </Grid.ColumnDefinitions>
 
-                <!--<Grid Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"
-                      IsEnabled="{Binding Transfer.IsSubTransaction, Converter={StaticResource InverseBooleanConverter}}">
-                    <Grid.ColumnDefinitions>
 
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="120" />
-                    </Grid.ColumnDefinitions>
-                -->
-                <!--<Button Grid.Row="0" Grid.Column="0"
-                                     IsEnabled="False">
-
-                            <Image Source="{StaticResource IconCircleInfo}" Height="16" Width="16" />
-
-                    </Button>-->
-                <!--
-                    <DatePicker      Grid.Row="0" Grid.Column="0"
-                                     Margin="2"
-                                     SelectedDate="{Binding Transfer.Date, Converter={StaticResource DateTimeToDateTimeOffsetConverter}}" />
-                    <TimePicker Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="1"
-                                     Margin="2"
-                                     HorizontalAlignment="Stretch"
-                                     SelectedTime="{Binding Transfer.Time, Converter={StaticResource DateTimeToTimeSpanConverter}}" />
-                </Grid>-->
                 <Grid
                     Grid.Row="0"
                     Grid.Column="0"
@@ -111,11 +77,16 @@
                     <DatePicker
                         Grid.Row="0"
                         Grid.Column="0"
+                        MinWidth="150"
                         Margin="2"
-                        SelectedDate="{Binding Transfer.Date, Converter={StaticResource DateTimeToDateTimeOffsetConverter}}" />
+                        DayFormat="dd"
+                        MonthFormat="MM"
+                        SelectedDate="{Binding Transfer.Date, Converter={StaticResource DateTimeToDateTimeOffsetConverter}}"
+                        YearFormat="yyyy" />
                     <TimePicker
                         Grid.Row="0"
                         Grid.Column="1"
+                        MinWidth="110"
                         Margin="2"
                         HorizontalAlignment="Stretch"
                         SelectedTime="{Binding Transfer.Time, Converter={StaticResource DateTimeToTimeSpanConverter}}" />
@@ -126,15 +97,7 @@
                     Grid.Column="0"
                     Grid.ColumnSpan="3"
                     Text="{loc:Translate Key=from_account}" />
-                <!--<ComboBox  Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
-                           ItemsSource="{Binding Source={x:Static fcrd:DbManual.Account}, Mode=OneWay}"
-                           SelectedItem="{Binding Transfer.FromAccount}"
-                           SelectedValuePath="Id"
-                           SelectedValue="{Binding Transfer.FromAccountId}"
-                           TextSearch.TextPath="Title"
-                           IsEditable="True"
-                           IsEnabled="{Binding Transfer.IsSubTransaction, Converter={StaticResource InverseBooleanConverter}}"
-                           ItemTemplate="{StaticResource ResourceKey=IActive}"/>-->
+
                 <ComboBox
                     Grid.Row="2"
                     Grid.Column="0"
@@ -153,14 +116,7 @@
                     Grid.Column="0"
                     Grid.ColumnSpan="3"
                     Text="{loc:Translate Key=to_account}" />
-                <!--<ComboBox  Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3"
-                           ItemsSource="{Binding Source={x:Static fcrd:DbManual.Account}, Mode=OneWay}"
-                           SelectedItem="{Binding Transfer.ToAccount}"
-                           SelectedValuePath="Id"
-                           SelectedValue="{Binding Transfer.ToAccountId}"
-                           TextSearch.TextPath="Title"
-                           IsEditable="True"
-                           ItemTemplate="{StaticResource ResourceKey=IActive}" />-->
+
                 <ComboBox
                     Grid.Row="4"
                     Grid.Column="0"

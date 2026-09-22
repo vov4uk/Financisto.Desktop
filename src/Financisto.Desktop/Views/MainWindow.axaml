@@ -6,6 +6,8 @@
     xmlns:ViewModel="clr-namespace:Financisto.Desktop.ViewModels"
     xmlns:Wizard="clr-namespace:Financisto.Desktop.Wizards"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:li="using:LoadingIndicators.Avalonia"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:msg="https://github.com/xiyaowong/Message.Avalonia"
     xmlns:vm="using:Financisto.Desktop.ViewModels"
@@ -50,119 +52,123 @@
     </Window.Resources>
 
     <Panel>
-    <DockPanel>
-        <DockPanel DockPanel.Dock="Top" LastChildFill="False">
-            <Menu DockPanel.Dock="Left">
-                <MenuItem Header="_File">
-                    <MenuItem
-                        Command="{Binding OpenBackupCommand}"
-                        CommandParameter="{Binding $parent[Window]}"
-                        Header="_Open..."
-                        IsEnabled="{Binding !IsLoading}" />
-                    <MenuItem
-                        Command="{Binding SaveBackupCommand}"
-                        CommandParameter="{Binding $parent[Window]}"
-                        Header="_Save Backup..."
-                        IsEnabled="{Binding !IsLoading}" />
-                    <MenuItem
-                        Command="{Binding SaveBackupAsDbCommand}"
-                        CommandParameter="{Binding $parent[Window]}"
-                        Header="Save as _DB..."
-                        IsEnabled="{Binding !IsLoading}" />
-                    <Separator />
-                    <MenuItem Header="_Exit" />
-                </MenuItem>
-                <MenuItem Header="_Edit">
-                    <MenuItem Header="Copy" />
-                    <MenuItem Header="Paste" />
-                </MenuItem>
-            </Menu>
+        <DockPanel>
+            <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                <Menu DockPanel.Dock="Left" IsEnabled="{Binding !IsLoading}">
+                    <MenuItem Header="{loc:Translate Key=menu}">
+                        <MenuItem
+                            Command="{Binding OpenBackupCommand}"
+                            CommandParameter="{Binding $parent[Window]}"
+                            Header="{loc:Translate Key=open_backup}">
+                            <MenuItem.Icon>
+                                <Image Source="{StaticResource ResourceKey=IconFileArrowUp}" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem
+                            Command="{Binding SaveBackupCommand}"
+                            CommandParameter="{Binding $parent[Window]}"
+                            Header="{loc:Translate Key=save_backup}">
+                            <MenuItem.Icon>
+                                <Image Source="{StaticResource ResourceKey=IconFileArrowDown}" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem
+                            Command="{Binding SaveBackupAsDbCommand}"
+                            CommandParameter="{Binding $parent[Window]}"
+                            Header="{loc:Translate Key=save_as_db}">
+                            <MenuItem.Icon>
+                                <Image Source="{StaticResource ResourceKey=IconDatabase}" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </MenuItem>
+                </Menu>
 
-            <StackPanel
-                Margin="10,0"
-                DockPanel.Dock="Right"
-                Orientation="Horizontal"
-                Spacing="10">
                 <TextBlock
+                    Margin="10,0"
                     VerticalAlignment="Center"
-                    Foreground="{DynamicResource SystemControlForegroundBaseBrush}"
-                    IsVisible="{Binding IsLoading}"
-                    Text="Loading backup..." />
-                <!--<TextBlock Text="{Binding StatusMessage}"
-                           VerticalAlignment="Center"
-                           Foreground="{DynamicResource SystemControlForegroundBaseBrush}"/>-->
-                <TextBlock
-                    VerticalAlignment="Center"
+                    DockPanel.Dock="Right"
                     Foreground="{DynamicResource SystemControlForegroundBaseBrush}"
                     Text="{Binding OpenBackupPath}" />
-            </StackPanel>
-        </DockPanel>
 
-        <SplitView
-            Background="{DynamicResource SystemControlPageBackgroundBaseMediumBrush}"
-            DisplayMode="CompactInline"
-            IsEnabled="{Binding !IsLoading}"
-            IsPaneOpen="{Binding IsPanelOpen}"
-            OpenPaneLength="200"
-            PaneBackground="{DynamicResource SystemAltMediumLowColor}">
+            </DockPanel>
 
-            <SplitView.Pane>
-                <Grid
-                    Margin="5"
-                    Background="{DynamicResource SystemControlBackgroundBaseMediumLowBrush}"
-                    RowDefinitions="*,Auto">
+            <SplitView
+                Background="{DynamicResource SystemControlPageBackgroundBaseMediumBrush}"
+                DisplayMode="CompactInline"
+                IsEnabled="{Binding !IsLoading}"
+                IsPaneOpen="{Binding IsPanelOpen}"
+                OpenPaneLength="200"
+                PaneBackground="{DynamicResource SystemAltMediumLowColor}">
 
+                <SplitView.Pane>
                     <Grid
-                        Grid.Row="0"
-                        Background="{DynamicResource SystemControlBackgroundAltMediumLowBrush}"
-                        RowDefinitions="Auto,*">
-
-                        <Button
-                            Padding="12,8"
-                            HorizontalAlignment="Left"
-                            HorizontalContentAlignment="Left"
-                            Command="{Binding OpenPanelCommand}">
-                            <Image
-                                Width="24"
-                                Height="24"
-                                Source="{StaticResource Icon3HorizontalLines}"
-                                Stretch="Uniform"
-                                />
-                        </Button>
-
+                        Margin="5"
+                        Background="{DynamicResource SystemControlBackgroundBaseMediumLowBrush}"
+                        RowDefinitions="*,Auto">
 
                         <Grid
-                            Grid.Row="1"
-                            Background="{DynamicResource SystemControlDisabledBaseMediumLowBrush}"
-                            RowDefinitions="*,Auto">
+                            Grid.Row="0"
+                            Background="{DynamicResource SystemControlBackgroundAltMediumLowBrush}"
+                            RowDefinitions="Auto,*">
 
-                            <ListBox
-                                Grid.Row="0"
-                                Background="{DynamicResource SystemAltMediumLowColor}"
-                                Foreground="{DynamicResource SystemControlForegroundBaseBrush}"
-                                ItemTemplate="{StaticResource ListItemTemplateDataTemplate}"
-                                ItemsSource="{Binding ItemsTop}"
-                                SelectedItem="{Binding SelectedItemTop, UpdateSourceTrigger=PropertyChanged}" />
+                            <Button
+                                Padding="12,8"
+                                HorizontalAlignment="Left"
+                                HorizontalContentAlignment="Left"
+                                Command="{Binding OpenPanelCommand}">
+                                <Image
+                                    Width="24"
+                                    Height="24"
+                                    Source="{StaticResource Icon3HorizontalLines}"
+                                    Stretch="Uniform" />
+                            </Button>
 
-                            <ListBox
+
+                            <Grid
                                 Grid.Row="1"
-                                Background="{DynamicResource SystemAltMediumLowColor}"
-                                Foreground="{DynamicResource SystemControlForegroundBaseBrush}"
-                                ItemTemplate="{StaticResource ListItemTemplateDataTemplate}"
-                                ItemsSource="{Binding ItemsBottom}"
-                                SelectedItem="{Binding SelectedItemBottom, UpdateSourceTrigger=PropertyChanged, }" />
+                                Background="{DynamicResource SystemControlDisabledBaseMediumLowBrush}"
+                                RowDefinitions="*,Auto">
+
+                                <ListBox
+                                    Grid.Row="0"
+                                    Background="{DynamicResource SystemAltMediumLowColor}"
+                                    Foreground="{DynamicResource SystemControlForegroundBaseBrush}"
+                                    ItemTemplate="{StaticResource ListItemTemplateDataTemplate}"
+                                    ItemsSource="{Binding ItemsTop}"
+                                    SelectedItem="{Binding SelectedItemTop, UpdateSourceTrigger=PropertyChanged}" />
+
+                                <ListBox
+                                    Grid.Row="1"
+                                    Background="{DynamicResource SystemAltMediumLowColor}"
+                                    Foreground="{DynamicResource SystemControlForegroundBaseBrush}"
+                                    ItemTemplate="{StaticResource ListItemTemplateDataTemplate}"
+                                    ItemsSource="{Binding ItemsBottom}"
+                                    SelectedItem="{Binding SelectedItemBottom, UpdateSourceTrigger=PropertyChanged, }" />
+                            </Grid>
                         </Grid>
                     </Grid>
-                </Grid>
-            </SplitView.Pane>
+                </SplitView.Pane>
 
-            <SplitView.Content>
-                <Border Background="{DynamicResource SystemAltMediumHighColor}">
-                    <TransitioningContentControl Content="{Binding CurrentPage, UpdateSourceTrigger=PropertyChanged}" />
-                </Border>
-            </SplitView.Content>
-        </SplitView>
-    </DockPanel>
+                <SplitView.Content>
+                    <Border Background="{DynamicResource SystemAltMediumHighColor}">
+                        <Grid RowDefinitions="*">
+                            <TransitioningContentControl
+                                Grid.Row="0"
+                                Content="{Binding CurrentPage, UpdateSourceTrigger=PropertyChanged}"
+                                IsVisible="{Binding !IsLoading}" />
+
+                            <li:LoadingIndicator
+                                Height="256"
+                                Foreground="{DynamicResource SystemControlPageBackgroundBaseMediumBrush}"
+                                IsActive="{Binding IsLoading, UpdateSourceTrigger=PropertyChanged}"
+                                Mode="Arc"
+                                SpeedRatio="1.2" />
+
+                        </Grid>
+                    </Border>
+                </SplitView.Content>
+            </SplitView>
+        </DockPanel>
         <msg:MessageHost />
     </Panel>
 
