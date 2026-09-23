@@ -6,9 +6,14 @@ using System.Threading.Tasks;
 using Avalonia.Threading;
 using Financisto.Common;
 using Financisto.Common.Localization;
+using Financisto.Common.Model;
+using Financisto.Common.Utils;
+using Financisto.Converters;
 using Financisto.DataAccess.Abstractions;
+using Financisto.DataAccess.Data;
 using Financisto.Desktop.Helpers;
 using Financisto.Desktop.Models;
+using Financisto.Desktop.Services;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
@@ -21,6 +26,7 @@ namespace Financisto.Desktop.ViewModels.Pages
     {
         private readonly IFinancistoDatabase db;
         private readonly IToastNotifierWrapper notifier;
+        private readonly AccountsTotalService accountsTotalService;
 
         private IAsyncCommand _refreshDataCommand;
 
@@ -61,7 +67,7 @@ WHERE RowNum = 1
 ORDER BY account_is_active DESC, sort_order ASC
 ";
 
-        // gráficos
+        // charts
         private ISeries[] _pieSeries = [];
         public ISeries[] PieSeries
         {
@@ -76,7 +82,7 @@ ORDER BY account_is_active DESC, sort_order ASC
             private set => SetProperty(ref _lineSeries, value);
         }
 
-        //eixos para gráfico de linha
+        // net worth chart axes
         private Axis[] _xAxes = [new Axis()];
         public Axis[] XAxes
         {
@@ -91,12 +97,26 @@ ORDER BY account_is_active DESC, sort_order ASC
             private set => SetProperty(ref _yAxes, value);
         }
 
+        // accounts total per currency
+        private AccountsTotalItemModel[] _totals = [];
+        public AccountsTotalItemModel[] Totals
+        {
+            get => _totals;
+            private set => SetProperty(ref _totals, value);
+        }
 
-        //construtor obrigatório recebendo o serviço
+        private AccountsTotalItemModel _homeCurrencyTotal;
+        public AccountsTotalItemModel HomeCurrencyTotal
+        {
+            get => _homeCurrencyTotal;
+            private set => SetProperty(ref _homeCurrencyTotal, value);
+        }
+
         public DashboardPageVM(IFinancistoDatabase db, IToastNotifierWrapper notifier)
         {
             this.db = db ?? throw new ArgumentNullException(nameof(db));
             this.notifier = notifier ?? throw new ArgumentNullException(nameof(notifier));
+            accountsTotalService = new AccountsTotalService(db);
         }
 
         public IAsyncCommand RefreshDataCommand => _refreshDataCommand ??= new AsyncCommand(RefreshData);
@@ -104,8 +124,90 @@ ORDER BY account_is_active DESC, sort_order ASC
         private async Task RefreshData()
         {
             await StructurePie();
+            await AccountsTotal();
             await SaldoBar();
         }
+
+        // same rows as Android AbstractTotalsDetailsActivity: every currency, then the total in the home currency
+        private async Task AccountsTotal()
+        {
+            var totals = await Task.Run(accountsTotalService.GetAccountsTotalsAsync);
+            var homeCurrency = totals.HomeCurrency;
+
+            var items = totals.TotalsPerCurrency
+                .OrderBy(x => x.Currency.Name, StringComparer.Ordinal)
+                .Select(x =>
+                {
+                    var title = string.Format(LocalizationService.Instance["account_total_in_currency"], x.Currency.Name);
+                    return x.Currency.Id == homeCurrency.Id
+                        ? CreateAmountItem(x, title)
+                        : CreateForeignAmountItem(x, totals.Rates.GetRate(x.Currency.Id ?? 0, homeCurrency.Id ?? 0), homeCurrency, title);
+                })
+                .ToArray();
+            var homeCurrencyTotal = CreateAmountItem(totals.TotalInHomeCurrency, LocalizationService.Instance["home_currency_total"]);
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                Totals = items;
+                HomeCurrencyTotal = homeCurrencyTotal;
+            });
+        }
+
+        private static AccountsTotalItemModel CreateAmountItem(Total total, string title)
+        {
+            if (!total.IsError)
+            {
+                return new AccountsTotalItemModel
+                {
+                    Title = title,
+                    Amount = BlotterUtils.SetAmountText(total.Currency, total.Balance, false),
+                    IsNegative = total.Balance < 0,
+                };
+            }
+
+            return new AccountsTotalItemModel
+            {
+                Title = title,
+                Amount = LocalizationService.Instance["not_available"],
+                IsError = true,
+                Details = total.Currency.Id == Currency.EMPTY.Id
+                    ? LocalizationService.Instance["currency_make_default_warning"]
+                    : string.Format(LocalizationService.Instance["rate_not_available_on_date_error"],
+                        FormatRateDate(total.Error.DateTime), total.Error.Currency.Name, total.Currency.Name),
+            };
+        }
+
+        private static AccountsTotalItemModel CreateForeignAmountItem(Total total, ExchangeRate rate, CurrencyModel homeCurrency, string title)
+        {
+            var item = new AccountsTotalItemModel
+            {
+                Title = title,
+                Amount = BlotterUtils.SetAmountText(total.Currency, total.Balance, false),
+                IsNegative = total.Balance < 0,
+            };
+
+            if (rate == ExchangeRate.NA)
+            {
+                return item with
+                {
+                    IsError = true,
+                    Details = string.Format(LocalizationService.Instance["rate_not_available_error"], total.Currency.Name, homeCurrency.Name),
+                };
+            }
+
+            var rateDate = rate.Date != 0 ? string.Format(LocalizationService.Instance["rate_as_of"], FormatRateDate(rate.Date)) : string.Empty;
+            var rateInfo = string.Format(LocalizationService.Instance["rate_info"],
+                total.Currency.Name, Math.Abs(rate.Rate).ToString("0.00000", CultureInfo.CurrentCulture), homeCurrency.Name);
+            var converted = (long)(decimal)(total.Balance * rate.Rate);
+
+            return item with
+            {
+                Details = rateDate + rateInfo,
+                ConvertedAmount = "≈ " + BlotterUtils.SetAmountText(homeCurrency, converted, false),
+            };
+        }
+
+        private static string FormatRateDate(long unixTime) => UnixTimeConverter.Convert(unixTime).ToString(UnixTimeConverter.FORMAT_DAY);
 
         private async Task StructurePie()
         {

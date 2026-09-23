@@ -924,4 +924,79 @@
   <data name="number_format" xml:space="preserve">
     <value>Format liczbowy</value>
   </data>
+  <data name="account_total_in_currency" xml:space="preserve">
+    <value>Wszystkie konta {0}</value>
+  </data>
+  <data name="home_currency_total" xml:space="preserve">
+    <value>Suma w walucie domowej</value>
+  </data>
+  <data name="rate_as_of" xml:space="preserve">
+    <value>Kurs z dnia {0}, </value>
+  </data>
+  <data name="rate_info" xml:space="preserve">
+    <value>1 {0} = {1} {2}</value>
+  </data>
+  <data name="rate_not_available_error" xml:space="preserve">
+    <value>Brak kursu wymiany między {0} a {1}</value>
+  </data>
+  <data name="rate_not_available_on_date_error" xml:space="preserve">
+    <value>Brak kursu wymiany na dzień {0} między {1} a {2}</value>
+  </data>
+  <data name="not_available" xml:space="preserve">
+    <value>b.d.</value>
+  </data>
+  <data name="currency_make_default_warning" xml:space="preserve">
+    <value>Ustaw domyślną walutę, aby uzyskać poprawną sumę (strona Waluty)</value>
+  </data>
+  <data name="dashboard" xml:space="preserve">
+    <value>Pulpit</value>
+  </data>
+  <data name="dashboard_accounts_structure" xml:space="preserve">
+    <value>Struktura kont</value>
+  </data>
+  <data name="dashboard_accounts_structure_description" xml:space="preserve">
+    <value>Udział każdego konta w saldzie całkowitym, w walucie domowej</value>
+  </data>
+  <data name="dashboard_net_worth" xml:space="preserve">
+    <value>Wartość netto w ciągu ostatnich 12 miesięcy</value>
+  </data>
+  <data name="dashboard_net_worth_description" xml:space="preserve">
+    <value>Aktywa, pasywa i wartość netto na koniec każdego miesiąca, w walucie domowej</value>
+  </data>
+  <data name="tags" xml:space="preserve">
+    <value>Tagi</value>
+  </data>
+  <data name="sub_transaction" xml:space="preserve">
+    <value>Część transakcji</value>
+  </data>
+  <data name="format" xml:space="preserve">
+    <value>Format</value>
+  </data>
+  <data name="configurations" xml:space="preserve">
+    <value>Ustawienia</value>
+  </data>
+  <data name="theme" xml:space="preserve">
+    <value>Motyw</value>
+  </data>
+  <data name="information" xml:space="preserve">
+    <value>Informacje</value>
+  </data>
+  <data name="repository" xml:space="preserve">
+    <value>Repozytorium kodu</value>
+  </data>
+  <data name="app_version" xml:space="preserve">
+    <value>Wersja</value>
+  </data>
+  <data name="developer" xml:space="preserve">
+    <value>Programista</value>
+  </data>
+  <data name="app_theme_system" xml:space="preserve">
+    <value>Systemowy</value>
+  </data>
+  <data name="app_theme_light" xml:space="preserve">
+    <value>Jasny</value>
+  </data>
+  <data name="app_theme_dark" xml:space="preserve">
+    <value>Ciemny</value>
+  </data>
 </root>

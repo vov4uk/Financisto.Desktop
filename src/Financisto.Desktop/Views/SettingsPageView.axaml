@@ -147,8 +147,12 @@
 
                 <StackPanel Spacing="6">
                     <TextBlock Text="Financisto Desktop" />
-                    <TextBlock Text="Version: 0.0.1" />
-                    <TextBlock Text="Developer: vov4uk" />
+                    <TextBlock>
+                        <Run Text="{loc:Translate Key=app_version}" /><Run Text=": " /><Run Text="{Binding AppVersion}" />
+                    </TextBlock>
+                    <TextBlock>
+                        <Run Text="{loc:Translate Key=developer}" /><Run Text=": vov4uk" />
+                    </TextBlock>
 
                     <HyperlinkButton Content="{loc:Translate Key=repository}" NavigateUri="https://github.com/vov4uk/Financisto.Desktop" />
                 </StackPanel>

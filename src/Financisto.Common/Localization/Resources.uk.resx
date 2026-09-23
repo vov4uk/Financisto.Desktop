@@ -924,4 +924,79 @@
   <data name="number_format" xml:space="preserve">
     <value>Числовий формат</value>
   </data>
+  <data name="account_total_in_currency" xml:space="preserve">
+    <value>Усі рахунки {0}</value>
+  </data>
+  <data name="home_currency_total" xml:space="preserve">
+    <value>Всього в домашній валюті</value>
+  </data>
+  <data name="rate_as_of" xml:space="preserve">
+    <value>Курс на {0}, </value>
+  </data>
+  <data name="rate_info" xml:space="preserve">
+    <value>1 {0} = {1} {2}</value>
+  </data>
+  <data name="rate_not_available_error" xml:space="preserve">
+    <value>Немає обмінного курсу від {0} до {1}</value>
+  </data>
+  <data name="rate_not_available_on_date_error" xml:space="preserve">
+    <value>Немає обмінного курсу на {0} від {1} до {2}</value>
+  </data>
+  <data name="not_available" xml:space="preserve">
+    <value>Н/Д</value>
+  </data>
+  <data name="currency_make_default_warning" xml:space="preserve">
+    <value>Будь ласка, встановіть валюту за замовчуванням, щоб отримати правильний баланс (сторінка Валюти)</value>
+  </data>
+  <data name="dashboard" xml:space="preserve">
+    <value>Огляд</value>
+  </data>
+  <data name="dashboard_accounts_structure" xml:space="preserve">
+    <value>Структура рахунків</value>
+  </data>
+  <data name="dashboard_accounts_structure_description" xml:space="preserve">
+    <value>Частка кожного рахунку в загальному балансі, у домашній валюті</value>
+  </data>
+  <data name="dashboard_net_worth" xml:space="preserve">
+    <value>Чистий капітал за останні 12 місяців</value>
+  </data>
+  <data name="dashboard_net_worth_description" xml:space="preserve">
+    <value>Активи, зобов'язання та чистий капітал на кінець кожного місяця, у домашній валюті</value>
+  </data>
+  <data name="tags" xml:space="preserve">
+    <value>Теги</value>
+  </data>
+  <data name="sub_transaction" xml:space="preserve">
+    <value>Частина операції</value>
+  </data>
+  <data name="format" xml:space="preserve">
+    <value>Формат</value>
+  </data>
+  <data name="configurations" xml:space="preserve">
+    <value>Налаштування</value>
+  </data>
+  <data name="theme" xml:space="preserve">
+    <value>Тема</value>
+  </data>
+  <data name="information" xml:space="preserve">
+    <value>Інформація</value>
+  </data>
+  <data name="repository" xml:space="preserve">
+    <value>Репозиторій з кодом</value>
+  </data>
+  <data name="app_version" xml:space="preserve">
+    <value>Версія</value>
+  </data>
+  <data name="developer" xml:space="preserve">
+    <value>Розробник</value>
+  </data>
+  <data name="app_theme_system" xml:space="preserve">
+    <value>Системна</value>
+  </data>
+  <data name="app_theme_light" xml:space="preserve">
+    <value>Світла</value>
+  </data>
+  <data name="app_theme_dark" xml:space="preserve">
+    <value>Темна</value>
+  </data>
 </root>

@@ -60,6 +60,8 @@ namespace Financisto.Desktop.ViewModels.Pages
             private set => SetProperty(ref _entity, value);
         }
 
+        public string AppVersion { get; } = typeof(SettingsPageVM).Assembly.GetName().Version?.ToString(3);
+
         public IAsyncCommand RefreshDataCommand => _refreshDataCommand ??= new AsyncCommand(RefreshData);
 
         public IAsyncCommand SaveCommand => _saveCommand ??= new AsyncCommand(Save);
