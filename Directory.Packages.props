@@ -15,6 +15,7 @@
     <PackageVersion Include="LiveChartsCore" Version="2.1.0-dev-798" />
     <PackageVersion Include="LiveChartsCore.SkiaSharpView" Version="2.1.0-dev-798" />
     <PackageVersion Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.1.0-dev-798" />
+    <PackageVersion Include="MacBundle" Version="1.0.0" />
     <!-- Production packages - Financier.Desktop -->
     <PackageVersion Include="Cogwheel" Version="2.1.1" />
     <PackageVersion Include="coverlet.collector" Version="10.0.1" />
