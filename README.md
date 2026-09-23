@@ -22,7 +22,7 @@ A full-featured desktop companion for [Financisto](https://github.com/dsolonenko
 </p>
 
 ## About
- Desktop version of [Financisto Holo](https://github.com/tiberiusteng/financisto1-holo "Financisto Holo") which is a fork of the great [Financisto](https://github.com/dsolonenko/financisto) app. Financisto is an open-source personal finance tracker for Android platform.
+ Desktop version of [Financisto Holo](https://github.com/tiberiusteng/financisto1-holo "Financisto Holo"). Financisto is an open-source personal finance tracker for Android platform.
 
 ## Supported features
 
