@@ -1,8 +1,10 @@
 using System;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using Financisto.Common;
 using Financisto.Common.Entities;
 using Financisto.Common.Localization;
+using Financisto.Common.Model;
 using Financisto.Desktop.Data;
 using Financisto.Desktop.Helpers;
 using Financisto.Desktop.Views.Dialogs;
@@ -36,7 +38,7 @@ public class TransactionDialogVM : SubTransactionDialogVM
 
     public DelegateCommand ClearPayeeCommand => _clearPayeeCommand ??= new DelegateCommand(() => { Transaction.PayeeId = default; });
 
-    public DelegateCommand ClearTagCommand => _clearTagCommand ??= new DelegateCommand(() => { Transaction.Tags = default; });
+    public DelegateCommand ClearTagCommand => _clearTagCommand ??= new DelegateCommand(() => { Transaction.SelectedTags = new ObservableCollection<TagModel>(); });
 
     public DelegateCommand<BaseTransactionDto> DeleteSubTransactionCommand => _deleteSubTransactionCommand ??= new DelegateCommand<BaseTransactionDto>(tr =>
     {
@@ -46,7 +48,8 @@ public class TransactionDialogVM : SubTransactionDialogVM
 
     public AsyncCommand<BaseTransactionDto> EditSubTransactionCommand => _editSubTransaction ??= new AsyncCommand<BaseTransactionDto>(EditSubTransaction);
 
-    protected override bool CanSaveCommandExecute() => Transaction.FromAccount != null && Transaction.FromAmount != 0 && Transaction.UnsplitAmount == 0;
+    // Only a split must be fully distributed among its parts; a regular transaction has no parts, so its UnsplitAmount is the whole amount.
+    protected override bool CanSaveCommandExecute() => Transaction.FromAccount != null && Transaction.FromAmount != 0 && base.CanSaveCommandExecute();
 
     private static void CopySubTransaction(TransactionDto original, TransactionDto modifiedCopy)
     {

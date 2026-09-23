@@ -2,6 +2,7 @@ using Financisto.Converters;
 using Financisto.DataAccess.Data;
 using Financisto.Desktop.Data;
 using System;
+using System.Linq;
 
 namespace Financisto.Desktop.Helpers;
 
@@ -62,6 +63,7 @@ public static class MapperHelper
         tr.LocationId = dto.LocationId ?? 0;
         tr.ProjectId = dto.CategoryId == -1 ? 0 : (dto.ProjectId ?? 0); // parent transaction doesn't have a Project
         tr.Note = dto.Note;
+        tr.Tags = dto.SelectedTags?.Count > 0 ? string.Join(TransactionDto.TagsDelimiter, dto.SelectedTags.Select(t => t.Title)) : null;
         tr.DateTime = UnixTimeConverter.ConvertBack(dto.DateTime);
         tr.LastRecurrence = UnixTimeConverter.ConvertBack(DateTime.Now);
     }

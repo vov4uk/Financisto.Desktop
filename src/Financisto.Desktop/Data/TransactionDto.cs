@@ -12,6 +12,9 @@ namespace Financisto.Desktop.Data
 {
     public class TransactionDto : BaseTransactionDto
     {
+        // Stored tags are titles joined by the two characters "\n" (backslash, n) as they appear in backups, not by a real line break.
+        internal const string TagsDelimiter = "\\n";
+
         private CategoryModel category;
         private int? categoryId;
         private CurrencyModel currency;
@@ -27,7 +30,7 @@ namespace Financisto.Desktop.Data
         private int? projectId;
         private ObservableCollection<BaseTransactionDto> subTransactions = new ObservableCollection<BaseTransactionDto>();
         private long unSplitAmount;
-        private string tags;
+        private ObservableCollection<TagModel> selectedTags = new ObservableCollection<TagModel>();
 
         public TransactionDto() { }
 
@@ -73,7 +76,9 @@ namespace Financisto.Desktop.Data
             isAmountNegative = transaction.FromAmount <= 0;
             date = UnixTimeConverter.Convert(transaction.DateTime).Date;
             time = UnixTimeConverter.Convert(transaction.DateTime);
-            tags = transaction.Tags;
+
+            var tagTitles = (transaction.Tags ?? string.Empty).Split(TagsDelimiter, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            selectedTags = new ObservableCollection<TagModel>(DbManual.Tag.Where(t => tagTitles.Contains(t.Title, StringComparer.OrdinalIgnoreCase)));
         }
 
         public CategoryModel Category
@@ -270,10 +275,10 @@ namespace Financisto.Desktop.Data
             private set { SetProperty(ref unSplitAmount, value, nameof(UnsplitAmount)); }
         }
 
-        public string Tags
+        public ObservableCollection<TagModel> SelectedTags
         {
-            get => tags;
-            set { SetProperty(ref tags, value, nameof(Tags)); }
+            get => selectedTags;
+            set { SetProperty(ref selectedTags, value, nameof(SelectedTags)); }
         }
 
         public void RecalculateUnSplitAmount()

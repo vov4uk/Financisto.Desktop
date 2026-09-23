@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -39,7 +40,7 @@ namespace Financisto.Desktop.ViewModels.Pages
         private PayeeModel _payee;
         private ProjectModel _project;
         private LocationModel _location;
-        private IList<TagModel> _tags = new List<TagModel>();
+        private ObservableCollection<TagModel> _tags = new ObservableCollection<TagModel>();
 
         public BlotterPageVM(IFinancistoDatabase db, IDialogWrapper dialogWrapper)
             : base(db, dialogWrapper)
@@ -132,12 +133,12 @@ namespace Financisto.Desktop.ViewModels.Pages
             }
         }
 
-        public IList<TagModel> Tags
+        public ObservableCollection<TagModel> Tags
         {
             get => _tags;
             set
             {
-                _tags = value ?? new List<TagModel>();
+                _tags = value ?? new ObservableCollection<TagModel>();
                 RaisePropertyChanged(nameof(Tags));
             }
         }
@@ -194,7 +195,7 @@ namespace Financisto.Desktop.ViewModels.Pages
             Payee = default;
             Project = default;
             Location = default;
-            Tags = new List<TagModel>();
+            Tags = new ObservableCollection<TagModel>();
             await RefreshDataCommand.ExecuteAsync();
         }
 

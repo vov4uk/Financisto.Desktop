@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -13,19 +11,12 @@ using Financisto.Common.Model;
 namespace Financisto.Common.Controls
 {
     // Avalonia's ComboBox has no built-in multi-select, so this opens a flyout of checkboxes instead.
-    // SelectedTagsText mirrors SelectedTags as a comma-joined string for consumers (like the
-    // free-text Transaction.Tags column) that store the selection as text rather than a list.
     [ExcludeFromCodeCoverage]
     public partial class TagSelector : UserControl
     {
-        public static readonly StyledProperty<IList<TagModel>> SelectedTagsProperty =
-            AvaloniaProperty.Register<TagSelector, IList<TagModel>>(
+        public static readonly StyledProperty<ObservableCollection<TagModel>> SelectedTagsProperty =
+            AvaloniaProperty.Register<TagSelector, ObservableCollection<TagModel>>(
                 nameof(SelectedTags),
-                defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
-
-        public static readonly StyledProperty<string> SelectedTagsTextProperty =
-            AvaloniaProperty.Register<TagSelector, string>(
-                nameof(SelectedTagsText),
                 defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
 
         private readonly ObservableCollection<TagSelectionItem> _items = new();
@@ -47,55 +38,33 @@ namespace Financisto.Common.Controls
             UpdateHeaderText();
         }
 
-        public IList<TagModel> SelectedTags
+        public ObservableCollection<TagModel> SelectedTags
         {
             get => GetValue(SelectedTagsProperty);
             set => SetValue(SelectedTagsProperty, value);
-        }
-
-        public string SelectedTagsText
-        {
-            get => GetValue(SelectedTagsTextProperty);
-            set => SetValue(SelectedTagsTextProperty, value);
         }
 
         protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
         {
             base.OnPropertyChanged(change);
 
-            if (_isSyncingFromItems)
+            if (change.Property == SelectedTagsProperty && !_isSyncingFromItems)
             {
-                return;
-            }
-
-            if (change.Property == SelectedTagsProperty)
-            {
-                var ids = ((IList<TagModel>)change.NewValue)?.Where(t => t?.Id != null).Select(t => t.Id);
-                SyncItemsFromIds(ids);
-            }
-            else if (change.Property == SelectedTagsTextProperty)
-            {
-                var titles = SplitTitles((string)change.NewValue);
-                var ids = _items
-                    .Where(i => titles.Contains(i.Tag.Title, StringComparer.OrdinalIgnoreCase))
-                    .Select(i => i.Tag.Id);
-                SyncItemsFromIds(ids);
+                SyncItemsFromSelectedTags(change.NewValue as ObservableCollection<TagModel>);
             }
         }
 
-        private static List<string> SplitTitles(string text) =>
-            (text ?? string.Empty)
-                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .ToList();
-
-        private void SyncItemsFromIds(IEnumerable<int?> selectedIds)
+        private void SyncItemsFromSelectedTags(ObservableCollection<TagModel> selectedTags)
         {
-            var ids = (selectedIds ?? Enumerable.Empty<int?>()).ToHashSet();
+            var selectedIds = (selectedTags ?? new ObservableCollection<TagModel>())
+                .Where(t => t?.Id != null)
+                .Select(t => t.Id)
+                .ToHashSet();
 
             _isSyncingFromExternal = true;
             foreach (var item in _items)
             {
-                item.IsSelected = ids.Contains(item.Tag.Id);
+                item.IsSelected = selectedIds.Contains(item.Tag.Id);
             }
             _isSyncingFromExternal = false;
 
@@ -109,11 +78,8 @@ namespace Financisto.Common.Controls
                 return;
             }
 
-            var selected = _items.Where(i => i.IsSelected).Select(i => i.Tag).ToList();
-
             _isSyncingFromItems = true;
-            SelectedTags = selected;
-            SelectedTagsText = string.Join(", ", selected.Select(t => t.Title));
+            SelectedTags = new ObservableCollection<TagModel>(_items.Where(i => i.IsSelected).Select(i => i.Tag));
             _isSyncingFromItems = false;
 
             UpdateHeaderText();
@@ -121,7 +87,7 @@ namespace Financisto.Common.Controls
 
         private void UpdateHeaderText()
         {
-            HeaderText.Text = string.Join(", ", _items.Where(i => i.IsSelected).Select(i => i.Tag.Title));
+            HeaderText.Text = string.Join(" | ", _items.Where(i => i.IsSelected).Select(i => i.Tag.Title));
         }
 
         private void OnClearClick(object sender, RoutedEventArgs e)

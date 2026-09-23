@@ -421,7 +421,7 @@
                         Grid.Row="20"
                         Grid.Column="0"
                         HorizontalAlignment="Stretch"
-                        SelectedTagsText="{Binding Transaction.Tags}" />
+                        SelectedTags="{Binding Transaction.SelectedTags}" />
                     <Button
                         Grid.Row="20"
                         Grid.Column="1"

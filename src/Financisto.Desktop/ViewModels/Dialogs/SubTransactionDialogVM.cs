@@ -6,7 +6,13 @@ namespace Financisto.Desktop.ViewModels.Dialogs;
 
 public class SubTransactionDialogVM : DialogBaseVM
 {
-    private readonly string[] TrackingProperies = new string[] { nameof(TransactionDto.FromAmount), nameof(TransactionDto.FromAccount) };
+    private readonly string[] TrackingProperies = new string[]
+    {
+        nameof(TransactionDto.FromAmount),
+        nameof(TransactionDto.FromAccount),
+        nameof(TransactionDto.IsSplitCategory),
+        nameof(TransactionDto.UnsplitAmount),
+    };
 
     private DelegateCommand _changeFromAmountSignCommand;
     private DelegateCommand<int?> _clearCategoryCommand;
