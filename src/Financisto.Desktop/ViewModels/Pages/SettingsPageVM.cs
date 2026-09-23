@@ -95,13 +95,16 @@ namespace Financisto.Desktop.ViewModels.Pages
             {
                 Entity.ExchangeRates.OpenExchangeRatesProviderAppId = "";
             }
-            else if (!string.IsNullOrEmpty(Entity.ExchangeRates.OpenExchangeRatesProviderAppId))
+
+            // Encrypt a copy: Entity stays bound to the UI with the plain app id, so saving again doesn't encrypt twice.
+            var toSave = (SettingsDto)Entity.Clone();
+            if (!string.IsNullOrEmpty(toSave.ExchangeRates.OpenExchangeRatesProviderAppId))
             {
-                Entity.ExchangeRates.OpenExchangeRatesProviderAppId = SettingsProtection.Encrypt(Entity.ExchangeRates.OpenExchangeRatesProviderAppId);
+                toSave.ExchangeRates.OpenExchangeRatesProviderAppId = SettingsProtection.Encrypt(toSave.ExchangeRates.OpenExchangeRatesProviderAppId);
             }
 
             Language before = SettingsService.Current.Settings.General.Language;
-            SettingsService.Current.Settings = Entity;
+            SettingsService.Current.Settings = toSave;
             SettingsService.Current.Save();
 
             if (before != Entity.General.Language)

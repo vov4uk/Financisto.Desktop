@@ -8,6 +8,7 @@ namespace Financisto.Desktop.Helpers
     /// Encrypts and decrypts sensitive settings values using DPAPI (CurrentUser scope).
     /// Cipher text is stored as Base64. Decryption falls back to returning the input as-is
     /// so that plain-text values written before this change are loaded without error.
+    /// DPAPI exists only on Windows; on Linux/macOS values are stored as-is in the per-user settings file.
     /// </summary>
     internal static class SettingsProtection
     {
@@ -15,7 +16,7 @@ namespace Financisto.Desktop.Helpers
 
         internal static string Encrypt(string plainText)
         {
-            if (string.IsNullOrEmpty(plainText))
+            if (string.IsNullOrEmpty(plainText) || !OperatingSystem.IsWindows())
                 return plainText;
 
             var plainBytes = Encoding.UTF8.GetBytes(plainText);
@@ -25,7 +26,7 @@ namespace Financisto.Desktop.Helpers
 
         internal static string TryDecrypt(string cipherText)
         {
-            if (string.IsNullOrEmpty(cipherText))
+            if (string.IsNullOrEmpty(cipherText) || !OperatingSystem.IsWindows())
                 return cipherText;
 
             try

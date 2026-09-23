@@ -27,6 +27,11 @@
     </ItemGroup>
 
     <ItemGroup>
+        <!-- NLog reads its config from next to the exe, so keep it out of the single-file bundle -->
+        <None Update="NLog.config" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Avalonia" />
         <PackageReference Include="Avalonia.Controls.DataGrid" />
         <PackageReference Include="Avalonia.Desktop" />

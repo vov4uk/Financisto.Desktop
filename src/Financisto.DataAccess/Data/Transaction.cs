@@ -54,6 +54,9 @@ namespace Financisto.DataAccess.Data
         [Column("parent_id")]
         public int ParentId { get; set; }
 
+        [Column("parent_account_id")]
+        public int ParentAccountId { get; set; }
+
         [Column("blob_key")]
         public string BlobKey { get; set; }
 

@@ -43,6 +43,9 @@ namespace Financisto.DataAccess.Data
         [Column("update_exchange_rate")]
         public bool UpdateExchangeRate { get; set; }
 
+        [Column("trading_currency_id")]
+        public int TradingCurrencyId { get; set; }
+
         [Column(Backup.UpdatedOnColumn)]
         public long UpdatedOn { get; set; }
 

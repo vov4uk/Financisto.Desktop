@@ -202,22 +202,36 @@ namespace Financisto.Desktop.ViewModels.Pages
         {
             if (await this.dialogWrapper.ShowMessageBoxAsync(LocalizationService.Instance.confirm_delete_transaction, LocalizationService.Instance.delete, true))
             {
+                var subTransactions = await db.GetSubTransactionsAsync(item.Id);
                 await DeleteTransaction(item.Id);
-                await db.RebuildAccountBalanceAsync(item.FromAccountId);
-                await db.RebuildAccountBalanceAsync(item.ToAccountId ?? 0);
+
+                var accounts = subTransactions.Select(x => x.ToAccountId)
+                    .Append(item.FromAccountId)
+                    .Append(item.ToAccountId ?? 0)
+                    .Where(x => x > 0)
+                    .Distinct()
+                    .ToList();
+                foreach (var account in accounts)
+                {
+                    await db.RebuildAccountBalanceAsync(account);
+                }
                 await RefreshData();
             }
         }
 
         private async Task DeleteTransaction(int id)
         {
+            // id 0 would match every top-level transaction through parent_id below.
+            if (id <= 0)
+            {
+                return;
+            }
+
             Logger.Info($"On Transaction delete id : {id}");
             using (var uow = db.CreateUnitOfWork())
             {
-                var repo = uow.GetRepository<Transaction>();
-                var transaction = await repo.FindByAsync(x => x.Id == id);
-
-                await repo.DeleteAsync(transaction);
+                // Split parts point to their parent via parent_id; delete them together so none are left orphaned.
+                await uow.GetRepository<Transaction>().DeleteAsync(x => x.Id == id || x.ParentId == id);
                 await uow.SaveChangesAsync();
             }
         }
@@ -318,6 +332,12 @@ namespace Financisto.Desktop.ViewModels.Pages
             {
                 transaction.Id = 0;
                 transaction.DateTime = UnixTimeConverter.ConvertBack(DateTime.Now);
+
+                // The copy gets its own split parts; keeping the original ids would re-parent the original's parts.
+                foreach (var subTransaction in subTransactions)
+                {
+                    subTransaction.Id = 0;
+                }
             }
 
             return (transaction, subTransactions);
@@ -395,7 +415,7 @@ namespace Financisto.Desktop.ViewModels.Pages
         private async Task ProcessDeletedTransactions(IEnumerable<Transaction> subTransactions, List<Transaction> resultTransactions)
         {
             var transactionsIds = resultTransactions.Select(x => x.Id).Distinct().ToList();
-            var deletedSubTransaction = subTransactions.Select(x => x.Id).Where(x => !transactionsIds.Contains(x));
+            var deletedSubTransaction = subTransactions.Select(x => x.Id).Where(x => x > 0 && !transactionsIds.Contains(x));
             foreach (var t in deletedSubTransaction)
             {
                 await DeleteTransaction(t);
@@ -411,6 +431,7 @@ namespace Financisto.Desktop.ViewModels.Pages
             MapperHelper.MapTransfer(subTranfer, subTransaction);
             subTransaction.Parent = transaction;
             subTransaction.FromAccountId = transaction.FromAccountId;
+            subTransaction.ParentAccountId = transaction.FromAccountId;
             return subTransaction;
         }
 
@@ -422,6 +443,8 @@ namespace Financisto.Desktop.ViewModels.Pages
             MapperHelper.MapTransaction(subTransactionDto, subTransaction);
             subTransaction.Parent = transaction;
             subTransaction.FromAccountId = transaction.FromAccountId;
+            // Same as Android DatabaseAdapter.insertSplits: split parts carry the parent's account.
+            subTransaction.ParentAccountId = transaction.FromAccountId;
             subTransaction.OriginalCurrencyId = transaction.OriginalCurrencyId ?? transaction.FromAccount.CurrencyId;
             subTransaction.Category = default;
             return subTransaction;

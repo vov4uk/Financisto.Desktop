@@ -35,8 +35,8 @@ namespace Financisto.Desktop.Services
     /// with fallbacks to the inverse rate and to a cross rate via the home currency.
     /// </summary>
     /// <remarks>
-    /// The Android fallback via currency.trading_currency_id is not ported: the desktop Currency entity
-    /// doesn't carry that column, so it is always 0 here.
+    /// The Android fallback via currency.trading_currency_id is not ported yet; the column is
+    /// imported (Currency.TradingCurrencyId) but not used here.
     /// </remarks>
     public class LatestExchangeRates
     {

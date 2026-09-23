@@ -35,14 +35,30 @@ namespace Financisto.Adapter
             BackupVersion backupVersion,
             Dictionary<string, List<string>> entityColumnsOrder)
         {
-            using var fileStream = File.Create(fileName);
-            using var gzipStream = new GZipStream(fileStream, CompressionMode.Compress);
-            using var writer = new StreamWriter(gzipStream);
+            ArgumentNullException.ThrowIfNull(backupVersion);
+            ArgumentNullException.ThrowIfNull(entityColumnsOrder);
 
-            WriteHeader(writer, backupVersion);
-            WriteBody(writer, entities, entityColumnsOrder);
-            WriteFooter(writer);
-            await writer.FlushAsync();
+            // Write to a temp file first so a failure never leaves a truncated backup at the target path.
+            string tempFileName = fileName + ".tmp";
+            try
+            {
+                await using (var fileStream = File.Create(tempFileName))
+                await using (var gzipStream = new GZipStream(fileStream, CompressionMode.Compress))
+                await using (var writer = new StreamWriter(gzipStream))
+                {
+                    WriteHeader(writer, backupVersion);
+                    WriteBody(writer, entities, entityColumnsOrder);
+                    WriteFooter(writer);
+                    await writer.FlushAsync();
+                }
+
+                File.Move(tempFileName, fileName, overwrite: true);
+            }
+            catch
+            {
+                File.Delete(tempFileName);
+                throw;
+            }
         }
 
         private static void WriteHeader(TextWriter bw, BackupVersion backupVersion)
@@ -50,7 +66,7 @@ namespace Financisto.Adapter
             bw.WriteLine($"{Backup.PACKAGE}:{backupVersion.Package}");
             bw.WriteLine($"{Backup.VERSION_CODE}:{backupVersion.VersionCode}");
             bw.WriteLine($"{Backup.VERSION_NAME}:{backupVersion.Version}");
-            bw.WriteLine($"{Backup.DATABASE_VERSION}:{backupVersion.DatabaseVersion++}");
+            bw.WriteLine($"{Backup.DATABASE_VERSION}:{backupVersion.DatabaseVersion}");
             bw.WriteLine(Backup.START);
         }
 

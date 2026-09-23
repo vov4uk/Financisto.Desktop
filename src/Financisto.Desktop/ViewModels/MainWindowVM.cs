@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using Financisto.Adapter;
 using Financisto.Common;
 using Financisto.Common.Entities;
@@ -118,9 +119,11 @@ namespace Financisto.Desktop.ViewModels
         }
         public IAsyncCommand OpenPanelCommand => _openPanelCommand ??= new AsyncCommand(OpenPanelAsync);
 
-        public IAsyncCommand SaveBackupAsDbCommand => _saveBackupAsDbCommand ??= new AsyncCommand(SaveBackupAsDb);
+        public IAsyncCommand SaveBackupAsDbCommand => _saveBackupAsDbCommand ??= new AsyncCommand(SaveBackupAsDb, () => IsBackupLoaded);
 
-        public IAsyncCommand SaveBackupCommand => _saveBackupCommand ??= new AsyncCommand(SaveBackup_Click);
+        public IAsyncCommand SaveBackupCommand => _saveBackupCommand ??= new AsyncCommand(SaveBackup_Click, () => IsBackupLoaded);
+
+        private bool IsBackupLoaded => _backupVersion != null && _entityColumnsOrder != null;
 
         public ListItemTemplate? SelectedItemBottom
         {
@@ -132,7 +135,7 @@ namespace Financisto.Desktop.ViewModels
                 {
                     SelectedItemTop = null;
 
-                    Task.Run(() => NavigateToType(value.ModelType));
+                    NavigateInBackground(value.ModelType);
                 }
             }
         }
@@ -147,7 +150,7 @@ namespace Financisto.Desktop.ViewModels
                 {
                     SelectedItemBottom = null;
 
-                    Task.Run(() => NavigateToType(value.ModelType));
+                    NavigateInBackground(value.ModelType);
                 }
             }
         }
@@ -161,23 +164,37 @@ namespace Financisto.Desktop.ViewModels
         {
             try
             {
-                OpenBackupPath = backupPath;
                 IsLoading = true;
-                _pages.Clear();
                 Stopwatch stopwatch = Stopwatch.StartNew();
                 var (entities, backupVersion, columnsOrder) = await Task.Run(() => entityReader.ParseBackupFileAsync(backupPath));
                 entities = entities as IReadOnlyCollection<Entity> ?? entities.ToList();
-                _backupVersion = backupVersion;
-                _entityColumnsOrder = columnsOrder;
+
+                // Import into a fresh database first; the currently loaded one stays intact if this backup fails to load.
+                var newDb = await Task.Run(async () =>
+                {
+                    var created = dbFactory.CreateDatabase();
+                    try
+                    {
+                        await created.ImportEntitiesAsync(entities);
+                        return created;
+                    }
+                    catch
+                    {
+                        created.Dispose();
+                        throw;
+                    }
+                });
 
                 var previousDb = db;
-                db = await Task.Run(async () =>
-                {
-                    previousDb?.Dispose();
-                    var newDb = dbFactory.CreateDatabase();
-                    await newDb.ImportEntitiesAsync(entities);
-                    return newDb;
-                });
+                db = newDb;
+                _pages.Clear();
+                previousDb?.Dispose();
+
+                OpenBackupPath = backupPath;
+                _backupVersion = backupVersion;
+                _entityColumnsOrder = columnsOrder;
+                SaveBackupCommand.RaiseCanExecuteChanged();
+                SaveBackupAsDbCommand.RaiseCanExecuteChanged();
 
                 keyLessEntities.Clear();
 
@@ -214,6 +231,11 @@ namespace Financisto.Desktop.ViewModels
 
         public async Task SaveBackup(string backupPath)
         {
+            if (!IsBackupLoaded)
+            {
+                throw new InvalidOperationException("Open a backup before saving.");
+            }
+
             List<Entity> itemsToBackup = [.. keyLessEntities];
             using (IUnitOfWork uow = db.CreateUnitOfWork())
             {
@@ -286,9 +308,18 @@ namespace Financisto.Desktop.ViewModels
             return (VMType)_pages.GetOrAdd(type, _ => Activator.CreateInstance(typeof(VMType), db, dialogWrapper) as VMType);
         }
 
+        private void NavigateInBackground(Type type)
+        {
+            // Page refresh stays off the UI thread so large backups don't freeze the window; failures are logged, not lost.
+            Task.Run(() => NavigateToType(type)).ContinueWith(
+                t => Logger.Error(t.Exception, $"Navigation to {type.FullName} failed"),
+                TaskContinuationOptions.OnlyOnFaulted);
+        }
+
         private async Task NavigateToType(Type type)
         {
-            CurrentPage = GetOrCreatePage(type);
+            var page = GetOrCreatePage(type);
+            await Dispatcher.UIThread.InvokeAsync(() => CurrentPage = page);
             await RefreshCurrentPage();
         }
 
