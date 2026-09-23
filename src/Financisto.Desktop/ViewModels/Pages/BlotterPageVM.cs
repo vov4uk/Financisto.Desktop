@@ -298,7 +298,7 @@ namespace Financisto.Desktop.ViewModels.Pages
         {
             TransferDialogVM dialogVm = new TransferDialogVM(new TransferDto(transfer));
 
-            var result = await dialogWrapper.ShowDialogAsync<TransferDialog>(dialogVm, 400, 440, LocalizationService.Instance.transfer);
+            var result = await dialogWrapper.ShowDialogAsync<TransferDialog>(dialogVm, 480, 440, LocalizationService.Instance.transfer);
 
             var output = result as TransferDto;
             if (output != null)

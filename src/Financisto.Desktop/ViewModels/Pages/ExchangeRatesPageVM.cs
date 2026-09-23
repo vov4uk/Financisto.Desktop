@@ -26,8 +26,8 @@ namespace Financisto.Desktop.ViewModels.Pages
 
         private readonly IToastNotifierWrapper notifier;
         private IAsyncCommand _refreshExchangeRatesCommand;
-        private CurrencyModel _from;
-        private CurrencyModel _to;
+        private string _from;
+        private string _to;
 
         //private PlotModel plotModel;
 
@@ -35,11 +35,11 @@ namespace Financisto.Desktop.ViewModels.Pages
             : base(db, dialogWrapper)
         {
             this.notifier = notifier;
-            _from = FromCurrencies.FirstOrDefault();
-            _to = ToCurrencies.FirstOrDefault();
+            From = FromCurrencies.FirstOrDefault()!;
+            To = ToCurrencies.FirstOrDefault()!;
         }
 
-        public CurrencyModel From
+        public string From
         {
             get => _from;
             set
@@ -52,7 +52,7 @@ namespace Financisto.Desktop.ViewModels.Pages
             }
         }
 
-        public static IEnumerable<CurrencyModel> FromCurrencies => DbManual.Currencies.Where(x => x.Id > 0);
+        public static List<string> FromCurrencies => DbManual.Currencies.Where(x => x.Id > 0).Select(x => x.Name).ToList();
 
         //public PlotModel PlotModel
         //{
@@ -64,7 +64,7 @@ namespace Financisto.Desktop.ViewModels.Pages
         //    }
         //}
 
-        public CurrencyModel To
+        public string To
         {
             get => _to;
             set
@@ -78,8 +78,8 @@ namespace Financisto.Desktop.ViewModels.Pages
 
         public IAsyncCommand RefreshExchangeRatesCommand => _refreshExchangeRatesCommand ??= new AsyncCommand(RefreshExchangeRates_Click);
 
-        public IEnumerable<CurrencyModel> ToCurrencies =>
-            DbManual.Currencies.Where(x => x.Id > 0 && x.Id != _from?.Id);
+        public List<string> ToCurrencies =>
+            DbManual.Currencies.Where(x => x.Id > 0 && x.Name != _from).Select(x => x.Name).ToList();
         protected override Task OnAdd() => throw new NotImplementedException();
 
         protected override Task OnDelete(ExchangeRateModel item) => throw new NotImplementedException();
@@ -90,8 +90,12 @@ namespace Financisto.Desktop.ViewModels.Pages
         {
             using var uow = db.CreateUnitOfWork();
             var currencyExchangeRepo = uow.GetRepository<CurrencyExchangeRate>();
+
+            var fromId = DbManual.Currencies.Where(x => x.Id > 0).FirstOrDefault(x => x.Name == _from)?.Id!;
+            var toId = DbManual.Currencies.Where(x => x.Id > 0).FirstOrDefault(x => x.Name == _to)?.Id!;
+
             var items = await currencyExchangeRepo.FindManyAndProjectAsync(
-                x => x.FromCurrencyId == (_from != null ? _from.Id : 0) && x.ToCurrencyId == (_to != null ? _to.Id : 0), // where
+                x => x.FromCurrencyId == (fromId ?? 0) && x.ToCurrencyId == (toId ?? 0), // where
                 rate => new ExchangeRateModel
                 {
                     Date = rate.Date,

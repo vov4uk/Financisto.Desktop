@@ -26,7 +26,6 @@
     </UserControl.Resources>
     <GroupBox
         Margin="3"
-        Background="{StaticResource WindowBackgroundBrush}"
         FontSize="14"
         Header="{loc:Translate Key=transfer_details}">
         <Grid>

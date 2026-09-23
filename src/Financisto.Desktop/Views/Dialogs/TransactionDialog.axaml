@@ -40,7 +40,6 @@
 
     <GroupBox
         Margin="3"
-        Background="{StaticResource WindowBackgroundBrush}"
         FontSize="14"
         Header="{loc:Translate Key=transaction_details}">
         <Grid Margin="0,0,6,0">
