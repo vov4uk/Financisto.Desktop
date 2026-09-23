@@ -27,6 +27,7 @@ public class ViewLocator : IDataTemplate
         [typeof(ExchangeRatesPageVM)] = typeof(ExchangeRatesPageView),
         [typeof(LocationsPageVM)] = typeof(LocationsPageView),
         [typeof(PayeesPageVM)] = typeof(TagPageView),
+        [typeof(TagsPageVM)] = typeof(TagPageView),
         [typeof(ProjectsPageVM)] = typeof(TagPageView),
         [typeof(BlotterPageVM)] = typeof(BlotterPageView),
         [typeof(SettingsPageVM)] = typeof(SettingsPageView),

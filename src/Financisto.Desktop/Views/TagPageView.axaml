@@ -48,14 +48,15 @@
             Classes="icon"
             Command="{Binding DeleteCommand}"
             Content="{loc:Translate Key=delete}"
+            IsEnabled="False"
             Tag="{StaticResource IconTrash}" />
         <DataGrid
             Grid.Row="1"
             Grid.ColumnSpan="4"
             Margin="5"
-            Classes="activeStatus"
             behaviors:CommandBehavior.DoubleTappedCommand="{Binding EditCommand}"
             AutoGenerateColumns="False"
+            Classes="activeStatus"
             FontSize="14"
             IsReadOnly="True"
             ItemsSource="{Binding Path=Entities}"

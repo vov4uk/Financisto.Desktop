@@ -1,4 +1,9 @@
 <Solution>
+  <Folder Name="/SolutionItems/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="README.md" />
+  </Folder>
   <Project Path="src/Financisto.Adapter/Financisto.Adapter.csproj" />
   <Project Path="src/Financisto.Common/Financisto.Common.csproj" />
   <Project Path="src/Financisto.DataAccess/Financisto.DataAccess.csproj" />

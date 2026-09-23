@@ -32,7 +32,7 @@ public partial class MainWindow : Window
 
         DataContext = ViewModel;
         var version = typeof(MainWindow).Assembly.GetName().Version;
-        Title = $"Financisto Desktop v.{version}";
+        Title = $"Financisto Desktop v.{version?.ToString(3)}";
         Logger.Info("App started");
     }
 

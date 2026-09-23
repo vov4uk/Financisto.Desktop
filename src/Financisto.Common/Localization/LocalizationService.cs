@@ -141,6 +141,7 @@ public sealed class LocalizationService : INotifyPropertyChanged
     public string projects => Get();
     public string payees => Get();
     public string locations => Get();
+    public string tags => Get();
     public string exchange_rates => Get();
     public string blotter => Get();
     public string categories => Get();

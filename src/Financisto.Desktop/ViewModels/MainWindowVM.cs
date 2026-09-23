@@ -99,6 +99,7 @@ namespace Financisto.Desktop.ViewModels
             new(typeof(ProjectModel), () => LocalizationService.Instance.projects, "IconListCheck"),
             new(typeof(PayeeModel), () => LocalizationService.Instance.payees, "IconAddressBook"),
             new(typeof(LocationModel), () => LocalizationService.Instance.locations, "IconMap"),
+            new(typeof(TagModel), () => LocalizationService.Instance.tags, "IconTags"),
             new(typeof(CurrencyModel), () => LocalizationService.Instance.currencies, "IconDollarSign"),
             new(typeof(ExchangeRateModel), () => LocalizationService.Instance.exchange_rates, "IconArrowTrendUp"),
             new(typeof(BlotterModel), () => LocalizationService.Instance.blotter, "IconReceipt"),
@@ -257,6 +258,8 @@ namespace Financisto.Desktop.ViewModels
                     return GetOrCreatePage<LocationModel, LocationsPageVM>();
                 case nameof(PayeeModel):
                     return GetOrCreatePage<PayeeModel, PayeesPageVM>();
+                case nameof(TagModel):
+                    return GetOrCreatePage<TagModel, TagsPageVM>();
                 case nameof(BlotterModel):
                     return GetOrCreatePage<BlotterModel, BlotterPageVM>();
                 case nameof(CategoryTreeModel):
