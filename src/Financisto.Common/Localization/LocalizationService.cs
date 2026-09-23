@@ -138,6 +138,7 @@ public sealed class LocalizationService : INotifyPropertyChanged
     public string currency => Get();
     public string currencies => Get();
     public string accounts => Get();
+    public string dashboard => Get();
     public string projects => Get();
     public string payees => Get();
     public string locations => Get();

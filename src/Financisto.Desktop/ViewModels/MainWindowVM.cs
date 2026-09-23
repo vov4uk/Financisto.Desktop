@@ -94,6 +94,7 @@ namespace Financisto.Desktop.ViewModels
         public ObservableCollection<ListItemTemplate> ItemsTop { get; } = new()
         {
             //new(typeof(DashboardPageViewModel), "Dashboard", "glance_regular"),
+            new(typeof(DashboardPageVM), () => LocalizationService.Instance.dashboard, "IconGlance"),
             new(typeof(AccountModel), () => LocalizationService.Instance.accounts, "IconWallet"),
             new(typeof(CategoryTreeModel), () => LocalizationService.Instance.categories, "IconFolderTree"),
             new(typeof(ProjectModel), () => LocalizationService.Instance.projects, "IconListCheck"),
@@ -270,6 +271,8 @@ namespace Financisto.Desktop.ViewModels
                 //    return _pages.GetOrAdd(type, _ => new ReportsControlVM(db));
                 case nameof(SettingsPageVM):
                     return _pages.GetOrAdd(type, _ => new SettingsPageVM(db, dialogWrapper, notifier, updateService));
+                case nameof(DashboardPageVM):
+                    return _pages.GetOrAdd(type, _ => new DashboardPageVM(db, notifier));
 
                 default: throw new NotSupportedException($"{type.FullName} not supported");
             }

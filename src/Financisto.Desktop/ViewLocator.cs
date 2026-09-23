@@ -31,6 +31,7 @@ public class ViewLocator : IDataTemplate
         [typeof(ProjectsPageVM)] = typeof(TagPageView),
         [typeof(BlotterPageVM)] = typeof(BlotterPageView),
         [typeof(SettingsPageVM)] = typeof(SettingsPageView),
+        [typeof(DashboardPageVM)] = typeof(DashboardPageView),
     };
 
     public Control? Build(object? param)

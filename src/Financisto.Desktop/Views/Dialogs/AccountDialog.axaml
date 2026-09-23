@@ -124,10 +124,14 @@
                     Grid.Row="3"
                     Grid.ColumnSpan="2"
                     Margin="0,0,0,4"
+                    HorizontalAlignment="Stretch"
                     BorderThickness="0"
                     Header="{loc:Translate Key=card_issuer}"
                     IsVisible="{Binding ShowCardIssuer}">
-                    <ComboBox ItemsSource="{Binding Source={loc:EnumBinding {x:Type ent:CardIssuer}}}" SelectedItem="{Binding SelectedCardIssuer, Mode=TwoWay}">
+                    <ComboBox
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{Binding Source={loc:EnumBinding {x:Type ent:CardIssuer}}}"
+                        SelectedItem="{Binding SelectedCardIssuer, Mode=TwoWay}">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
