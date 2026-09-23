@@ -246,29 +246,35 @@ ORDER BY account_is_active DESC, sort_order ASC
             var saldo = await Task.Run(() => GetSaldoAsync(GetLastMonthsEndDates(12)));
             var symbol = saldo.FirstOrDefault()?.DefaultCurrencySymbol ?? string.Empty;
 
+            // assets and liabilities share one column: positive values stack above the axis, negative below it
             ISeries[] series =
             [
-                new ColumnSeries<double>
+                new StackedColumnSeries<double>
                 {
                     Name = LocalizationService.Instance.assets,
                     Values = saldo.Select(x => x.AssetsDefaultCurrencyBalance).ToArray(),
+                    Fill = new SolidColorPaint(SKColor.Parse("#36B37E")),
                 },
-                new ColumnSeries<double>
+                new StackedColumnSeries<double>
                 {
                     Name = LocalizationService.Instance.liabilities,
                     Values = saldo.Select(x => x.LiabilitiesDefaultCurrencyBalance).ToArray(),
+                    Fill = new SolidColorPaint(SKColor.Parse("#FBBC3D")),
                 },
                 new LineSeries<double>
                 {
                     Name = LocalizationService.Instance.net_worth,
                     Values = saldo.Select(x => x.NetWorthDefaultCurrencyBalance).ToArray(),
                     Fill = null,
+                    Stroke = new SolidColorPaint(SKColors.Gray, 2),
+                    GeometryFill = new SolidColorPaint(SKColors.White),
+                    GeometryStroke = new SolidColorPaint(SKColors.Gray, 2),
                     DataLabelsPaint = new SolidColorPaint(SKColors.Gray),
                     DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.Top,
                     DataLabelsFormatter = point => $"{point.Coordinate.PrimaryValue:N0}{symbol}",
                 },
             ];
-            var xAxis = new Axis { Labels = saldo.Select(x => x.Date.ToString("MMM yyyy", CultureInfo.InvariantCulture)).ToArray() };
+            var xAxis = new Axis { Labels = saldo.Select(x => x.Date.ToString("MMM yyyy", CultureInfo.CurrentUICulture)).ToArray() };
             var yAxis = new Axis { Labeler = value => $"{value:N0}{symbol}" };
 
             // navigation refreshes pages from a thread-pool thread; the chart must be updated on the UI thread
