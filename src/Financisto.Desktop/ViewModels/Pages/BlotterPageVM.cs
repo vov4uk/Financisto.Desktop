@@ -206,7 +206,8 @@ namespace Financisto.Desktop.ViewModels.Pages
                 var subTransactions = await db.GetSubTransactionsAsync(item.Id);
                 await DeleteTransaction(item.Id);
 
-                var accounts = subTransactions.Select(x => x.ToAccountId)
+                // An incoming split transfer has the other account on its "from" side.
+                var accounts = subTransactions.SelectMany(x => new[] { x.FromAccountId, x.ToAccountId })
                     .Append(item.FromAccountId)
                     .Append(item.ToAccountId ?? 0)
                     .Where(x => x > 0)
@@ -362,6 +363,13 @@ namespace Financisto.Desktop.ViewModels.Pages
         {
             var resultTransactions = new List<Transaction>();
 
+            // Accounts the transaction touched before the edit also need their balance rebuilt,
+            // e.g. the other account of a split transfer that was removed or moved.
+            var previousAccounts = subTransactions
+                .SelectMany(x => new[] { x.FromAccountId, x.ToAccountId })
+                .Append(transaction.FromAccountId)
+                .ToList();
+
             MapperHelper.MapTransaction(resultVm, transaction);
             long totalFromAmountHomeCurrency = transaction.FromAmount;
             resultTransactions.Add(transaction);
@@ -404,9 +412,14 @@ namespace Financisto.Desktop.ViewModels.Pages
 
             await ProcessDeletedTransactions(subTransactions, resultTransactions);
 
-            await db.RebuildAccountBalanceAsync(transaction.FromAccountId);
-            var toAccounts = resultTransactions.Select(x => x.ToAccountId).Where(x => x > 0).Distinct().ToList();
-            foreach (var account in toAccounts)
+            // An incoming split transfer has the other account on its "from" side, so rebuild both sides.
+            var accounts = resultTransactions
+                .SelectMany(x => new[] { x.FromAccountId, x.ToAccountId })
+                .Concat(previousAccounts)
+                .Where(x => x > 0)
+                .Distinct()
+                .ToList();
+            foreach (var account in accounts)
             {
                 await db.RebuildAccountBalanceAsync(account);
             }
@@ -429,9 +442,12 @@ namespace Financisto.Desktop.ViewModels.Pages
 
             subTranfer.Date = resultVm.Date;
             subTranfer.Time = resultVm.Time;
+            // The parent account's side of the part follows the parent's account;
+            // MapTransfer then stores it as the "from" or the "to" side depending on the direction.
+            subTranfer.FromAccountId = transaction.FromAccountId;
+            subTranfer.FromAccount = resultVm.FromAccount;
             MapperHelper.MapTransfer(subTranfer, subTransaction);
             subTransaction.Parent = transaction;
-            subTransaction.FromAccountId = transaction.FromAccountId;
             subTransaction.ParentAccountId = transaction.FromAccountId;
             return subTransaction;
         }

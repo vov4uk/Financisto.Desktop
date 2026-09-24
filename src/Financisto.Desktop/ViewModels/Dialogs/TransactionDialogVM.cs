@@ -69,8 +69,11 @@ public class TransactionDialogVM : SubTransactionDialogVM
         original.ToAccountId = modifiedCopy.ToAccountId;
         original.ToAccount = modifiedCopy.ToAccount;
         original.Note = modifiedCopy.Note;
+        // The sign tells whether the money leaves (-) or comes into (+) the parent account.
+        original.IsAmountNegative = modifiedCopy.IsAmountNegative;
         original.FromAmount = modifiedCopy.RealFromAmount;
-        original.ToAmount = Math.Abs(modifiedCopy.FromAmount);
+        // A transfer to an account in another currency keeps its own incoming amount.
+        original.ToAmount = Math.Abs(modifiedCopy.IsToAmountVisible ? modifiedCopy.ToAmount : modifiedCopy.FromAmount);
         original.Date = modifiedCopy.DateTime.Date;
         original.Time = modifiedCopy.DateTime;
     }
@@ -100,11 +103,13 @@ public class TransactionDialogVM : SubTransactionDialogVM
         }
 
         Transaction.RecalculateUnSplitAmount();
+        // Like Android's SplitTransferActivity, the parent account is always the "from" side of the dialog and
+        // the sign says whether the money leaves it or comes into it; a new part takes over the unsplit amount.
         var workingCopy = new TransferDto()
         {
-            FromAccountId = Transaction.FromAccountId,
             IsSubTransaction = true,
-            FromAmount = Transaction.UnsplitAmount,
+            IsAmountNegative = Transaction.UnsplitAmount <= 0,
+            FromAmount = Math.Abs(Transaction.UnsplitAmount),
             Date = Transaction.Date,
             Time = Transaction.Time,
         };
@@ -113,9 +118,12 @@ public class TransactionDialogVM : SubTransactionDialogVM
             CopySubTransfer(workingCopy, original);
         }
 
+        workingCopy.FromAccountId = Transaction.FromAccountId;
+        workingCopy.FromAccount = Transaction.FromAccount;
+
         var viewModel = new TransferDialogVM(workingCopy);
 
-        var dialogResult = await dialogWrapper.ShowDialogAsync<TransferDialog>(viewModel, 385, 340, LocalizationService.Instance.transfer);
+        var dialogResult = await dialogWrapper.ShowDialogAsync<TransferDialog>(viewModel, 440, 340, LocalizationService.Instance.transfer);
 
         var modifiedCopy = dialogResult as TransferDto;
         if (modifiedCopy != null)

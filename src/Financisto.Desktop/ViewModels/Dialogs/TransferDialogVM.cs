@@ -12,6 +12,7 @@ namespace Financisto.Desktop.ViewModels.Dialogs
             nameof(TransferDto.ToAccount),
             nameof(TransferDto.FromAccount),
         };
+        private DelegateCommand _changeFromAmountSignCommand;
         private DelegateCommand _clearNotesCommand;
 
         public TransferDialogVM(TransferDto transfer)
@@ -22,6 +23,11 @@ namespace Financisto.Desktop.ViewModels.Dialogs
         }
 
         public TransferDto Transfer { get; }
+
+        // Only a split part can go either way: out of the parent account (-) or into it (+).
+        public DelegateCommand ChangeFromAmountSignCommand => _changeFromAmountSignCommand ??= new DelegateCommand(
+            () => { Transfer.IsAmountNegative = !Transfer.IsAmountNegative; },
+            () => Transfer.IsSubTransaction);
 
         public DelegateCommand ClearNotesCommand => _clearNotesCommand ??= new DelegateCommand(() => { Transfer.Note = default; });
 

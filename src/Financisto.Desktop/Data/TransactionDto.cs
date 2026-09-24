@@ -42,7 +42,7 @@ namespace Financisto.Desktop.Data
             {
                 if (t.ToAccountId > 0 && t.CategoryId == 0 && t.FromAccountId > 0)
                 {
-                    list.Add(new TransferDto(t));
+                    list.Add(new TransferDto(t, fromAccountId));
                 }
                 else
                 {

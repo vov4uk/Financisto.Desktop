@@ -95,13 +95,14 @@
                     Grid.Row="1"
                     Grid.Column="0"
                     Grid.ColumnSpan="3"
-                    Text="{loc:Translate Key=from_account}" />
+                    Text="{Binding Transfer.FromAccountCaption}" />
 
                 <ComboBox
                     Grid.Row="2"
                     Grid.Column="0"
                     Grid.ColumnSpan="3"
                     HorizontalAlignment="Stretch"
+                    IsEnabled="{Binding Transfer.IsSubTransaction, Converter={StaticResource InverseBooleanConverter}}"
                     IsTextSearchEnabled="True"
                     ItemTemplate="{StaticResource IActive}"
                     ItemsSource="{x:Static entities:DbManual.Account}"
@@ -114,7 +115,7 @@
                     Grid.Row="3"
                     Grid.Column="0"
                     Grid.ColumnSpan="3"
-                    Text="{loc:Translate Key=to_account}" />
+                    Text="{Binding Transfer.ToAccountCaption}" />
 
                 <ComboBox
                     Grid.Row="4"
@@ -136,23 +137,33 @@
                     Grid.ColumnSpan="3">
                     <TextBlock.Text>
                         <MultiBinding Converter="{StaticResource localizedFormatConverter}">
-                            <Binding Path="[amount_out]" Source="{x:Static loc:LocalizationService.Instance}" />
+                            <Binding Path="Transfer.FromAmountCaption" />
                             <Binding Path="Transfer.FromAccountCurrency.Name" />
                         </MultiBinding>
                     </TextBlock.Text>
                 </TextBlock>
+                <!--  A split part can go out of (-) or into (+) the parent account; a plain transfer is always out.  -->
                 <Button
+                    x:Name="FromAmountSign"
                     Grid.Row="6"
                     Grid.Column="0"
                     Width="32"
                     Height="32"
-                    IsEnabled="False">
-
+                    Classes.IsAmountNegative="{Binding Transfer.IsAmountNegative}"
+                    Classes.IsAmountPositive="{Binding !Transfer.IsAmountNegative}"
+                    Command="{Binding ChangeFromAmountSignCommand}">
+                    <Button.Styles>
+                        <Style Selector="Button.IsAmountPositive Image#FromSignImage">
+                            <Setter Property="Source" Value="{StaticResource IconPlus}" />
+                        </Style>
+                        <Style Selector="Button.IsAmountNegative Image#FromSignImage">
+                            <Setter Property="Source" Value="{StaticResource IconMinus}" />
+                        </Style>
+                    </Button.Styles>
                     <Image
+                        x:Name="FromSignImage"
                         Width="16"
-                        Height="16"
-                        Source="{StaticResource IconMinus}" />
-
+                        Height="16" />
                 </Button>
                 <NumericUpDown
                     Grid.Row="6"
@@ -171,7 +182,7 @@
                     IsVisible="{Binding Path=Transfer.IsToAmountVisible, Mode=OneWay}">
                     <TextBlock.Text>
                         <MultiBinding Converter="{StaticResource localizedFormatConverter}">
-                            <Binding Path="[amount_in]" Source="{x:Static loc:LocalizationService.Instance}" />
+                            <Binding Path="Transfer.ToAmountCaption" />
                             <Binding Path="Transfer.ToAccountCurrency.Name" />
                         </MultiBinding>
                     </TextBlock.Text>
@@ -181,13 +192,22 @@
                     Grid.Column="0"
                     Width="32"
                     Height="32"
+                    Classes.IsAmountNegative="{Binding Transfer.IsAmountNegative}"
+                    Classes.IsAmountPositive="{Binding !Transfer.IsAmountNegative}"
+                    IsEnabled="False"
                     IsVisible="{Binding Path=Transfer.IsToAmountVisible, Mode=OneWay}">
-
+                    <Button.Styles>
+                        <Style Selector="Button.IsAmountNegative Image#ToSignImage">
+                            <Setter Property="Source" Value="{StaticResource IconPlus}" />
+                        </Style>
+                        <Style Selector="Button.IsAmountPositive Image#ToSignImage">
+                            <Setter Property="Source" Value="{StaticResource IconMinus}" />
+                        </Style>
+                    </Button.Styles>
                     <Image
+                        x:Name="ToSignImage"
                         Width="16"
-                        Height="16"
-                        Source="{StaticResource IconPlus}" />
-
+                        Height="16" />
                 </Button>
                 <NumericUpDown
                     Grid.Row="8"
