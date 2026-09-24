@@ -1,86 +1,154 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui" 
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
-             xmlns:vm="using:Financisto.Desktop.ViewModels" 
-             mc:Ignorable="d"
-             x:Class="Financisto.Desktop.Views.DashboardPageView"
-             x:DataType="vm:DashboardPageViewModel">
-    
+﻿<UserControl
+    x:Class="Financisto.Desktop.Views.DashboardPageView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:Financisto.Desktop.Models"
+    xmlns:vm="using:Financisto.Desktop.ViewModels.Pages"
+    x:DataType="vm:DashboardPageVM"
+    mc:Ignorable="d">
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock.sectionTitle">
+            <Setter Property="Margin" Value="5,8,0,0" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="TextBlock.sectionDescription">
+            <Setter Property="Margin" Value="5,0,0,6" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="Gray" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="Border.card">
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="Background" Value="{DynamicResource SystemAltHighColor}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAltMediumHighColor}" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="CornerRadius" Value="15" />
+        </Style>
+        <Style Selector="TextBlock.totalAmount">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="HorizontalAlignment" Value="Right" />
+        </Style>
+        <Style Selector="TextBlock.totalAmount.negative">
+            <Setter Property="Foreground" Value="DarkRed" />
+        </Style>
+        <Style Selector="TextBlock.totalDetails">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="Gray" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="TextBlock.totalDetails.error">
+            <Setter Property="Foreground" Value="DarkRed" />
+        </Style>
+        <Style Selector="ContentControl.homeCurrencyTotal TextBlock.totalTitle">
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="ContentControl.homeCurrencyTotal TextBlock.totalAmount">
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+    </UserControl.Styles>
+
+    <UserControl.Resources>
+        <DataTemplate x:Key="AccountsTotalItemTemplate" x:DataType="models:AccountsTotalItemModel">
+            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="totalTitle"
+                    Text="{Binding Title}"
+                    TextWrapping="Wrap" />
+                <TextBlock
+                    Grid.Column="1"
+                    Margin="12,0,0,0"
+                    VerticalAlignment="Center"
+                    Classes="totalAmount"
+                    Classes.negative="{Binding IsNegative}"
+                    Text="{Binding Amount}" />
+                <TextBlock
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Classes="totalDetails"
+                    Classes.error="{Binding IsError}"
+                    IsVisible="{Binding Details, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                    Text="{Binding Details}" />
+                <TextBlock
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Margin="12,0,0,0"
+                    HorizontalAlignment="Right"
+                    Classes="totalDetails"
+                    IsVisible="{Binding ConvertedAmount, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                    Text="{Binding ConvertedAmount}" />
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+
     <ScrollViewer>
-        <StackPanel Spacing="16" Margin="16">
+        <StackPanel Margin="16" Spacing="16">
 
-            <!-- Cabeçalho -->
-            <StackPanel Spacing="6">
-                <TextBlock Text="Bem vindo ao Dashboard!"
-                           FontSize="20"
-                           FontWeight="Bold"
-                           TextWrapping="Wrap"/>
+            <TextBlock
+                FontSize="20"
+                FontWeight="Bold"
+                Text="{loc:Translate Key=dashboard}"
+                TextWrapping="Wrap" />
 
-                <TextBlock Text="Aqui será onde você poderá ver o resumo de seus ganhos e gastos"
-                           FontWeight="SemiBold"
-                           TextWrapping="Wrap"/>
+            <!--  Accounts structure  -->
+            <StackPanel Spacing="4">
+                <TextBlock Classes="sectionTitle" Text="{loc:Translate Key=dashboard_accounts_structure}" />
+                <TextBlock Classes="sectionDescription" Text="{loc:Translate Key=dashboard_accounts_structure_description}" />
+
+                <Border Classes="card">
+                    <Grid ColumnDefinitions="*,*">
+                        <lvc:PieChart
+                            Grid.Column="0"
+                            Height="320"
+                            BorderBrush="{DynamicResource SystemAltMediumHighColor}"
+                            LegendPosition="Left"
+                            Series="{Binding PieSeries}" />
+
+                        <!--  Accounts total  -->
+                        <StackPanel
+                            Grid.Column="1"
+                            MaxWidth="560"
+                            Margin="16,0,8,0"
+                            VerticalAlignment="Center"
+                            Spacing="8">
+                            <ItemsControl ItemTemplate="{StaticResource AccountsTotalItemTemplate}" ItemsSource="{Binding Totals}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Spacing="8" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                            <Separator />
+                            <ContentControl
+                                Classes="homeCurrencyTotal"
+                                Content="{Binding HomeCurrencyTotal}"
+                                ContentTemplate="{StaticResource AccountsTotalItemTemplate}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
             </StackPanel>
 
-            <!-- Seção Pizza -->
-            <StackPanel Spacing="6">
+            <!--  Net worth  -->
+            <StackPanel Spacing="4">
+                <TextBlock Classes="sectionTitle" Text="{loc:Translate Key=dashboard_net_worth}" />
+                <TextBlock Classes="sectionDescription" Text="{loc:Translate Key=dashboard_net_worth_description}" />
 
-                <TextBlock Text="Distribuição geral"
-                           FontWeight="SemiBold"
-                           TextWrapping="Wrap"
-                           Margin="5,24,0,0"/>
-
-                <TextBlock Text="Resumo visual das suas receitas e despesas"
-                           FontSize="12"
-                           Foreground="Gray"
-                           TextWrapping="Wrap"
-                           Margin="5,4,0,0"/>
-
-                <Border CornerRadius="15" 
-                        BorderThickness="2" 
-                        BorderBrush="{DynamicResource SystemAltMediumHighColor}"
-                        Background="{DynamicResource SystemAltHighColor}"
-                        Padding="10"
-                        Margin="0,10,0,0">
-
-                    <lvc:PieChart Series="{Binding PieSeries}" 
-                                  LegendPosition="Left" 
-                                  BorderBrush="{DynamicResource SystemAltMediumHighColor}"
-                                  Height="320"/>
-
+                <Border Classes="card">
+                    <lvc:CartesianChart
+                        Height="350"
+                        LegendPosition="Top"
+                        Series="{Binding LineSeries}"
+                        XAxes="{Binding XAxes}"
+                        YAxes="{Binding YAxes}" />
                 </Border>
-
-            </StackPanel>
-
-            <!-- Seção Linha -->
-            <StackPanel Spacing="6">
-
-                <TextBlock Text="Evolução anual do saldo"
-                           FontWeight="SemiBold"
-                           TextWrapping="Wrap"
-                           Margin="5,14,0,0"/>
-
-                <TextBlock Text="Mostra como seus ganhos evoluíram ao longo dos anos"
-                           FontSize="12"
-                           Foreground="Gray"
-                           TextWrapping="Wrap"
-                           Margin="5,4,0,0"/>
-
-                <Border CornerRadius="15" 
-                        BorderThickness="2" 
-                        BorderBrush="{DynamicResource SystemAltMediumHighColor}"
-                        Background="{DynamicResource SystemAltHighColor}"
-                        Padding="10"
-                        Margin="0,10,0,0">
-
-                    <lvc:CartesianChart Series="{Binding LineSeries}"
-                                        XAxes="{Binding XAxes}"
-                                        YAxes="{Binding YAxes}"
-                                        Height="350"/>
-
-                </Border>
-
             </StackPanel>
 
         </StackPanel>

@@ -1,0 +1,17 @@
+﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+
+namespace Financisto.Common.Model
+{
+    [ExcludeFromCodeCoverage]
+    public class CategoryTreeModel : BaseModel
+    {
+        public int Id { get; set; }
+        public int Left { get; set; }
+        public int Right { get; set; }
+        public string Title { get; set; }
+        public bool IsExpanded { get; set; }
+        public bool IsSelected { get; set; }
+        public List<CategoryTreeModel> SubCategoties { get; set; }
+    }
+}

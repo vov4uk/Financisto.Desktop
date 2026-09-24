@@ -1,0 +1,107 @@
+<UserControl
+    x:Class="Financisto.Desktop.Views.ExchangeRatesPageView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviors="using:Financisto.Common.Behaviors"
+    xmlns:conv="using:Financisto.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:Financisto.Desktop.ViewModels.Pages"
+    d:DesignHeight="600"
+    d:DesignWidth="800"
+    x:DataType="vm:ExchangeRatesPageVM"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <conv:UnixTimeConverter x:Key="UnixTimeConverter" />
+            <conv:NullToBoolConverter x:Key="NullToBoolConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid
+        Margin="10"
+        ColumnDefinitions="*,Auto"
+        Grid.RowDefinitions="Auto,*">
+        <TextBlock
+            Grid.Column="0"
+            VerticalAlignment="Center"
+            FontSize="20"
+            FontWeight="Bold"
+            Text="{loc:Translate Key=exchange_rates}" />
+        <Button
+            Grid.Column="1"
+            Margin="4,2"
+            Classes="icon"
+            Command="{Binding RefreshExchangeRatesCommand}"
+            Content="{loc:Translate Key=download}"
+            Tag="{StaticResource IconDownload}" />
+        <Grid Grid.Row="1" Grid.ColumnSpan="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <StackPanel Grid.Row="0" Orientation="Horizontal">
+                <GroupBox
+                    Width="120"
+                    BorderThickness="0"
+                    Header="{loc:Translate Key=from}">
+                    <ComboBox
+                        Margin="2,0"
+                        ItemsSource="{Binding Source={x:Static vm:ExchangeRatesPageVM.FromCurrencies}, Mode=OneWay}"
+                        SelectedItem="{Binding Path=From, UpdateSourceTrigger=PropertyChanged}" />
+                </GroupBox>
+                <GroupBox
+                    Width="120"
+                    BorderThickness="0"
+                    Header="{loc:Translate Key=to}"
+                    IsEnabled="{Binding Path=From, Converter={StaticResource NullToBoolConverter}, UpdateSourceTrigger=PropertyChanged}">
+                    <ComboBox
+                        Margin="2,0"
+                        ItemsSource="{Binding Path=ToCurrencies}"
+                        SelectedItem="{Binding Path=To, UpdateSourceTrigger=PropertyChanged}" />
+                </GroupBox>
+                <Button
+                    Grid.Column="0"
+                    Width="24"
+                    Height="24"
+                    Margin="4"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Command="{Binding RefreshDataCommand}"
+                    ToolTip.Tip="{loc:Translate Key=refresh}">
+                    <Image
+                        Width="16"
+                        Height="16"
+                        Source="{StaticResource ResourceKey=IconRefresh}" />
+                </Button>
+            </StackPanel>
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <!--<ColumnDefinition Width="8*"/>-->
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <!--<oxy:PlotView Grid.Row="1"
+                          Model="{Binding PlotModel}"
+                      />-->
+                <DataGrid
+                    Margin="2"
+                    AutoGenerateColumns="False"
+                    FontSize="14"
+                    IsReadOnly="True"
+                    ItemsSource="{Binding Path=Entities}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Binding="{Binding Path=Date, Converter={StaticResource UnixTimeConverter}}" Header="{loc:Translate Key=date}" />
+                        <DataGridTextColumn Binding="{Binding Path=FromCurrency.Name}" Header="{loc:Translate Key=from}" />
+                        <DataGridTextColumn Binding="{Binding Path=ToCurrency.Name}" Header="{loc:Translate Key=to}" />
+                        <DataGridTextColumn Binding="{Binding Path=Rate}" Header="{loc:Translate Key=rate}" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+
+        </Grid>
+    </Grid>
+</UserControl>

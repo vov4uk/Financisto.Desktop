@@ -1,0 +1,170 @@
+<UserControl
+    x:Class="Financisto.Desktop.Views.Dialogs.SubTransactionDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:conv="using:Financisto.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogs="using:Financisto.Desktop.Views.Dialogs"
+    xmlns:entities="using:Financisto.Common.Entities"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+    xmlns:vm="using:Financisto.Desktop.ViewModels.Dialogs"
+    d:DesignHeight="480"
+    d:DesignWidth="340"
+    x:CompileBindings="False"
+    x:DataType="vm:SubTransactionDialogVM"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <conv:AmountConverter x:Key="AmountConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <GroupBox
+        Margin="5"
+        Background="{StaticResource WindowBackgroundBrush}"
+        FontSize="14"
+        Header="{loc:Translate Key=transaction_details}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="36" />
+            </Grid.RowDefinitions>
+            <Grid Margin="5">
+                <Grid.RowDefinitions>
+
+                    <!--  Category  -->
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="32" />
+
+                    <!--  amount  -->
+                    <RowDefinition Height="Auto" />
+                    <!--  Spit  -->
+                    <RowDefinition Height="32" />
+                    <RowDefinition Height="32" />
+
+                    <!--  note  -->
+                    <RowDefinition Height="15" />
+                    <RowDefinition Height="32" />
+                    <!--  project  -->
+                    <RowDefinition Height="15" />
+                    <RowDefinition Height="32" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="32" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="2"
+                    Text="{loc:Translate Key=category}" />
+
+                <ComboBox
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    HorizontalAlignment="Stretch"
+                    IsEditable="True"
+                    ItemTemplate="{StaticResource ResourceKey=CategoryTemplate}"
+                    ItemsSource="{Binding Source={x:Static entities:DbManual.SubCategory}, Mode=OneWay}"
+                    SelectedItem="{Binding Transaction.Category}"
+                    SelectedValue="{Binding Transaction.CategoryId}"
+                    SelectedValueBinding="{Binding Id}"
+                    TextSearch.TextBinding="{Binding Title}" />
+
+                <Button
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Classes="icon"
+                    Command="{Binding ClearCategoryCommand}"
+                    Tag="{StaticResource IconXmark}">
+                    <Button.CommandParameter>
+                        <sys:Int32>0</sys:Int32>
+                    </Button.CommandParameter>
+                </Button>
+
+                <dialogs:AmountControl
+                    Grid.Row="2"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="2"
+                    DataContext="{Binding}" />
+
+                <TextBlock
+                    Grid.Row="3"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="2"
+                    Text="{loc:Translate Key=unsplit_amount}" />
+                <TextBlock
+                    Grid.Row="4"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="2"
+                    Text="{Binding Transaction.UnsplitAmount, Converter={StaticResource AmountConverter}, StringFormat=F2, ConverterParameter=false, Mode=OneWay}" />
+
+                <TextBlock
+                    Grid.Row="5"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="2"
+                    Text="{loc:Translate Key=note}" />
+                <TextBox
+                    Grid.Row="6"
+                    Grid.Column="0"
+                    Text="{Binding Transaction.Note}" />
+                <Button
+                    Grid.Row="6"
+                    Grid.Column="1"
+                    Classes="icon"
+                    Command="{Binding ClearNotesCommand}"
+                    Tag="{StaticResource IconXmark}" />
+
+                <TextBlock
+                    Grid.Row="7"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="2"
+                    Text="{loc:Translate Key=project}" />
+
+                <ComboBox
+                    Grid.Row="8"
+                    Grid.Column="0"
+                    HorizontalAlignment="Stretch"
+                    IsEditable="True"
+                    ItemTemplate="{StaticResource ResourceKey=IActive}"
+                    ItemsSource="{Binding Source={x:Static entities:DbManual.Project}, Mode=OneWay}"
+                    SelectedValue="{Binding Transaction.ProjectId}"
+                    SelectedValueBinding="{Binding Id}"
+                    TextSearch.TextBinding="{Binding Title}" />
+                <Button
+                    Grid.Row="8"
+                    Grid.Column="1"
+                    Classes="icon"
+                    Command="{Binding ClearProjectCommand}"
+                    Tag="{StaticResource IconXmark}" />
+            </Grid>
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Button
+                    Grid.Column="0"
+                    Margin="2"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding SaveCommand}"
+                    Content="{loc:Translate Key=save}" />
+                <Button
+                    Grid.Column="1"
+                    Margin="2"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding CancelCommand}"
+                    Content="{loc:Translate Key=cancel}" />
+            </Grid>
+        </Grid>
+    </GroupBox>
+
+</UserControl>

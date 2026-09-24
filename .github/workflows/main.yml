@@ -1,0 +1,162 @@
+name: main
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    tags:
+      - "*"
+  pull_request:
+    branches:
+      - main
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+
+      - name: Build
+        run: >
+          dotnet build
+          --configuration Release
+
+  pack:
+    if: ${{ github.ref_type == 'tag' }}
+    needs: build
+    strategy:
+      matrix:
+        rid:
+          - win-arm64
+          - win-x86
+          - win-x64
+          - linux-arm64
+          # Linux x86 is not supported by .NET
+          # - linux-x86
+          - linux-x64
+          - osx-arm64
+          - osx-x64
+
+    # macOS apphost must be signed, which the SDK only does on a macOS host
+    runs-on: ${{ startsWith(matrix.rid, 'win-') && 'windows-latest' || startsWith(matrix.rid, 'osx-') && 'macos-latest' || 'ubuntu-latest' }}
+    timeout-minutes: 15
+
+    permissions:
+      actions: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+
+      # On osx-* runtimes, MacBundle also generates Financisto.app next to the published files
+      - name: Publish app
+        run: >
+          dotnet publish src/Financisto.Desktop
+          -p:Version=${{ github.ref_name }}
+          --output src/Financisto.Desktop/bin/publish
+          --configuration Release
+          --runtime ${{ matrix.rid }}
+          --self-contained
+
+      - name: Upload app binaries
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: Financisto.Desktop.${{ matrix.rid }}
+          path: src/Financisto.Desktop/bin/publish
+          if-no-files-found: error
+
+  release:
+    if: ${{ github.ref_type == 'tag' }}
+
+    needs:
+      - build
+      - pack
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          gh release create ${{ github.ref_name }}
+          --repo ${{ github.event.repository.full_name }}
+          --title "Financisto.Desktop v${{ github.ref_name }}"
+          --generate-notes
+          --verify-tag
+
+  deploy:
+    needs: release
+
+    strategy:
+      matrix:
+        rid:
+          - win-arm64
+          - win-x86
+          - win-x64
+          - linux-arm64
+          # Linux x86 is not supported by .NET
+          # - linux-x86
+          - linux-x64
+          - osx-arm64
+          - osx-x64
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      actions: read
+      contents: write
+
+    steps:
+      - name: Download app binaries
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: Financisto.Desktop.${{ matrix.rid }}
+          path: Financisto.Desktop/
+
+      # Artifact upload/download does not preserve the executable bit
+      - name: Set permissions
+        if: ${{ !startsWith(matrix.rid, 'win-') }}
+        run: |
+          [ -f Financisto.Desktop/Financisto.Desktop ] && chmod +x Financisto.Desktop/Financisto.Desktop || true
+
+          # macOS bundle
+          [ -f Financisto.Desktop/Financisto.app/Contents/MacOS/Financisto.Desktop ] && chmod +x Financisto.Desktop/Financisto.app/Contents/MacOS/Financisto.Desktop || true
+
+      - name: Create package
+        # Change into the artifacts directory to avoid including the directory itself in the zip archive
+        working-directory: Financisto.Desktop/
+        run: zip -r ../Financisto.Desktop.${{ matrix.rid }}.zip .
+
+      # Asset name must match the one UpdateService (Onova) looks for: Financisto.Desktop.{rid}.zip
+      - name: Upload release asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          gh release upload ${{ github.ref_name }}
+          Financisto.Desktop.${{ matrix.rid }}.zip
+          --repo ${{ github.event.repository.full_name }}

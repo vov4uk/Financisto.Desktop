@@ -1,96 +1,178 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:Financisto.Desktop.ViewModels"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="720"
-        Width="1280" Height="720"
-        x:Class="Financisto.Desktop.Views.MainWindow"
-        x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/ic_launcher.png"
-        Title="Financisto.Desktop"
-        WindowState="Maximized"
-        SystemDecorations="Full">
+<Window
+    x:Class="Financisto.Desktop.Views.MainWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:View="clr-namespace:Financisto.Desktop.Views"
+    xmlns:ViewModel="clr-namespace:Financisto.Desktop.ViewModels"
+    xmlns:Wizard="clr-namespace:Financisto.Desktop.Wizards"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:li="using:LoadingIndicators.Avalonia"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:msg="https://github.com/xiyaowong/Message.Avalonia"
+    xmlns:vm="using:Financisto.Desktop.ViewModels"
+    Title="Financisto.Desktop"
+    Width="1280"
+    Height="720"
+    d:DesignHeight="720"
+    d:DesignWidth="1280"
+    x:DataType="vm:MainWindowVM"
+    Icon="/Assets/ic_launcher.png"
+    Loaded="MainWindow_Loaded"
+    WindowDecorations="Full"
+    WindowState="Maximized"
+    mc:Ignorable="d">
+    <Window.Styles>
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        </Style>
+    </Window.Styles>
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <DataTemplate x:Key="ListItemTemplateDataTemplate" DataType="{x:Type vm:ListItemTemplate}">
+                <StackPanel
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="15">
+                    <Image
+                        Width="24"
+                        Height="24"
+                        Source="{Binding ListItemIcon}" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource SystemControlForegroundBaseBrush}"
+                        Text="{Binding Label}" />
+                </StackPanel>
+            </DataTemplate>
+        </ResourceDictionary>
+    </Window.Resources>
 
-    <!-- Utilizando DynamicResources para trocar cores dinamicamente entre os temas -->
-    <SplitView IsPaneOpen="{Binding IsPaneOpen}"
-               DisplayMode="CompactInline"
-               OpenPaneLength="200"
-               CompactPaneLength="50"
-               PaneBackground="{DynamicResource SystemAltMediumLowColor}"  
-               Background="{DynamicResource SystemControlPageBackgroundBaseMediumBrush}">
-        
-        <SplitView.Pane>
-            <Grid RowDefinitions="*,Auto" Background="{DynamicResource SystemControlBackgroundBaseMediumLowBrush}" Margin="5">
+    <Panel>
+        <DockPanel>
+            <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                <Menu DockPanel.Dock="Left" IsEnabled="{Binding !IsLoading}">
+                    <MenuItem Header="{loc:Translate Key=menu}">
+                        <MenuItem
+                            Command="{Binding OpenBackupCommand}"
+                            CommandParameter="{Binding $parent[Window]}"
+                            Header="{loc:Translate Key=open_backup}">
+                            <MenuItem.Icon>
+                                <Image Source="{StaticResource ResourceKey=IconFileArrowUp}" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem
+                            Command="{Binding SaveBackupCommand}"
+                            CommandParameter="{Binding $parent[Window]}"
+                            Header="{loc:Translate Key=save_backup}">
+                            <MenuItem.Icon>
+                                <Image Source="{StaticResource ResourceKey=IconFileArrowDown}" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem
+                            Command="{Binding SaveBackupAsDbCommand}"
+                            CommandParameter="{Binding $parent[Window]}"
+                            Header="{loc:Translate Key=save_as_db}">
+                            <MenuItem.Icon>
+                                <Image Source="{StaticResource ResourceKey=IconDatabase}" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </MenuItem>
+                </Menu>
 
-                <!-- Conteúdo principal -->
-                <Grid Grid.Row="0"
-                      RowDefinitions="Auto,Auto,*"
-                      Background="{DynamicResource SystemControlBackgroundAltMediumLowBrush}">
+                <TextBlock
+                    Margin="10,0"
+                    VerticalAlignment="Center"
+                    DockPanel.Dock="Right"
+                    Foreground="{DynamicResource SystemControlForegroundBaseBrush}"
+                    Text="{Binding OpenBackupPath}" />
 
-                    <!-- Botão -->
-                    <Button Command="{Binding OpenPaneCommand}" HorizontalAlignment="Left">
-                        <PathIcon Foreground="{DynamicResource SystemControlForegroundBaseBrush}" 
-                                  Data="{StaticResource line_horizontal_3_regular}" />
-                    </Button>
+            </DockPanel>
 
-                    <!-- Logo -->
-                    <Image Grid.Row="1"
-                           Source="../Assets/Images/BR/FinancistoIcon.png"
-                           HorizontalAlignment="Stretch"
-                           VerticalAlignment="Top" Margin="0,11,10,0" />
+            <SplitView
+                Background="{DynamicResource SystemControlPageBackgroundBaseMediumBrush}"
+                CompactPaneLength="60"
+                DisplayMode="CompactInline"
+                IsEnabled="{Binding !IsLoading}"
+                IsPaneOpen="{Binding IsPanelOpen}"
+                OpenPaneLength="200"
+                PaneBackground="{DynamicResource SystemAltMediumLowColor}">
 
-                    <!-- Menu -->
-                    <Grid Grid.Row="2"
-                          RowDefinitions="*,Auto"
-                          Background="{DynamicResource SystemControlDisabledBaseMediumLowBrush}">
+                <SplitView.Pane>
+                    <Grid
+                        Margin="5"
+                        Background="{DynamicResource SystemControlBackgroundBaseMediumLowBrush}"
+                        RowDefinitions="*,Auto">
 
-                       
-                        <!-- Itens do topo -->
-                        <ListBox Grid.Row="0"
-                                 ItemsSource="{Binding ItemsTopo}"
-                                 SelectedItem="{Binding SelectedItemTopo}"
-                                 Background="{DynamicResource SystemAltMediumLowColor}"
-                                 Foreground="{DynamicResource SystemControlForegroundBaseBrush}">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate DataType="{x:Type vm:ListItemTemplate}">
-                                    <StackPanel Orientation="Horizontal" Spacing="15">
-                                        <PathIcon Foreground="{DynamicResource SystemControlForegroundBaseBrush}" 
-                                                  Data="{Binding ListItemIcon}" />
-                                        <TextBlock Text="{Binding Label}" Foreground="{DynamicResource SystemControlForegroundBaseBrush}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
+                        <Grid
+                            Grid.Row="0"
+                            Background="{DynamicResource SystemControlBackgroundAltMediumLowBrush}"
+                            RowDefinitions="Auto,*">
 
-                        <!-- Configurações FIXO EMBAIXO -->
-                        <ListBox Grid.Row="1"
-                                 ItemsSource="{Binding ItemsFundo}"
-                                 SelectedItem="{Binding SelectedItemFundo}"
-                                 Background="{DynamicResource SystemAltMediumLowColor}"
-                                 Foreground="{DynamicResource SystemControlForegroundBaseBrush}">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate DataType="{x:Type vm:ListItemTemplate}">
-                                    <StackPanel Orientation="Horizontal" Spacing="15">
-                                        <PathIcon Foreground="{DynamicResource SystemControlForegroundBaseBrush}" 
-                                                  Data="{Binding ListItemIcon}" />
-                                        <TextBlock Text="{Binding Label}" Foreground="{DynamicResource SystemControlForegroundBaseBrush}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
+                            <Button
+                                Width="48"
+                                Padding="12,8"
+                                HorizontalAlignment="Left"
+                                HorizontalContentAlignment="Left"
+                                Command="{Binding OpenPanelCommand}">
+                                <Image
+                                    Width="24"
+                                    Height="24"
+                                    Source="{StaticResource Icon3HorizontalLines}"
+                                    Stretch="Uniform" />
+                            </Button>
 
 
+                            <Grid
+                                Grid.Row="1"
+                                Background="{DynamicResource SystemControlDisabledBaseMediumLowBrush}"
+                                RowDefinitions="*,Auto">
+
+                                <ListBox
+                                    Grid.Row="0"
+                                    Background="{DynamicResource SystemAltMediumLowColor}"
+                                    Foreground="{DynamicResource SystemControlForegroundBaseBrush}"
+                                    ItemTemplate="{StaticResource ListItemTemplateDataTemplate}"
+                                    ItemsSource="{Binding ItemsTop}"
+                                    SelectedItem="{Binding SelectedItemTop, UpdateSourceTrigger=PropertyChanged}" />
+
+                                <ListBox
+                                    Grid.Row="1"
+                                    Background="{DynamicResource SystemAltMediumLowColor}"
+                                    Foreground="{DynamicResource SystemControlForegroundBaseBrush}"
+                                    ItemTemplate="{StaticResource ListItemTemplateDataTemplate}"
+                                    ItemsSource="{Binding ItemsBottom}"
+                                    SelectedItem="{Binding SelectedItemBottom, UpdateSourceTrigger=PropertyChanged, }" />
+                            </Grid>
+                        </Grid>
                     </Grid>
-                </Grid>
-            </Grid>
-        </SplitView.Pane>
+                </SplitView.Pane>
 
-        <SplitView.Content>
-            <Border CornerRadius="10,0,0,0" Background="{DynamicResource SystemAltMediumHighColor}"> 
-                <TransitioningContentControl Content="{Binding CurrentPage}" />
-            </Border>
-        </SplitView.Content>
-    </SplitView>
+                <SplitView.Content>
+                    <Border Background="{DynamicResource SystemAltMediumHighColor}">
+                        <Grid RowDefinitions="*">
+                            <TransitioningContentControl
+                                Grid.Row="0"
+                                Content="{Binding CurrentPage, UpdateSourceTrigger=PropertyChanged}"
+                                IsVisible="{Binding !IsLoading}" />
+
+                            <li:LoadingIndicator
+                                Width="256"
+                                Height="256"
+                                Foreground="{DynamicResource SystemControlPageBackgroundBaseMediumBrush}"
+                                IsActive="{Binding IsLoading, UpdateSourceTrigger=PropertyChanged}"
+                                Mode="Arc"
+                                SpeedRatio="2" />
+
+                        </Grid>
+                    </Border>
+                </SplitView.Content>
+            </SplitView>
+        </DockPanel>
+        <msg:MessageHost />
+    </Panel>
 
 </Window>

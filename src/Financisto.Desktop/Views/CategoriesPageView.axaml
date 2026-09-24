@@ -1,0 +1,126 @@
+﻿<UserControl
+    x:Class="Financisto.Desktop.Views.CategoriesPageView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviors="using:Financisto.Common.Behaviors"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:model="using:Financisto.Common.Model"
+    xmlns:vm="using:Financisto.Desktop.ViewModels.Pages"
+    x:DataType="vm:CategoriesPageVM">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <ContextMenu x:Key="ItemContextMenu">
+                <MenuItem Command="{Binding DataContext.MoveTopCommand, ElementName=CategoriesTree}" Header="{loc:Translate Key=position_move_top}">
+                    <MenuItem.Icon>
+                        <Image
+                            Width="16"
+                            Height="16"
+                            Source="{StaticResource IconArrowNarrowTopAlignment}" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Command="{Binding DataContext.MoveUpCommand, ElementName=CategoriesTree}" Header="{loc:Translate Key=position_move_up}">
+                    <MenuItem.Icon>
+                        <Image
+                            Width="16"
+                            Height="16"
+                            Source="{StaticResource IconArrowNarrowUpAlignment}" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Command="{Binding DataContext.MoveDownCommand, ElementName=CategoriesTree}" Header="{loc:Translate Key=position_move_down}">
+                    <MenuItem.Icon>
+                        <Image
+                            Width="16"
+                            Height="16"
+                            Source="{StaticResource IconArrowNarrowDownAlignment}" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Command="{Binding DataContext.MoveBottomCommand, ElementName=CategoriesTree}" Header="{loc:Translate Key=position_move_bottom}">
+                    <MenuItem.Icon>
+                        <Image
+                            Width="16"
+                            Height="16"
+                            Source="{StaticResource IconArrowNarrowBottomAlignment}" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator />
+                <MenuItem Command="{Binding DataContext.SortByTitleCommand, ElementName=CategoriesTree}" Header="{loc:Translate Key=sort_by_title}">
+                    <MenuItem.Icon>
+                        <Image
+                            Width="16"
+                            Height="16"
+                            Source="{StaticResource IconSortAscending}" />
+                    </MenuItem.Icon>
+                </MenuItem>
+            </ContextMenu>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid
+        Margin="10"
+        ColumnDefinitions="*,Auto,Auto,Auto"
+        RowDefinitions="Auto,*">
+
+        <TextBlock
+            Grid.Row="0"
+            Margin="0,0,0,10"
+            FontSize="20"
+            FontWeight="Bold"
+            Text="{loc:Translate Key=categories}" />
+
+
+        <Button
+            Grid.Row="0"
+            Grid.Column="1"
+            Margin="4,2"
+            Classes="icon"
+            Command="{Binding AddCommand}"
+            Content="{loc:Translate Key=add}"
+            Tag="{StaticResource IconPlus}" />
+        <Button
+            Grid.Row="0"
+            Grid.Column="2"
+            Margin="4,2"
+            Classes="icon"
+            Command="{Binding EditCommand}"
+            Content="{loc:Translate Key=edit}"
+            Tag="{StaticResource IconPencil}" />
+        <Button
+            Grid.Row="0"
+            Grid.Column="3"
+            Margin="4,2"
+            Classes="icon"
+            Command="{Binding DeleteCommand}"
+            Content="{loc:Translate Key=delete}"
+            IsEnabled="False"
+            Tag="{StaticResource IconTrash}" />
+
+
+        <TreeView
+            x:Name="CategoriesTree"
+            Grid.Row="1"
+            Grid.ColumnSpan="4"
+            Margin="5"
+            FontSize="14"
+            ItemsSource="{Binding Path=Entities}"
+            SelectedItem="{Binding SelectedValue, Mode=TwoWay}">
+            <TreeView.Styles>
+                <Style x:CompileBindings="False" Selector="TreeViewItem">
+                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                    <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
+                    <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}" />
+                    <Setter Property="behaviors:CommandBehavior.DoubleTappedCommand" Value="{Binding DataContext.EditCommand, ElementName=CategoriesTree}" />
+                    <Setter Property="behaviors:CommandBehavior.DoubleTappedCommandParameter" Value="{Binding}" />
+                </Style>
+            </TreeView.Styles>
+            <TreeView.ItemTemplate>
+                <TreeDataTemplate ItemsSource="{Binding Path=SubCategoties}">
+                    <TextBlock Text="{Binding Title}" />
+                </TreeDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
+
+    </Grid>
+</UserControl>

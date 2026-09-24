@@ -1,0 +1,72 @@
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
+
+namespace Financisto.DataAccess.Data
+{
+    [DebuggerDisplay("{Title}")]
+    [Table(Backup.CURRENCY_TABLE)]
+    public class Currency : Entity, IIdentity
+    {
+        [Column(Backup.IdColumn)]
+        public int Id { get; set; } = -1;
+
+        [Column(Backup.IsActiveColumn)]
+        public bool IsActive { get; set; } = true;
+
+        [Column(Backup.TitleColumn)]
+        public string Title { get; set; }
+
+        [Column("name")]
+        public string Name { get; set; }
+
+        [Column("symbol")]
+        public string Symbol { get; set; }
+
+        [Column("symbol_format")]
+        public string SymbolFormat { get; set; } = "RS";
+
+        [Column("is_default")]
+        public bool IsDefault { get; set; }
+
+        [Column("decimals")]
+        public int Decimals { get; set; } = 2;
+
+        [Column("decimal_separator")]
+        public string DecimalSeparator { get; set; }
+
+        [Column("group_separator")]
+        public string GroupSeparator { get; set; }
+
+        [Column("number_format")]
+        public string NumberFormat { get; set; }
+
+        [Column("update_exchange_rate")]
+        public bool UpdateExchangeRate { get; set; }
+
+        [Column("trading_currency_id")]
+        public int TradingCurrencyId { get; set; }
+
+        [Column(Backup.UpdatedOnColumn)]
+        public long UpdatedOn { get; set; }
+
+        [Column(Backup.SortOrderColumn)]
+        public int SortOrder { get; set; }
+
+        public static Currency EMPTY;
+
+        static Currency()
+        {
+            EMPTY = new Currency
+            {
+                Id = 0,
+                Name = "",
+                Title = "Default",
+                Symbol = "",
+                SymbolFormat = "RS",
+                Decimals = 2,
+                DecimalSeparator = "'.'",
+                GroupSeparator = "','"
+            };
+        }
+    }
+}

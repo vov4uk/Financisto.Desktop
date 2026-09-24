@@ -1,0 +1,212 @@
+<UserControl
+    x:Class="Financisto.Desktop.Views.Dialogs.CurrencyDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:conv="using:Financisto.Converters"
+    xmlns:converters="using:Avalonia.Data.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:entities="clr-namespace:Financisto.Common.Entities;assembly=Financisto.Common"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:Financisto.Desktop.ViewModels.Dialogs"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:DataType="vm:CurrencyDialogVM"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <conv:EnumDescriptionConverter x:Key="EnumDescriptionConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <GroupBox
+        Margin="5"
+        FontSize="14"
+        Header="{loc:Translate Key=currency_details}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!--  Currency name (Title)  -->
+            <GroupBox
+                Grid.Row="0"
+                Margin="0,0,0,4"
+                BorderThickness="0"
+                Header="{loc:Translate Key=currency_name}">
+                <TextBox Text="{Binding Entity.Title, UpdateSourceTrigger=PropertyChanged}" />
+            </GroupBox>
+
+            <!--  Code and Symbol  -->
+            <Grid Grid.Row="1" Margin="0,0,0,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <GroupBox
+                    Grid.Column="0"
+                    BorderThickness="0"
+                    Header="{loc:Translate Key=currency_code}">
+                    <Grid>
+                        <TextBox
+                            x:Name="NameTextBox"
+                            VerticalAlignment="Center"
+                            MaxLength="3"
+                            Text="{Binding Entity.Name, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Foreground="DarkGray"
+                            IsHitTestVisible="False"
+                            IsVisible="{Binding Text, ElementName=NameTextBox, Converter={x:Static converters:StringConverters.IsNullOrEmpty}}"
+                            Text="{loc:Translate Key=currency_code_hint}" />
+                    </Grid>
+                </GroupBox>
+                <GroupBox
+                    Grid.Column="2"
+                    BorderThickness="0"
+                    Header="{loc:Translate Key=symbol}">
+                    <TextBox MaxLength="10" Text="{Binding Entity.Symbol, UpdateSourceTrigger=PropertyChanged}" />
+                </GroupBox>
+            </Grid>
+
+            <!--  Decimals, Decimal separator, Group separator  -->
+            <Grid Grid.Row="2" Margin="0,0,0,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <GroupBox
+                    Grid.Column="0"
+                    BorderThickness="0"
+                    Header="{loc:Translate Key=decimals}">
+                    <ComboBox
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{Binding Source={loc:EnumBinding {x:Type vm:Decimals}}}"
+                        SelectedItem="{Binding SelectedDecimals, Mode=TwoWay}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock VerticalAlignment="Center" Text="{Binding Converter={StaticResource EnumDescriptionConverter}}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </GroupBox>
+                <GroupBox
+                    Grid.Column="2"
+                    BorderThickness="0"
+                    Header="{loc:Translate Key=decimal_separator}">
+                    <ComboBox
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{Binding Source={loc:EnumBinding {x:Type vm:DecimalSeparator}}}"
+                        SelectedItem="{Binding SelectedDecimalSeparator, Mode=TwoWay}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock VerticalAlignment="Center" Text="{Binding Converter={StaticResource EnumDescriptionConverter}}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </GroupBox>
+                <GroupBox
+                    Grid.Column="4"
+                    BorderThickness="0"
+                    Header="{loc:Translate Key=group_separator}">
+                    <ComboBox
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{Binding Source={loc:EnumBinding {x:Type vm:GroupSeparator}}}"
+                        SelectedItem="{Binding SelectedGroupSeparator, Mode=TwoWay}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock VerticalAlignment="Center" Text="{Binding Converter={StaticResource EnumDescriptionConverter}}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </GroupBox>
+            </Grid>
+
+            <!--  Symbol format and Number format  -->
+            <Grid Grid.Row="3" Margin="0,0,0,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <GroupBox
+                    Grid.Column="0"
+                    BorderThickness="0"
+                    Header="{loc:Translate Key=symbol_format}">
+                    <ComboBox
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{Binding Source={loc:EnumBinding {x:Type entities:SymbolFormat}}}"
+                        SelectedItem="{Binding Entity.SymbolFormat, Mode=TwoWay}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock VerticalAlignment="Center" Text="{Binding Converter={StaticResource EnumDescriptionConverter}}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </GroupBox>
+                <GroupBox
+                    Grid.Column="2"
+                    BorderThickness="0"
+                    Header="{loc:Translate Key=number_format}">
+                    <Grid>
+                        <TextBox
+                            x:Name="SearchTermTextBox"
+                            VerticalAlignment="Center"
+                            Text="{Binding Entity.NumberFormat, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Foreground="DarkGray"
+                            IsHitTestVisible="False"
+                            IsVisible="{Binding Text, ElementName=SearchTermTextBox, Converter={x:Static converters:StringConverters.IsNullOrEmpty}}"
+                            Text="#,##0.00" />
+                    </Grid>
+                </GroupBox>
+            </Grid>
+
+            <!--  IsDefault and UpdateExchangeRate  -->
+            <StackPanel
+                Grid.Row="4"
+                Margin="4,4,0,8"
+                Orientation="Horizontal">
+                <CheckBox
+                    Margin="0,0,16,0"
+                    Content="{loc:Translate Key=is_default}"
+                    IsChecked="{Binding Entity.IsDefault}" />
+                <CheckBox Content="{loc:Translate Key=update_exchange_rate}" IsChecked="{Binding Entity.UpdateExchangeRate}" />
+            </StackPanel>
+
+            <!--  Save / Cancel  -->
+            <Grid Grid.Row="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Button
+                    Grid.Column="0"
+                    Margin="2"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding SaveCommand}"
+                    Content="{loc:Translate Key=save}" />
+                <Button
+                    Grid.Column="1"
+                    Margin="2"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding CancelCommand}"
+                    Content="{loc:Translate Key=cancel}" />
+            </Grid>
+        </Grid>
+    </GroupBox>
+</UserControl>

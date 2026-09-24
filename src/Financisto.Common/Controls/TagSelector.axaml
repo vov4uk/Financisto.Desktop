@@ -1,0 +1,50 @@
+<UserControl
+    x:Class="Financisto.Common.Controls.TagSelector"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:loc="using:Financisto.Common.Localization"
+    MinWidth="140">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Button
+        x:Name="HeaderButton"
+        Height="32"
+        HorizontalAlignment="Stretch"
+        HorizontalContentAlignment="Left">
+        <TextBlock x:Name="HeaderText" TextTrimming="CharacterEllipsis" />
+        <Button.Flyout>
+            <Flyout Placement="BottomEdgeAlignedLeft">
+                <Grid MinWidth="180" MaxHeight="260">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <ScrollViewer Grid.Row="0" MaxHeight="220">
+                        <ItemsControl x:Name="TagsItemsControl">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox
+                                        Margin="0,2"
+                                        Content="{Binding Tag.Title}"
+                                        Foreground="{Binding Tag.IsActive, Converter={StaticResource activeStatusBrush}}"
+                                        IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                    <Button
+                        Grid.Row="1"
+                        Margin="0,4,0,0"
+                        HorizontalAlignment="Right"
+                        Click="OnClearClick"
+                        Content="{loc:Translate Key=clear}" />
+                </Grid>
+            </Flyout>
+        </Button.Flyout>
+    </Button>
+</UserControl>

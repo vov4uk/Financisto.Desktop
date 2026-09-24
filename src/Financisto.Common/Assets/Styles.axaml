@@ -1,0 +1,43 @@
+﻿<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Style Selector="Button.icon">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border
+                    Padding="{TemplateBinding Padding}"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="{StaticResource ControlCornerRadius}">
+                    <DockPanel>
+                        <Image
+                            Width="16"
+                            Height="16"
+                            DockPanel.Dock="Left"
+                            Source="{TemplateBinding Tag}" />
+                        <ContentPresenter
+                            Margin="10,0,0,0"
+                            HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            TextBlock.Foreground="{TemplateBinding Foreground}" />
+                    </DockPanel>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="Button.icon:pointerover">
+        <Setter Property="Background" Value="{StaticResource ButtonBackgroundPointerOver}" />
+    </Style>
+    <Style Selector="Button.icon:pressed">
+        <Setter Property="Background" Value="{StaticResource ButtonBackgroundPressed}" />
+    </Style>
+    <Style Selector="Button.icon:disabled">
+        <Setter Property="Opacity" Value="0.35" />
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+</Styles>
+
+

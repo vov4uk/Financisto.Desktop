@@ -1,0 +1,116 @@
+<UserControl
+    x:Class="Financisto.Desktop.Views.Dialogs.CategoryDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:Financisto.Desktop.ViewModels.Dialogs"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:DataType="vm:CategoryDialogVM"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <GroupBox
+        Margin="5"
+        FontSize="14"
+        Header="{loc:Translate Key=category_details}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" MaxHeight="36" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" MaxHeight="32" />
+                <RowDefinition Height="Auto" MaxHeight="32" />
+                <RowDefinition Height="Auto" MaxHeight="32" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="32" />
+            </Grid.ColumnDefinitions>
+
+            <!--  Parent Category  -->
+            <TextBlock
+                Grid.Row="0"
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
+                Text="{loc:Translate Key=parent_category}" />
+            <ComboBox
+                Grid.Row="1"
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
+                IsEditable="True"
+                ItemTemplate="{StaticResource ResourceKey=CategoryTemplate}"
+                ItemsSource="{Binding AvailableParents}"
+                SelectedItem="{Binding SelectedParent, UpdateSourceTrigger=PropertyChanged}" />
+
+            <!--  Title  -->
+            <TextBlock
+                Grid.Row="2"
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
+                Margin="0,8,0,0"
+                Text="{loc:Translate Key=title}" />
+            <TextBox
+                Grid.Row="3"
+                Grid.Column="0"
+                Text="{Binding Entity.Title, UpdateSourceTrigger=PropertyChanged}" />
+            <Button
+                Grid.Row="3"
+                Grid.Column="1"
+                Width="32"
+                Height="32"
+                Classes="icon"
+                Command="{Binding ClearTitleCommand}"
+                Tag="{StaticResource IconXmark}" />
+
+            <!--  Income / Expense  -->
+            <StackPanel
+                Grid.Row="4"
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
+                Margin="0,8,0,0"
+                IsEnabled="{Binding IsTypeEnabled}"
+                Orientation="Horizontal">
+                <RadioButton
+                    Margin="0,0,16,0"
+                    Content="{loc:Translate Key=expense}"
+                    IsChecked="{Binding !Entity.IsIncome}" />
+                <RadioButton Content="{loc:Translate Key=income}" IsChecked="{Binding Entity.IsIncome}" />
+            </StackPanel>
+
+            <!--  Save / Cancel  -->
+            <Grid
+                Grid.Row="6"
+                Grid.ColumnSpan="2"
+                Margin="0,24,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Button
+                    Grid.Column="0"
+                    Margin="2"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding SaveCommand}"
+                    Content="{loc:Translate Key=save}" />
+                <Button
+                    Grid.Column="1"
+                    Margin="2"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding CancelCommand}"
+                    Content="{loc:Translate Key=cancel}" />
+            </Grid>
+        </Grid>
+    </GroupBox>
+</UserControl>

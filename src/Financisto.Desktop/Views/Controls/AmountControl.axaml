@@ -1,0 +1,180 @@
+<UserControl
+    x:Class="Financisto.Desktop.Views.Dialogs.AmountControl"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="using:Financisto.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="160"
+    d:DesignWidth="340"
+    x:CompileBindings="False"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <converters:AmountConverter x:Key="AmountConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <UserControl.Styles>
+        <Style Selector="NumericUpDown.negative">
+            <Setter Property="Background" Value="LightPink" />
+        </Style>
+        <Style Selector="NumericUpDown.positive">
+            <Setter Property="Background" Value="YellowGreen" />
+        </Style>
+    </UserControl.Styles>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" MaxHeight="32" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" MaxHeight="32" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" MaxHeight="32" />
+            <RowDefinition Height="Auto" MaxHeight="32" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="32" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="32" />
+        </Grid.ColumnDefinitions>
+        <TextBlock
+            x:Name="OriginalFromAmountBlock"
+            Grid.Row="0"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
+            IsVisible="{Binding Transaction.IsOriginalFromAmountVisible}">
+            <TextBlock.Text>
+                <MultiBinding Converter="{StaticResource localizedFormatConverter}">
+                    <Binding Path="[amount]" Source="{x:Static loc:LocalizationService.Instance}" />
+                    <Binding Path="Transaction?.OriginalCurrency?.Name" />
+                </MultiBinding>
+            </TextBlock.Text>
+        </TextBlock>
+        <Image
+            Grid.Row="1"
+            Grid.Column="0"
+            Width="16"
+            Height="16"
+            Classes.IsAmountNegative="{Binding Transaction.IsAmountNegative}"
+            Classes.IsAmountPositive="{Binding !Transaction.IsAmountNegative}"
+            IsVisible="{Binding Transaction.IsOriginalFromAmountVisible}">
+            <Image.Styles>
+                <Style Selector="Image.IsAmountPositive">
+                    <Setter Property="Source" Value="{StaticResource IconPlus}" />
+                </Style>
+                <Style Selector="Image.IsAmountNegative">
+                    <Setter Property="Source" Value="{StaticResource IconMinus}" />
+                </Style>
+            </Image.Styles>
+        </Image>
+        <NumericUpDown
+            x:Name="Amount"
+            Grid.Row="1"
+            Grid.Column="1"
+            Classes.negative="{Binding Transaction.IsAmountNegative, UpdateSourceTrigger=PropertyChanged}"
+            Classes.positive="{Binding !Transaction.IsAmountNegative, UpdateSourceTrigger=PropertyChanged}"
+            FormatString="F2"
+            Increment="0.01"
+            IsVisible="{Binding Transaction.IsOriginalFromAmountVisible}"
+            Minimum="0"
+            ShowButtonSpinner="True"
+            Value="{Binding Transaction.OriginalFromAmount, Converter={StaticResource AmountConverter}}" />
+
+        <Button
+            Grid.Row="1"
+            Grid.Column="2"
+            Width="32"
+            Height="32"
+            Command="{Binding ClearOriginalFromAmountCommand}"
+            IsVisible="{Binding Transaction.IsOriginalFromAmountVisible}">
+            <Image Source="{StaticResource IconXmark}" />
+        </Button>
+
+        <TextBlock
+            x:Name="FromAmountBlock"
+            Grid.Row="2"
+            Grid.Column="0"
+            Grid.ColumnSpan="3">
+            <TextBlock.Text>
+                <MultiBinding Converter="{StaticResource localizedFormatConverter}">
+                    <Binding Path="[amount]" Source="{x:Static loc:LocalizationService.Instance}" />
+                    <Binding Path="Transaction.FromAccountCurrency?.Name" />
+                </MultiBinding>
+            </TextBlock.Text>
+        </TextBlock>
+        <Button
+            x:Name="FromAmountSign"
+            Grid.Row="3"
+            Grid.Column="0"
+            Width="32"
+            Height="32"
+            Classes.IsAmountNegative="{Binding Transaction.IsAmountNegative}"
+            Classes.IsAmountPositive="{Binding !Transaction.IsAmountNegative}"
+            Command="{Binding ChangeFromAmountSignCommand}">
+            <Button.Styles>
+                <Style Selector="Button.IsAmountPositive Image#ButtonImage">
+                    <Setter Property="Source" Value="{StaticResource IconPlus}" />
+                </Style>
+                <Style Selector="Button.IsAmountNegative Image#ButtonImage">
+                    <Setter Property="Source" Value="{StaticResource IconMinus}" />
+                </Style>
+            </Button.Styles>
+            <Image
+                x:Name="ButtonImage"
+                Width="16"
+                Height="16" />
+        </Button>
+        <NumericUpDown
+            x:Name="OrigAmount"
+            Grid.Row="3"
+            Grid.Column="1"
+            Classes.negative="{Binding Transaction.IsAmountNegative}"
+            Classes.positive="{Binding !Transaction.IsAmountNegative}"
+            FormatString="F2"
+            Increment=".01"
+            Minimum="0"
+            ShowButtonSpinner="True"
+            Value="{Binding Transaction.FromAmount, Converter={StaticResource AmountConverter}, Mode=TwoWay}" />
+
+        <Button
+            Grid.Row="3"
+            Grid.Column="2"
+            Width="32"
+            Height="32"
+            Command="{Binding ClearFromAmountCommand}">
+            <Image
+                Width="16"
+                Height="16"
+                Source="{StaticResource IconXmark}" />
+        </Button>
+
+        <TextBlock
+            Grid.Row="4"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
+            IsVisible="{Binding Transaction.IsOriginalFromAmountVisible}"
+            Text="{loc:Translate Key=rate}" />
+        <NumericUpDown
+            Grid.Row="5"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
+            FormatString="F5"
+            Increment="0.00001"
+            IsEnabled="False"
+            IsVisible="{Binding Transaction.IsOriginalFromAmountVisible}"
+            Minimum="0"
+            ShowButtonSpinner="True"
+            Value="{Binding Transaction.Rate}" />
+        <TextBlock
+            Grid.Row="6"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
+            IsVisible="{Binding Transaction.IsOriginalFromAmountVisible}"
+            Text="{Binding Transaction.RateString, Mode=OneWay}" />
+    </Grid>
+</UserControl>

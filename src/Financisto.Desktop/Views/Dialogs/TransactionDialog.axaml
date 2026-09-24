@@ -1,0 +1,456 @@
+<UserControl
+    x:Class="Financisto.Desktop.Views.Dialogs.TransactionDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviors="using:Financisto.Common.Behaviors"
+    xmlns:controls="using:Financisto.Common.Controls"
+    xmlns:conv="using:Financisto.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogs="using:Financisto.Desktop.Views.Dialogs"
+    xmlns:entities="using:Financisto.Common.Entities"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+    xmlns:vm="using:Financisto.Desktop.ViewModels.Dialogs"
+    d:DesignHeight="800"
+    d:DesignWidth="440"
+    x:CompileBindings="False"
+    x:DataType="vm:TransactionDialogVM"
+    mc:Ignorable="d">
+
+    <UserControl.Styles>
+        <Style Selector="Border.negative">
+            <Setter Property="Background" Value="LightPink" />
+        </Style>
+        <Style Selector="Border.positive">
+            <Setter Property="Background" Value="YellowGreen" />
+        </Style>
+    </UserControl.Styles>
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <conv:AmountConverter x:Key="AmountConverter" />
+            <conv:DateTimeToDateTimeOffsetConverter x:Key="DateTimeToDateTimeOffsetConverter" />
+            <conv:DateTimeToTimeSpanConverter x:Key="DateTimeToTimeSpanConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <GroupBox
+        Margin="3"
+        FontSize="14"
+        Header="{loc:Translate Key=transaction_details}">
+        <Grid Margin="0,0,6,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="36" />
+            </Grid.RowDefinitions>
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <Grid Margin="5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="30" />
+                        <!--  Account  -->
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="32" />
+                        <!--  payee  -->
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="32" />
+                        <!--  Category  -->
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="32" />
+                        <!--  Currenct  -->
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="32" />
+                        <!--  amount  -->
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <!--  Spit  -->
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+
+                        <!--  location  -->
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="32" />
+                        <!--  note  -->
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="32" />
+                        <!--  project  -->
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="32" />
+                        <!--  tag  -->
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="32" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="32" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <DatePicker
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            MinWidth="150"
+                            Margin="2"
+                            DayFormat="dd"
+                            MonthFormat="MM"
+                            SelectedDate="{Binding Transaction.Date, Converter={StaticResource DateTimeToDateTimeOffsetConverter}}"
+                            YearFormat="yyyy" />
+                        <TimePicker
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            MinWidth="110"
+                            Margin="2"
+                            HorizontalAlignment="Stretch"
+                            SelectedTime="{Binding Transaction.Time, Converter={StaticResource DateTimeToTimeSpanConverter}}" />
+                    </Grid>
+
+                    <TextBlock
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        Text="{loc:Translate Key=account}" />
+
+                    <ComboBox
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        HorizontalAlignment="Stretch"
+                        IsTextSearchEnabled="True"
+                        ItemTemplate="{StaticResource IActive}"
+                        ItemsSource="{x:Static entities:DbManual.Account}"
+                        SelectedItem="{Binding Transaction.FromAccount}"
+                        SelectedValue="{Binding Transaction.FromAccountId}"
+                        SelectedValueBinding="{Binding Id}"
+                        TextSearch.TextBinding="{Binding Title}" />
+
+                    <TextBlock
+                        Grid.Row="3"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        Text="{loc:Translate Key=payee}" />
+
+                    <ComboBox
+                        Grid.Row="4"
+                        Grid.Column="0"
+                        HorizontalAlignment="Stretch"
+                        IsTextSearchEnabled="True"
+                        ItemTemplate="{StaticResource IActive}"
+                        ItemsSource="{x:Static entities:DbManual.Payee}"
+                        SelectedValue="{Binding Transaction.PayeeId}"
+                        SelectedValueBinding="{Binding Id}"
+                        TextSearch.TextBinding="{Binding Title}" />
+                    <Button
+                        Grid.Row="4"
+                        Grid.Column="1"
+                        Height="32"
+                        Classes="icon"
+                        Command="{Binding ClearPayeeCommand}"
+                        Tag="{StaticResource IconXmark}" />
+
+                    <TextBlock
+                        Grid.Row="5"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        Text="{loc:Translate Key=category}" />
+
+                    <Grid
+                        Grid.Row="6"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="32" />
+                            <ColumnDefinition Width="32" />
+                        </Grid.ColumnDefinitions>
+
+                        <ComboBox
+                            Grid.Column="0"
+                            HorizontalAlignment="Stretch"
+                            IsTextSearchEnabled="True"
+                            ItemTemplate="{StaticResource CategoryTemplate}"
+                            ItemsSource="{x:Static entities:DbManual.Category}"
+                            SelectedItem="{Binding Transaction.Category}"
+                            SelectedValue="{Binding Transaction.CategoryId}"
+                            SelectedValueBinding="{Binding Id}"
+                            TextSearch.TextBinding="{Binding Title}" />
+                        <Button
+                            Grid.Column="1"
+                            Height="32"
+                            Command="{Binding ClearCategoryCommand}">
+                            <Button.CommandParameter>
+                                <sys:Int32>-1</sys:Int32>
+                            </Button.CommandParameter>
+                            <Image
+                                Width="16"
+                                Height="16"
+                                Source="{StaticResource IconShareNodes}" />
+                        </Button>
+                        <Button
+                            Grid.Column="2"
+                            Height="32"
+                            Classes="icon"
+                            Command="{Binding ClearCategoryCommand}"
+                            Tag="{StaticResource IconXmark}">
+                            <Button.CommandParameter>
+                                <sys:Int32>0</sys:Int32>
+                            </Button.CommandParameter>
+                        </Button>
+                    </Grid>
+
+                    <TextBlock
+                        Grid.Row="7"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        Text="{loc:Translate Key=currency}" />
+
+                    <ComboBox
+                        Grid.Row="8"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        HorizontalAlignment="Stretch"
+                        DisplayMemberBinding="{Binding Title}"
+                        ItemsSource="{x:Static entities:DbManual.Currencies}"
+                        SelectedItem="{Binding Transaction.OriginalCurrency}"
+                        SelectedValue="{Binding Transaction.OriginalCurrencyId}"
+                        SelectedValueBinding="{Binding Id}" />
+
+                    <dialogs:AmountControl
+                        Grid.Row="10"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        DataContext="{Binding}" />
+
+                    <Border
+                        Grid.Row="11"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        BorderBrush="LightGray"
+                        BorderThickness="0,1,0,1"
+                        IsVisible="{Binding Transaction.IsSplitCategory, Mode=OneWay}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="32" />
+                                <ColumnDefinition Width="32" />
+                                <ColumnDefinition Width="32" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="20" />
+                                <RowDefinition Height="20" />
+                            </Grid.RowDefinitions>
+                            <TextBlock
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                Text="{loc:Translate Key=unsplit_amount}" />
+                            <TextBlock
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                Text="{Binding Transaction.UnsplitAmount, Converter={StaticResource AmountConverter}, ConverterParameter=false, StringFormat=F2, Mode=OneWay}" />
+
+                            <Button
+                                Grid.Row="0"
+                                Grid.RowSpan="2"
+                                Grid.Column="2"
+                                Height="32"
+                                Margin="0,3,0,0"
+                                VerticalAlignment="Top"
+                                Command="{Binding AddSubTransferCommand}"
+                                ToolTip.Tip="{loc:Translate Key=add_split_transfers}">
+                                <Image
+                                    Width="16"
+                                    Height="16"
+                                    Source="{StaticResource ResourceKey=IconArrowRightArrowLeft}" />
+                            </Button>
+                            <Button
+                                Grid.Row="0"
+                                Grid.RowSpan="2"
+                                Grid.Column="3"
+                                Height="32"
+                                Margin="0,3,0,0"
+                                VerticalAlignment="Top"
+                                Command="{Binding AddSubTransactionCommand}"
+                                ToolTip.Tip="{loc:Translate Key=add_split_transactions}">
+                                <Image
+                                    Width="16"
+                                    Height="16"
+                                    Source="{StaticResource IconPlus}" />
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <ListBox
+                        Grid.Row="12"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        IsVisible="{Binding Transaction.IsSplitCategory}"
+                        ItemsSource="{Binding Transaction.SubTransactions}">
+                        <ListBox.Styles>
+                            <Style Selector="ListBoxItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Margin" Value="0,2" />
+                                <Setter Property="Padding" Value="0" />
+                            </Style>
+                        </ListBox.Styles>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:CompileBindings="False">
+                                <Border
+                                    HorizontalAlignment="Stretch"
+                                    behaviors:CommandBehavior.DoubleTappedCommand="{Binding $parent[ListBox].DataContext.EditSubTransactionCommand}"
+                                    behaviors:CommandBehavior.DoubleTappedCommandParameter="{Binding}"
+                                    Classes.negative="{Binding IsAmountNegative}"
+                                    Classes.positive="{Binding !IsAmountNegative}">
+                                    <Grid ColumnDefinitions="*,Auto,32">
+                                        <TextBlock
+                                            Grid.Column="0"
+                                            Margin="2,0"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"
+                                            Text="{Binding SubTransactionTitle, UpdateSourceTrigger=PropertyChanged}"
+                                            TextTrimming="CharacterEllipsis" />
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            Margin="2,0"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Center"
+                                            Text="{Binding FromAmount, Converter={StaticResource AmountConverter}, ConverterParameter=false, StringFormat=F2, UpdateSourceTrigger=PropertyChanged}" />
+                                        <Button
+                                            Grid.Column="2"
+                                            Width="32"
+                                            Height="32"
+                                            Classes="icon"
+                                            Command="{Binding $parent[ListBox].DataContext.DeleteSubTransactionCommand}"
+                                            CommandParameter="{Binding}"
+                                            Tag="{StaticResource IconMinus}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <TextBlock
+                        Grid.Row="13"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        Text="{loc:Translate Key=location}" />
+
+                    <ComboBox
+                        Grid.Row="14"
+                        Grid.Column="0"
+                        HorizontalAlignment="Stretch"
+                        IsTextSearchEnabled="True"
+                        ItemTemplate="{StaticResource IActive}"
+                        ItemsSource="{x:Static entities:DbManual.Location}"
+                        SelectedValue="{Binding Transaction.LocationId}"
+                        SelectedValueBinding="{Binding Id}"
+                        TextSearch.TextBinding="{Binding Title}" />
+                    <Button
+                        Grid.Row="14"
+                        Grid.Column="1"
+                        Width="32"
+                        Height="32"
+                        Classes="icon"
+                        Command="{Binding ClearLocationCommand}"
+                        Tag="{StaticResource IconXmark}" />
+
+                    <TextBlock
+                        Grid.Row="15"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        Text="{loc:Translate Key=note}" />
+                    <TextBox
+                        Grid.Row="16"
+                        Grid.Column="0"
+                        Text="{Binding Transaction.Note}" />
+                    <Button
+                        Grid.Row="16"
+                        Grid.Column="1"
+                        Width="32"
+                        Height="32"
+                        Classes="icon"
+                        Command="{Binding ClearNotesCommand}"
+                        Tag="{StaticResource IconXmark}" />
+
+                    <TextBlock
+                        Grid.Row="17"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        IsVisible="{Binding ElementName=ProjectIdBox, Path=IsVisible}"
+                        Text="{loc:Translate Key=project}" />
+
+                    <ComboBox
+                        Grid.Row="18"
+                        Grid.Column="0"
+                        HorizontalAlignment="Stretch"
+                        IsTextSearchEnabled="True"
+                        ItemTemplate="{StaticResource IActive}"
+                        ItemsSource="{x:Static entities:DbManual.Project}"
+                        SelectedValue="{Binding Transaction.ProjectId}"
+                        SelectedValueBinding="{Binding Id}"
+                        TextSearch.TextBinding="{Binding Title}" />
+                    <Button
+                        Grid.Row="18"
+                        Grid.Column="1"
+                        Width="32"
+                        Height="32"
+                        Classes="icon"
+                        Command="{Binding ClearProjectCommand}"
+                        IsVisible="{Binding ElementName=ProjectIdBox, Path=IsVisible}"
+                        Tag="{StaticResource IconXmark}" />
+
+                    <TextBlock
+                        Grid.Row="19"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        Text="{loc:Translate Key=tag}" />
+
+                    <controls:TagSelector
+                        Grid.Row="20"
+                        Grid.Column="0"
+                        HorizontalAlignment="Stretch"
+                        SelectedTags="{Binding Transaction.SelectedTags}" />
+                    <Button
+                        Grid.Row="20"
+                        Grid.Column="1"
+                        Width="32"
+                        Height="32"
+                        Classes="icon"
+                        Command="{Binding ClearTagCommand}"
+                        Tag="{StaticResource IconXmark}" />
+                </Grid>
+            </ScrollViewer>
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Button
+                    Grid.Column="0"
+                    Margin="2"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding SaveCommand}"
+                    Content="{loc:Translate Key=save}" />
+                <Button
+                    Grid.Column="1"
+                    Margin="2"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding CancelCommand}"
+                    Content="{loc:Translate Key=cancel}" />
+            </Grid>
+        </Grid>
+    </GroupBox>
+</UserControl>
