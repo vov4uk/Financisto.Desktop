@@ -68,7 +68,8 @@ ORDER  BY 3 DESC, 4 ASC"
 SELECT _id,
        title,
        is_active,
-       resolved_address
+       resolved_address,
+       aliases
 FROM   locations
 WHERE  title IS NOT NULL
 ORDER  BY 3 DESC, 2 ASC"
@@ -118,7 +119,8 @@ ORDER  BY LEFT,
                 var payees = await FinancistoDatabase.ExecuteQuery<PayeeModel>(@"
 SELECT _id,
        title,
-       is_active
+       is_active,
+       aliases
 FROM   payee
 WHERE  title IS NOT NULL
 ORDER  BY is_active DESC, title ASC");

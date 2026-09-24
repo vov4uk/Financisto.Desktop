@@ -24,6 +24,8 @@ namespace Financisto.Desktop.ViewModels.Pages
 
         IEnumerable<TagBaseModel> Entities { get; }
 
+        bool HasAliases { get; }
+
         object SelectedValue { get; set; }
 
         IAsyncCommand AddCommand { get; }
@@ -47,6 +49,8 @@ namespace Financisto.Desktop.ViewModels.Pages
 
         public string PageTitle => LocalizationService.Instance[TitleKey];
 
+        public virtual bool HasAliases => false;
+
         IEnumerable<TagBaseModel> ITagBaseVM.Entities => Entities;
 
         object ITagBaseVM.SelectedValue
@@ -68,14 +72,16 @@ namespace Financisto.Desktop.ViewModels.Pages
         {
             T selectedEntity = await db.GetOrCreateAsync<T>(e);
             TagDialogVM context = new TagDialogVM(new TagDto(selectedEntity));
+            double height = context.ShowAliases ? 340 : 180;
 
-            var result = await dialogWrapper.ShowDialogAsync<TagDialog>(context, 180, 300, LocalizationService.Instance[typeof(T).Name.ToLowerInvariant()]);
+            var result = await dialogWrapper.ShowDialogAsync<TagDialog>(context, height, 300, LocalizationService.Instance[typeof(T).Name.ToLowerInvariant()]);
 
             var updatedItem = result as TagDto;
             if (updatedItem != null)
             {
                 selectedEntity.IsActive = updatedItem.IsActive;
                 selectedEntity.Title = updatedItem.Title;
+                updatedItem.ApplyAliases(selectedEntity);
 
                 await db.InsertOrUpdateAsync(new[] { selectedEntity });
                 await RefreshData();

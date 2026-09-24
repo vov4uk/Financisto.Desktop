@@ -65,6 +65,7 @@
                 <DataGridCheckBoxColumn Binding="{Binding Path=IsActive}" Header="{loc:Translate Key=active}" />
                 <DataGridTextColumn Binding="{Binding Path=Title}" Header="{loc:Translate Key=name}" />
                 <DataGridTextColumn Binding="{Binding Path=Address}" Header="{loc:Translate Key=address}" />
+                <DataGridTextColumn Binding="{Binding Path=AliasesText}" Header="{loc:Translate Key=aliases}" />
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

@@ -261,6 +261,12 @@
   <data name="address" xml:space="preserve">
     <value>Address</value>
   </data>
+  <data name="aliases" xml:space="preserve">
+    <value>Aliases (for search)</value>
+  </data>
+  <data name="aliases_hint" xml:space="preserve">
+    <value>One per line</value>
+  </data>
   <data name="title" xml:space="preserve">
     <value>Title</value>
   </data>

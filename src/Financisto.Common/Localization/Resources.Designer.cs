@@ -293,7 +293,25 @@ namespace Financisto.Common.Localization {
                 return ResourceManager.GetString("address", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Aliases (for search).
+        /// </summary>
+        public static string aliases {
+            get {
+                return ResourceManager.GetString("aliases", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to One per line.
+        /// </summary>
+        public static string aliases_hint {
+            get {
+                return ResourceManager.GetString("aliases_hint", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to All currencies.
         /// </summary>

@@ -27,6 +27,7 @@
                 <RowDefinition Height="Auto" MaxHeight="32" />
                 <RowDefinition Height="Auto" MaxHeight="32" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
@@ -58,8 +59,26 @@
                 Content="{loc:Translate Key=is_active}"
                 IsChecked="{Binding Entity.IsActive}" />
 
-            <Grid
+            <!--  Aliases: payees only (TagDto.SupportsAliases)  -->
+            <StackPanel
                 Grid.Row="3"
+                Grid.ColumnSpan="2"
+                Margin="0,8,0,0"
+                IsVisible="{Binding ShowAliases}">
+                <TextBlock Text="{loc:Translate Key=aliases}" />
+                <TextBlock
+                    FontSize="12"
+                    Opacity="0.7"
+                    Text="{loc:Translate Key=aliases_hint}" />
+                <TextBox
+                    Height="110"
+                    AcceptsReturn="True"
+                    Text="{Binding Entity.Aliases}"
+                    TextWrapping="NoWrap" />
+            </StackPanel>
+
+            <Grid
+                Grid.Row="4"
                 Grid.ColumnSpan="2"
                 Margin="0,24,0,0">
                 <Grid.ColumnDefinitions>

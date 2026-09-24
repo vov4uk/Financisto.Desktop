@@ -261,6 +261,12 @@
   <data name="address" xml:space="preserve">
     <value>Адреса</value>
   </data>
+  <data name="aliases" xml:space="preserve">
+    <value>Псевдоніми (для пошуку)</value>
+  </data>
+  <data name="aliases_hint" xml:space="preserve">
+    <value>По одному в рядку</value>
+  </data>
   <data name="title" xml:space="preserve">
     <value>Назва</value>
   </data>

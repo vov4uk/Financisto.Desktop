@@ -51,6 +51,7 @@
             IsEnabled="False"
             Tag="{StaticResource IconTrash}" />
         <DataGrid
+            x:Name="EntitiesGrid"
             Grid.Row="1"
             Grid.ColumnSpan="4"
             Margin="5"
@@ -65,6 +66,12 @@
                 <DataGridTextColumn Binding="{Binding Path=Id}" Header="{loc:Translate Key=id}" />
                 <DataGridCheckBoxColumn Binding="{Binding Path=IsActive}" Header="{loc:Translate Key=active}" />
                 <DataGridTextColumn Binding="{Binding Path=Title}" Header="{loc:Translate Key=title}" />
+                <!--  Only payees have aliases; shown from code-behind via ITagBaseVM.HasAliases  -->
+                <DataGridTextColumn
+                    Binding="{ReflectionBinding Path=AliasesText}"
+                    Header="{loc:Translate Key=aliases}"
+                    IsVisible="False"
+                    Tag="aliases" />
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

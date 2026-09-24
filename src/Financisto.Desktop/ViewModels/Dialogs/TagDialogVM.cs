@@ -15,6 +15,8 @@ namespace Financisto.Desktop.ViewModels.Dialogs
         public DelegateCommand ClearTitleCommand => _clearTitleCommand ??= new DelegateCommand(() => { Entity.Title = default; });
 
         public TagDto Entity { get; }
+
+        public bool ShowAliases => Entity.SupportsAliases;
         public override object OnRequestSave()
         {
             return Entity;

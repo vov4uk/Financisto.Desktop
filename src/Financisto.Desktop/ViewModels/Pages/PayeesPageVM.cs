@@ -20,6 +20,8 @@ namespace Financisto.Desktop.ViewModels.Pages
 
         protected override string TitleKey => "payees";
 
+        public override bool HasAliases => true;
+
         protected override Task OnAdd() => OpenTagDialogAsync<Payee>(0);
 
         protected override Task OnDelete(PayeeModel item) => throw new System.NotImplementedException();

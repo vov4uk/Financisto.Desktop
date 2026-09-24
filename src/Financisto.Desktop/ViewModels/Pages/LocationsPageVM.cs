@@ -39,7 +39,7 @@ namespace Financisto.Desktop.ViewModels.Pages
             Location selectedValue = await db.GetOrCreateAsync<Location>(id);
             LocationDialogVM locationVm = new LocationDialogVM(new LocationDto(selectedValue));
 
-            var result = await dialogWrapper.ShowDialogAsync<LocationDialog>(locationVm, 240, 300, LocalizationService.Instance.location);
+            var result = await dialogWrapper.ShowDialogAsync<LocationDialog>(locationVm, 400, 300, LocalizationService.Instance.location);
 
             var updatedItem = result as LocationDto;
             if (updatedItem != null)
@@ -47,6 +47,7 @@ namespace Financisto.Desktop.ViewModels.Pages
                 selectedValue.IsActive = updatedItem.IsActive;
                 selectedValue.Address = updatedItem.Address;
                 selectedValue.Title = updatedItem.Title;
+                updatedItem.ApplyAliases(selectedValue);
                 if (id == 0)
                 {
                     selectedValue.Count = 0;
