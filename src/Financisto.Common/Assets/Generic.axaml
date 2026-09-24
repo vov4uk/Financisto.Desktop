@@ -16,7 +16,8 @@
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 
-
+    <SolidColorBrush x:Key="MessageInfoBorderColor" Color="#858585" />
+    <SolidColorBrush x:Key="MessageInfoColor" Color="#858585" />
     <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#FFF0F0F0" />
     <convert:CategoryTitleConverter x:Key="categoryTitleConvert" />
     <convert:LocalizedFormatConverter x:Key="localizedFormatConverter" />

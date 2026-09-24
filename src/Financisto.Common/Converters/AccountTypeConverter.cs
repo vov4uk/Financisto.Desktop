@@ -23,7 +23,13 @@ namespace Financisto.Converters
             if (values.Count > 1)
                 card_issuer = values[1]?.ToString()?.ToLowerInvariant();
 
-            return LoadImage(GetImageUri(type, card_issuer));
+            // An issuer that doesn't belong to the type (e.g. DEBIT_CARD + GOOGLE_WALLET) has no icon: fall back to the type's icon.
+            foreach (Uri uri in GetImageUris(type, card_issuer))
+            {
+                if (AssetLoader.Exists(uri))
+                    return LoadImage(uri);
+            }
+            return null;
         }
 
         private static IImage LoadImage(Uri uri)
@@ -39,33 +45,34 @@ namespace Financisto.Converters
             }
         }
 
-        private static Uri GetImageUri(string type, string card_issuer)
+        private static IEnumerable<Uri> GetImageUris(string type, string card_issuer)
         {
-            if (string.IsNullOrEmpty(type) || card_issuer == "(unset)")
+            if (!string.IsNullOrEmpty(type) && card_issuer != "(unset)")
             {
-                return new Uri("avares://Financisto.Common/Assets/AccountType/account_type_other.png");
-            }
-
-            if (type.Contains("card") && !string.IsNullOrEmpty(card_issuer) && card_issuer != type)
-            {
-                return new Uri($"avares://Financisto.Common/Assets/AccountType/account_type_card_{card_issuer}.png");
-            }
-
-            if ( type.Contains("electronic") && !string.IsNullOrEmpty(card_issuer) && card_issuer != type)
-            {
-                return new Uri($"avares://Financisto.Common/Assets/ElectronicType/electronic_type_{card_issuer}.png");
-            }
-
-            if (KnownTypes.Contains(type))
-            {
-                if (type == "credit_card" || type == "debit_card")
+                if (type.Contains("card") && !string.IsNullOrEmpty(card_issuer) && card_issuer != type)
                 {
-                    return new Uri("avares://Financisto.Common/Assets/AccountType/account_type_card.png");
+                    yield return new Uri($"avares://Financisto.Common/Assets/AccountType/account_type_card_{card_issuer}.png");
                 }
-                return new Uri($"avares://Financisto.Common/Assets/AccountType/account_type_{type}.png");
+
+                if (type.Contains("electronic") && !string.IsNullOrEmpty(card_issuer) && card_issuer != type)
+                {
+                    yield return new Uri($"avares://Financisto.Common/Assets/ElectronicType/electronic_type_{card_issuer}.png");
+                }
+
+                if (KnownTypes.Contains(type))
+                {
+                    if (type == "credit_card" || type == "debit_card")
+                    {
+                        yield return new Uri("avares://Financisto.Common/Assets/AccountType/account_type_card.png");
+                    }
+                    else
+                    {
+                        yield return new Uri($"avares://Financisto.Common/Assets/AccountType/account_type_{type}.png");
+                    }
+                }
             }
 
-            return new Uri("avares://Financisto.Common/Assets/AccountType/account_type_other.png");
+            yield return new Uri("avares://Financisto.Common/Assets/AccountType/account_type_other.png");
         }
     }
 }

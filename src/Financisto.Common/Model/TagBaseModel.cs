@@ -15,6 +15,9 @@ namespace Financisto.Common.Model
         [Column("is_active")]
         public bool IsActive { get; set; }
 
+        /// <summary>Aliases for display, comma-separated; only payees and locations have them.</summary>
+        public virtual string AliasesText => null;
+
         override public string ToString() => Title;
     }
 }

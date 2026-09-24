@@ -68,7 +68,7 @@
                 <DataGridTextColumn Binding="{Binding Path=Title}" Header="{loc:Translate Key=title}" />
                 <!--  Only payees have aliases; shown from code-behind via ITagBaseVM.HasAliases  -->
                 <DataGridTextColumn
-                    Binding="{ReflectionBinding Path=AliasesText}"
+                    Binding="{Binding Path=AliasesText}"
                     Header="{loc:Translate Key=aliases}"
                     IsVisible="False"
                     Tag="aliases" />

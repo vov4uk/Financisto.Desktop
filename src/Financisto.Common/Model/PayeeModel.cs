@@ -10,6 +10,6 @@ namespace Financisto.Common.Model
         [Column("aliases")]
         public string Aliases { get; set; }
 
-        public string AliasesText => string.Join(", ", BackupText.SplitAliases(Aliases));
+        public override string AliasesText => string.Join(", ", BackupText.SplitAliases(Aliases));
     }
 }

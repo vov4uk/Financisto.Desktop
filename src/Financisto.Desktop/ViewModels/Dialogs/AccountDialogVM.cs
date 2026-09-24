@@ -46,6 +46,7 @@ namespace Financisto.Desktop.ViewModels.Dialogs
             {
                 selectedAccountType = value;
                 Entity.Type = value.ToString();
+                ApplyIssuerForType();
                 this.OnPropertyChanged(nameof(SelectedAccountType));
                 this.OnPropertyChanged(nameof(ShowCardIssuer));
                 this.OnPropertyChanged(nameof(ShowElectronicType));
@@ -116,15 +117,34 @@ namespace Financisto.Desktop.ViewModels.Dialogs
                 accountType = AccountType.CASH;
             selectedAccountType = accountType;
             Entity.Type = selectedAccountType.ToString();
-
-            if (!string.IsNullOrEmpty(Entity.CardIssuer))
-            {
-                System.Enum.TryParse<CardIssuer>(Entity.CardIssuer, out selectedCardIssuer);
-                System.Enum.TryParse<ElectronicType>(Entity.CardIssuer, out selectedElectronicType);
-            }
+            ApplyIssuerForType();
 
             if (Entity.CurrencyId > 0)
                 selectedCurrency = Currencies.Find(x => x.Id == Entity.CurrencyId);
+        }
+
+        // Same as Android AccountActivity.selectAccountType: card_issuer holds a card issuer for cards, an electronic
+        // payment type for electronic accounts, and nothing otherwise. A mismatch (e.g. DEBIT_CARD + GOOGLE_WALLET)
+        // makes Android's account list throw in CardIssuer.valueOf.
+        private void ApplyIssuerForType()
+        {
+            if (selectedAccountType is AccountType.DEBIT_CARD or AccountType.CREDIT_CARD)
+            {
+                selectedCardIssuer = System.Enum.TryParse<CardIssuer>(Entity.CardIssuer, out var issuer) ? issuer : CardIssuer.DEFAULT;
+                Entity.CardIssuer = selectedCardIssuer.ToString();
+            }
+            else if (selectedAccountType == AccountType.ELECTRONIC)
+            {
+                selectedElectronicType = System.Enum.TryParse<ElectronicType>(Entity.CardIssuer, out var type) ? type : ElectronicType.PAYPAL;
+                Entity.CardIssuer = selectedElectronicType.ToString();
+            }
+            else
+            {
+                Entity.CardIssuer = null;
+            }
+
+            OnPropertyChanged(nameof(SelectedCardIssuer));
+            OnPropertyChanged(nameof(SelectedElectronicType));
         }
     }
 }
