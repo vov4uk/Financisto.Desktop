@@ -15,8 +15,8 @@ namespace Financisto.Desktop.ViewModels.Dialogs;
 public class TransactionDialogVM : SubTransactionDialogVM
 {
     private readonly IDialogWrapper dialogWrapper;
-    private DelegateCommand _addSubTransactionCommand;
-    private DelegateCommand _addSubTransferCommand;
+    private Common.IAsyncCommand _addSubTransactionCommand;
+    private Common.IAsyncCommand _addSubTransferCommand;
     private DelegateCommand _clearLocationCommand;
     private DelegateCommand _clearPayeeCommand;
     private DelegateCommand _clearTagCommand;
@@ -31,8 +31,8 @@ public class TransactionDialogVM : SubTransactionDialogVM
         this.dialogWrapper = dialogWrapper;
     }
 
-    public DelegateCommand AddSubTransactionCommand => _addSubTransactionCommand ??= new DelegateCommand(() => { ShowSubTransactionDialog(new TransactionDto(), true); });
-    public DelegateCommand AddSubTransferCommand => _addSubTransferCommand ??= new DelegateCommand(() => { ShowSubTransferDialog(new TransferDto(), true); });
+    public Common.IAsyncCommand AddSubTransactionCommand => _addSubTransactionCommand ??= new AsyncCommand(() => ShowSubTransactionDialog(new TransactionDto(), true));
+    public Common.IAsyncCommand AddSubTransferCommand => _addSubTransferCommand ??= new AsyncCommand(() => ShowSubTransferDialog(new TransferDto(), true));
 
     public DelegateCommand ClearLocationCommand => _clearLocationCommand ??= new DelegateCommand(() => { Transaction.LocationId = default; });
 
@@ -54,7 +54,7 @@ public class TransactionDialogVM : SubTransactionDialogVM
     private static void CopySubTransaction(TransactionDto original, TransactionDto modifiedCopy)
     {
         original.CategoryId = modifiedCopy.CategoryId;
-        original.Category = DbManual.Category?.Find(x => x.Id == modifiedCopy.CategoryId);
+        original.Category = DbManual.Category?.Find(x => x.Id == modifiedCopy.CategoryId)!;
         original.FromAmount = modifiedCopy.RealFromAmount;
         original.IsAmountNegative = modifiedCopy.IsAmountNegative;
         original.Note = modifiedCopy.Note;

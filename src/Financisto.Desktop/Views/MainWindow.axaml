@@ -94,6 +94,7 @@
 
             <SplitView
                 Background="{DynamicResource SystemControlPageBackgroundBaseMediumBrush}"
+                CompactPaneLength="60"
                 DisplayMode="CompactInline"
                 IsEnabled="{Binding !IsLoading}"
                 IsPaneOpen="{Binding IsPanelOpen}"
@@ -112,6 +113,7 @@
                             RowDefinitions="Auto,*">
 
                             <Button
+                                Width="48"
                                 Padding="12,8"
                                 HorizontalAlignment="Left"
                                 HorizontalContentAlignment="Left"
@@ -158,11 +160,12 @@
                                 IsVisible="{Binding !IsLoading}" />
 
                             <li:LoadingIndicator
+                                Width="256"
                                 Height="256"
                                 Foreground="{DynamicResource SystemControlPageBackgroundBaseMediumBrush}"
                                 IsActive="{Binding IsLoading, UpdateSourceTrigger=PropertyChanged}"
                                 Mode="Arc"
-                                SpeedRatio="1.2" />
+                                SpeedRatio="2" />
 
                         </Grid>
                     </Border>
