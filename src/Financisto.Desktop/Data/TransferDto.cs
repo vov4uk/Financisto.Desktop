@@ -1,5 +1,6 @@
 ﻿using System;
 using Financisto.Common.Entities;
+using Financisto.Common.Localization;
 using Financisto.Common.Model;
 using Financisto.Common.Utils;
 using Financisto.Converters;
@@ -12,11 +13,32 @@ namespace Financisto.Desktop.Data
         private AccountFilterModel fromAccount;
         private int fromAccountId;
         private long fromAmount;
+        private bool isAmountNegative = true;
         private AccountFilterModel toAccount;
         private int toAccountId;
         private long toAmount;
 
         public TransferDto() { }
+
+        /// <summary>
+        /// A split part seen from the parent account's side, like Android's SplitTransferActivity.updateUI:
+        /// FromAccount is the parent account and ToAccount the other one. A transfer into the parent account
+        /// (stored as other account -> parent account) is swapped back and gets IsAmountNegative = false.
+        /// </summary>
+        public TransferDto(Transaction transaction, int parentAccountId)
+            : this(transaction)
+        {
+            if (transaction.FromAccountId != parentAccountId && transaction.ToAccountId == parentAccountId)
+            {
+                fromAccountId = transaction.ToAccountId;
+                toAccountId = transaction.FromAccountId;
+                fromAmount = Math.Abs(transaction.ToAmount);
+                toAmount = Math.Abs(transaction.FromAmount);
+                fromAccount = DbManual.Account.Find(x => x.Id == fromAccountId);
+                toAccount = DbManual.Account.Find(x => x.Id == toAccountId);
+                isAmountNegative = false;
+            }
+        }
 
         public TransferDto(Transaction transaction)
         {
@@ -43,6 +65,7 @@ namespace Financisto.Desktop.Data
                     RaisePropertyChanged(nameof(RateString));
                     RaisePropertyChanged(nameof(IsToAmountVisible));
                     RaisePropertyChanged(nameof(FromAccountCurrency));
+                    RaisePropertyChanged(nameof(SubTransactionTitle));
                 }
             }
         }
@@ -72,12 +95,40 @@ namespace Financisto.Desktop.Data
                 if (SetProperty(ref fromAmount, value))
                 {
                     RaisePropertyChanged(nameof(FromAmount));
+                    RaisePropertyChanged(nameof(RealFromAmount));
                     RecalculateRate();
                 }
             }
         }
 
-        public override bool IsAmountNegative => true;
+        /// <summary>
+        /// False only for a split part that moves money into the parent account; a standalone transfer is always outgoing.
+        /// </summary>
+        public override bool IsAmountNegative
+        {
+            get => isAmountNegative;
+            set
+            {
+                if (SetProperty(ref isAmountNegative, value))
+                {
+                    RaisePropertyChanged(nameof(IsAmountNegative));
+                    RaisePropertyChanged(nameof(RealFromAmount));
+                    RaisePropertyChanged(nameof(SubTransactionTitle));
+                    RaisePropertyChanged(nameof(FromAccountCaption));
+                    RaisePropertyChanged(nameof(ToAccountCaption));
+                    RaisePropertyChanged(nameof(FromAmountCaption));
+                    RaisePropertyChanged(nameof(ToAmountCaption));
+                }
+            }
+        }
+
+        // For an incoming split part the parent account stays in the first slot, so the captions flip,
+        // as Android's RateLayoutView does for a switchable transfer.
+        public string FromAccountCaption => LocalizationService.Instance[IsAmountNegative ? "from_account" : "to_account"];
+        public string ToAccountCaption => LocalizationService.Instance[IsAmountNegative ? "to_account" : "from_account"];
+        public string FromAmountCaption => LocalizationService.Instance[IsAmountNegative ? "amount_out" : "amount_in"];
+        public string ToAmountCaption => LocalizationService.Instance[IsAmountNegative ? "amount_in" : "amount_out"];
+
         public bool IsToAmountVisible => fromAccount != null && toAccount != null && fromAccount.CurrencyId != toAccount.CurrencyId;
         public string RateString
         {
@@ -92,8 +143,10 @@ namespace Financisto.Desktop.Data
             }
         }
 
-        public override long RealFromAmount => -1 * Math.Abs(FromAmount);
-        public override string SubTransactionTitle => $"{FromAccount?.Title}{BlotterUtils.TRANSFER_DELIMITER}{ToAccount?.Title}";
+        public override long RealFromAmount => Math.Abs(FromAmount) * (IsAmountNegative ? -1 : 1);
+        public override string SubTransactionTitle => IsAmountNegative
+            ? $"{FromAccount?.Title}{BlotterUtils.TRANSFER_DELIMITER}{ToAccount?.Title}"
+            : $"{ToAccount?.Title}{BlotterUtils.TRANSFER_DELIMITER}{FromAccount?.Title}";
         public AccountFilterModel ToAccount
         {
             get => toAccount;

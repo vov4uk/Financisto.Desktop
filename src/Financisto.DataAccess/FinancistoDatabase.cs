@@ -109,6 +109,12 @@ namespace Financisto.DataAccess
                     var sql = SQL_alter_files.ResourceManager.GetString(item);
                     await context.Database.ExecuteSqlRawAsync(sql!);
                 }
+
+                // Same as Android's IntegrityFix (run by FullDatabaseImport): older backups have split parts without
+                // parent_account_id, which the running balance needs to tell the parent account's side of a split transfer.
+                await context.Database.ExecuteSqlRawAsync(
+                    "UPDATE transactions SET parent_account_id = (SELECT p.from_account_id FROM transactions AS p WHERE p._id = transactions.parent_id) " +
+                    "WHERE parent_id != 0 AND parent_account_id = 0 AND EXISTS (SELECT 1 FROM transactions AS p WHERE p._id = transactions.parent_id)");
             }
 
             var accounts = entities.OfType<Account>().ToList();
@@ -132,10 +138,11 @@ namespace Financisto.DataAccess
 
                     foreach (var transaction in transactions)
                     {
-                        if (transaction.ParentId > 0 && transaction.IsTransfer >= 0)
+                        if (transaction.ParentId > 0 && transaction.ParentAccountId == accountId)
                         {
-                            // we only interested in the second part of the transfer-split
-                            // which is marked with is_transfer=-1 (see v_blotter_for_account_with_splits)
+                            // Same as Android's rebuildRunningBalanceForAccount: the split parent already carries
+                            // the amount for its own account, so only the other account's side of a split transfer
+                            // counts here, whether it is the "to" side (outgoing) or the "from" side (incoming).
                             continue;
                         }
                         var toAccountId = transaction.ToAccountId;

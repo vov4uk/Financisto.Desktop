@@ -10,20 +10,35 @@ public static class MapperHelper
 {
     public static void MapTransfer(TransferDto dto, Transaction tr)
     {
-        tr.FromAccountId = dto.FromAccountId;
+        var firstAmount = Math.Abs(dto.FromAmount);
+        var secondAmount = Math.Abs(dto.IsToAmountVisible ? dto.ToAmount : dto.FromAmount);
+        if (dto.IsAmountNegative)
+        {
+            tr.FromAccountId = dto.FromAccountId;
+            tr.ToAccountId = dto.ToAccountId;
+            tr.FromAmount = -firstAmount;
+            tr.ToAmount = secondAmount;
+        }
+        else
+        {
+            // A split part into the parent account is stored as other account -> parent account,
+            // swapped like Android's SplitTransferActivity.updateFromUI.
+            tr.FromAccountId = dto.ToAccountId;
+            tr.ToAccountId = dto.FromAccountId;
+            tr.FromAmount = -secondAmount;
+            tr.ToAmount = firstAmount;
+        }
+
         tr.FromAccount = null;
-        tr.ToAccountId = dto.ToAccountId;
         tr.ToAccount = null;
         tr.Note = dto.Note;
-        tr.FromAmount = Math.Abs(dto.FromAmount) * -1;
-        tr.ToAmount = Math.Abs(dto.IsToAmountVisible ? dto.ToAmount : dto.FromAmount);
         tr.DateTime = UnixTimeConverter.ConvertBack(dto.DateTime);
         tr.LastRecurrence = UnixTimeConverter.ConvertBack(DateTime.Now);
 
         if (dto.FromAccountCurrency?.Id != dto.ToAccountCurrency?.Id)
         {
-            tr.OriginalCurrencyId = dto.FromAccountCurrency?.Id;
-            tr.OriginalFromAmount = Math.Abs(dto.FromAmount) * -1;
+            tr.OriginalCurrencyId = dto.IsAmountNegative ? dto.FromAccountCurrency?.Id : dto.ToAccountCurrency?.Id;
+            tr.OriginalFromAmount = tr.FromAmount;
         }
         else
         {
