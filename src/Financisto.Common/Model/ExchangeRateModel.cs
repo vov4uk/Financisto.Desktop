@@ -11,7 +11,7 @@ namespace Financisto.Common.Model
 
         public long Date { get; set; }
 
-        public float Rate { get; set; }
+        public double Rate { get; set; }
 
         public CurrencyModel FromCurrency { get; set; }
 

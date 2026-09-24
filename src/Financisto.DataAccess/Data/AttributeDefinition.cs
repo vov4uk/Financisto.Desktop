@@ -31,6 +31,9 @@ namespace Financisto.DataAccess.Data
         [Column("default_value")]
         public string DefaultValue { get; set; }
 
+        [Column(Backup.SortOrderColumn)]
+        public int SortOrder { get; set; }
+
         [NotMapped]
         public long UpdatedOn { get; set; }
     }

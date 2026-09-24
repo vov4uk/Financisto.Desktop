@@ -14,8 +14,10 @@ namespace Financisto.Adapter
 {
     public static class EntityExtensions
     {
-        private record struct ColumnInfo(string Col, Func<Entity, object> GetValue, IPropertyConverter Conv, object DefaultValue);
-        private record struct TypeInfo(string TableName, ColumnInfo[] Columns);
+        private static readonly char[] LineBreaks = ['\r', '\n'];
+
+        private record struct ColumnInfo(string Col, Func<Entity, object> GetValue, IPropertyConverter Conv, object DefaultValue, bool EscapeLineBreaks);
+        private record struct TypeInfo(string TableName, ColumnInfo[] Columns, Func<Entity, object> GetSortOrder);
 
         private static readonly ConcurrentDictionary<Type, TypeInfo> _typeCache = new();
 
@@ -41,7 +43,7 @@ namespace Financisto.Adapter
                 if (val == null)
                     continue;
 
-                string line = $"{col.Col}:{col.Conv.ConvertBack(val)}";
+                string line = $"{col.Col}:{ToSingleLine(col.Conv.ConvertBack(val), col.EscapeLineBreaks)}";
                 if (isKnownTable && columnIndex.TryGetValue(col.Col, out int colIdx))
                 {
                     lines[colIdx] = line;
@@ -68,11 +70,38 @@ namespace Financisto.Adapter
             writer.WriteLine(Backup.ENTITY_END);
         }
 
+        /// <summary>
+        /// Orders rows of one entity type like Android's export: tables with a sort order are written "order by sort_order",
+        /// which is how Android restores it. Rows added in the app (sort order 0) go last, as Android appends new entities.
+        /// </summary>
+        public static IEnumerable<Entity> InBackupOrder(this IEnumerable<Entity> rows, Type type)
+        {
+            Func<Entity, object> getSortOrder = _typeCache.GetOrAdd(type, BuildTypeInfo).GetSortOrder;
+            if (getSortOrder == null)
+                return rows;
+
+            return rows.OrderBy(e =>
+            {
+                long order = Convert.ToInt64(getSortOrder(e));
+                return order > 0 ? order : long.MaxValue;
+            });
+        }
+
+        // Every value must stay on its line: Android escapes line breaks in aliases/tags and replaces them with a space elsewhere.
+        private static string ToSingleLine(string value, bool escape)
+        {
+            if (value.IndexOfAny(LineBreaks) < 0)
+                return value;
+
+            string replacement = escape ? "\\n" : " ";
+            return value.Replace("\r\n", replacement).Replace("\r", replacement).Replace("\n", replacement);
+        }
+
         private static TypeInfo BuildTypeInfo(Type type)
         {
             string tableName = type.GetCustomAttributes().OfType<TableAttribute>().FirstOrDefault()?.Name;
             if (tableName == null)
-                return new TypeInfo(string.Empty, Array.Empty<ColumnInfo>());
+                return new TypeInfo(string.Empty, Array.Empty<ColumnInfo>(), null);
 
             object defaultInstance = type.IsAbstract ? null : Activator.CreateInstance(type);
 
@@ -85,10 +114,19 @@ namespace Financisto.Adapter
                     x.Attr!.Name!,
                     BuildGetter(x.Prop),
                     new DefaultConverter { PropertyType = x.Prop.PropertyType },
-                    defaultInstance == null ? null : x.Prop.GetValue(defaultInstance)))
+                    defaultInstance == null ? null : x.Prop.GetValue(defaultInstance),
+                    x.Attr.Name is Backup.AliasesColumn or Backup.TagsColumn))
                 .ToArray();
 
-            return new TypeInfo(tableName, columns);
+            Func<Entity, object> getSortOrder = Backup.TableHasOrder(tableName)
+                ? columns.FirstOrDefault(c => c.Col == Backup.SortOrderColumn).GetValue
+                : null;
+
+            // Like Android, sort_order itself is exported only for accounts; other tables carry it in the row order.
+            if (tableName != Backup.ACCOUNT_TABLE)
+                columns = columns.Where(c => c.Col != Backup.SortOrderColumn).ToArray();
+
+            return new TypeInfo(tableName, columns, getSortOrder);
         }
 
         private static Func<Entity, object> BuildGetter(PropertyInfo prop)

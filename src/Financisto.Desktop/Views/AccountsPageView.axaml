@@ -34,7 +34,10 @@
             <Setter Property="Foreground" Value="DarkGreen" />
         </Style>
     </UserControl.Styles>
-    <Grid Margin="10" RowDefinitions="Auto,*">
+    <Grid
+        Margin="10"
+        ColumnDefinitions="*"
+        RowDefinitions="Auto,*">
         <Grid
             Grid.Row="0"
             Margin="0,0,0,10"
@@ -70,10 +73,10 @@
         <DataGrid
             Grid.Row="1"
             Margin="5"
-            VerticalAlignment="Center"
-            Classes="activeStatus"
+            VerticalAlignment="Stretch"
             behaviors:CommandBehavior.DoubleTappedCommand="{Binding EditCommand}"
             AutoGenerateColumns="False"
+            Classes="activeStatus"
             FontSize="18"
             IsReadOnly="True"
             ItemsSource="{Binding Path=Entities}"

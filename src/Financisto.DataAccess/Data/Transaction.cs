@@ -65,10 +65,10 @@ namespace Financisto.DataAccess.Data
 
         [ForeignKey("OriginalCurrency")]
         [Column("original_currency_id")]
-        public int? OriginalCurrencyId { get; set; }
+        public int? OriginalCurrencyId { get; set; } = 0;
 
         [Column("original_from_amount")]
-        public long? OriginalFromAmount { get; set; }
+        public long? OriginalFromAmount { get; set; } = 0;
 
         [Column(Backup.UpdatedOnColumn)]
         public long UpdatedOn { get; set; }
@@ -79,8 +79,9 @@ namespace Financisto.DataAccess.Data
         [Column("is_ccard_payment")]
         public bool IsCcardPayment { get; set; }
 
+        // 0 = transaction, 1 = template, 2 = scheduled transaction.
         [Column("is_template")]
-        public bool IsTemplate { get; set; }
+        public int IsTemplate { get; set; }
 
         [Column("status")]
         public string Status { get; set; } = "UR";
@@ -100,13 +101,16 @@ namespace Financisto.DataAccess.Data
         [Column("template_name")]
         public string TemplateName { get; set; }
 
+        [Column("recurrence")]
+        public string Recurrence { get; set; }
+
         [Column("notification_options")]
         public string NotificationOptions { get; set; }
 
         [Column("attached_picture")]
         public string AttachedPicture { get; set; }
 
-        [Column("tags")]
+        [Column(Backup.TagsColumn)]
         public string Tags { get; set; }
 
         public virtual Transaction Parent { get; set; }

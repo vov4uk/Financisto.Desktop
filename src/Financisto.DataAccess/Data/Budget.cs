@@ -63,5 +63,8 @@ namespace Financisto.DataAccess.Data
 
         [Column("remote_key")]
         public string RemoteKey { get; set; }
+
+        [Column(Backup.SortOrderColumn)]
+        public int SortOrder { get; set; }
     }
 }

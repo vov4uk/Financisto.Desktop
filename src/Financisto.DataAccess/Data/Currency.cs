@@ -23,7 +23,7 @@ namespace Financisto.DataAccess.Data
         public string Symbol { get; set; }
 
         [Column("symbol_format")]
-        public string SymbolFormat { get; set; }
+        public string SymbolFormat { get; set; } = "RS";
 
         [Column("is_default")]
         public bool IsDefault { get; set; }
@@ -48,6 +48,9 @@ namespace Financisto.DataAccess.Data
 
         [Column(Backup.UpdatedOnColumn)]
         public long UpdatedOn { get; set; }
+
+        [Column(Backup.SortOrderColumn)]
+        public int SortOrder { get; set; }
 
         public static Currency EMPTY;
 

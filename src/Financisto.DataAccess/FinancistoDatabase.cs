@@ -101,14 +101,14 @@ namespace Financisto.DataAccess
             await using (var context = new FinancistoDataContext(ContextOptions))
             {
                 await context.AddRangeAsync(entities.OfType<IIdentity>().Where(x => x.Id > 0));
+                await context.SaveChangesAsync();
 
+                // Same as Android's DatabaseImport: the restore scripts fix up the rows just imported.
                 foreach (var item in Backup.RESTORE_SCRIPTS)
                 {
                     var sql = SQL_alter_files.ResourceManager.GetString(item);
                     await context.Database.ExecuteSqlRawAsync(sql!);
                 }
-
-                await context.SaveChangesAsync();
             }
 
             var accounts = entities.OfType<Account>().ToList();

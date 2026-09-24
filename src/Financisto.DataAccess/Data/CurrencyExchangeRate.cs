@@ -19,13 +19,13 @@ namespace Financisto.DataAccess.Data
         public long Date { get; set; }
 
         [Column("rate")]
-        public float Rate { get; set; }
+        public double Rate { get; set; }
 
         [Column(Backup.UpdatedOnColumn)]
         public long UpdatedOn { get; set; }
 
         [Column("remote_key")]
-        public long RemoteKey { get; set; }
+        public string RemoteKey { get; set; }
 
         public Currency FromCurrency { get; set; }
 

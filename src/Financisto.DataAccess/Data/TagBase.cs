@@ -15,5 +15,8 @@ namespace Financisto.DataAccess.Data
 
         [Column(Backup.UpdatedOnColumn)]
         public long UpdatedOn { get; set; }
+
+        [Column(Backup.SortOrderColumn)]
+        public int SortOrder { get; set; }
     }
 }

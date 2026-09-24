@@ -1,4 +1,6 @@
-﻿namespace Financisto.DataAccess.Data
+﻿using System;
+
+namespace Financisto.DataAccess.Data
 {
     public static class Backup
     {
@@ -7,6 +9,8 @@
         public const string SortOrderColumn = "sort_order";
         public const string IsActiveColumn = "is_active";
         public const string UpdatedOnColumn = "updated_on";
+        public const string AliasesColumn = "aliases";
+        public const string TagsColumn = "tags";
         public const string ENTITY_END = "$$";
         public const string ENTITY = "$ENTITY";
         public const string TRANSACTION_TABLE = "transactions";
@@ -35,5 +39,14 @@
             "_20100114_1158_alter_accounts_types",
             "_20110903_0129_alter_template_splits",
             "_20171230_1852_alter_electronic_account_type"};
+
+        // Android exports these tables "order by sort_order" without the sort_order column (except account),
+        // and restores the order from the row order.
+        public static readonly string[] BACKUP_TABLES_WITH_SORT_ORDER = {
+            ACCOUNT_TABLE, SMS_TEMPLATES_TABLE, PROJECT_TABLE, PAYEE_TABLE, BUDGET_TABLE,
+            CURRENCY_TABLE, LOCATIONS_TABLE, ATTRIBUTES_TABLE, TAG_TABLE};
+
+        public static bool TableHasOrder(string tableName) =>
+            Array.Exists(BACKUP_TABLES_WITH_SORT_ORDER, t => string.Equals(t, tableName, StringComparison.OrdinalIgnoreCase));
     }
 }

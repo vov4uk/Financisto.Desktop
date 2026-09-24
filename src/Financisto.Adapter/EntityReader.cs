@@ -30,6 +30,8 @@ namespace Financisto.Adapter
             EntityInfo entityInfo = null;
             string prevField = string.Empty;
             string entityType = string.Empty;
+            bool hasSortOrder = false;
+            int rowNum = 0;
 
             await foreach (var raw in reader.GetLinesAsync())
             {
@@ -37,6 +39,7 @@ namespace Financisto.Adapter
                 if (line.Key == Backup.ENTITY)
                 {
                     prevField = string.Empty;
+                    hasSortOrder = false;
                     entityType = line.Value!;
                     if (!string.IsNullOrEmpty(line.Value) && entityTypes.TryGetValue(line.Value, out entityInfo))
                     {
@@ -51,6 +54,13 @@ namespace Financisto.Adapter
                 }
                 else if (line.Key == Backup.ENTITY_END && entity != null)
                 {
+                    // Same as Android's DatabaseImport: sort_order isn't exported (except for accounts), so number rows in file order.
+                    if (!hasSortOrder && Backup.TableHasOrder(entityType)
+                        && entityInfo.Properties.TryGetValue(Backup.SortOrderColumn, out var sortOrder))
+                    {
+                        sortOrder.SetValue(entity, ++rowNum);
+                    }
+
                     entities.Add(entity);
                     entity = null!;
                     entityType = string.Empty;
@@ -61,6 +71,7 @@ namespace Financisto.Adapter
                     {
                         property.SetValue(entity, line.Value);
                     }
+                    hasSortOrder |= line.Key == Backup.SortOrderColumn;
 
                     var order = EntityColumnsOrder[entityType];
                     if (columnsSeen[entityType].Add(line.Key!))

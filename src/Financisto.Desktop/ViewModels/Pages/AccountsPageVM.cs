@@ -91,12 +91,14 @@ namespace Financisto.Desktop.ViewModels.Pages
             {
                 var t = new Transaction
                 {
+                    Id = 0, // new entity; the default -1 would be saved as an update
                     FromAccountId = account.Id,
                     CategoryId = 0,
                     FromAmount = updated.OpeningAmount,
                     DateTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 };
                 await db.InsertOrUpdateAsync(new[] { t });
+                await db.RebuildAccountBalanceAsync(account.Id);
             }
 
             DbManual.ResetManuals(nameof(DbManual.Account));

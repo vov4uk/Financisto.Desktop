@@ -31,7 +31,7 @@ namespace Financisto.DataAccess.Data
         public int CurrencyId { get; set; }
 
         [Column("type")]
-        public string Type { get; set; }
+        public string Type { get; set; } = "CASH";
 
         [Column("card_issuer")]
         public string CardIssuer { get; set; }
@@ -71,6 +71,16 @@ namespace Financisto.DataAccess.Data
 
         [Column(Backup.UpdatedOnColumn)]
         public long UpdatedOn { get; set; }
+
+        // NOT NULL columns: the defaults match Android's, for backups made before they existed.
+        [Column("icon")]
+        public string Icon { get; set; } = string.Empty;
+
+        [Column("accent_color")]
+        public string AccentColor { get; set; } = string.Empty;
+
+        [Column("is_include_into_reports")]
+        public bool IsIncludeIntoReports { get; set; } = true;
 
         public virtual Currency Currency { get; set; }
     }

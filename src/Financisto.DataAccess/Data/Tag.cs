@@ -7,7 +7,5 @@ namespace Financisto.DataAccess.Data
     [Table(Backup.TAG_TABLE)]
     public class Tag : TagBase
     {
-        [Column("sort_order")]
-        public int SortOrder { get; set; }
     }
 }

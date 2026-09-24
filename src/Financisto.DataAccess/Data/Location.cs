@@ -5,7 +5,7 @@ namespace Financisto.DataAccess.Data
 {
     [DebuggerDisplay("{Title}")]
     [Table(Backup.LOCATIONS_TABLE)]
-    public class Location : TagBase
+    public class Location : TagBase, IHasAliases
     {
 
         [Column("datetime")]
@@ -28,9 +28,9 @@ namespace Financisto.DataAccess.Data
 
         [Column("count")]
         public int Count { get; set; }
-        
-        [Column("sort_order")]
-        public int SortOrder { get; set; }
 
+        // Kept in the backup's escaped form: aliases joined by the two characters \n.
+        [Column(Backup.AliasesColumn)]
+        public string Aliases { get; set; }
     }
 }

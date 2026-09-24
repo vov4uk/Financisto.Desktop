@@ -6,7 +6,6 @@ namespace Financisto.Adapter.Converters
 {
     public class DefaultConverter : IPropertyConverter
     {
-        private static readonly NumberFormatInfo Nfi = new NumberFormatInfo { NumberDecimalSeparator = "." };
         private Type _propertyType;
         private Type _resolvedType;
 
@@ -45,7 +44,7 @@ namespace Financisto.Adapter.Converters
                     return default(float?)!;
                 return retNum;
             }
-            return System.Convert.ChangeType(value, type);
+            return System.Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
         }
 
         public string ConvertBack(object value)
@@ -53,22 +52,24 @@ namespace Financisto.Adapter.Converters
             Type type = _resolvedType;
             if (type == typeof(bool))
             {
-                return System.Convert.ToInt32(value).ToString();
+                return System.Convert.ToInt32(value).ToString(CultureInfo.InvariantCulture);
             }
             if (type == typeof(IIdentity) || type.BaseType == typeof(IIdentity))
             {
                 var entity = value as IIdentity;
-                return (entity?.Id ?? 0).ToString();
+                return (entity?.Id ?? 0).ToString(CultureInfo.InvariantCulture);
             }
+            // "R" keeps every digit Android wrote (exchange rates, coordinates); a fixed number of decimals would round them.
             if (type == typeof(double))
             {
-                return ((double)value).ToString("0.####", Nfi);
+                return ((double)value).ToString("R", CultureInfo.InvariantCulture);
             }
             if (type == typeof(float))
             {
-                return ((float)value).ToString("0.####", Nfi);
+                return ((float)value).ToString("R", CultureInfo.InvariantCulture);
             }
-            return System.Convert.ToString(value)!;
+            // Invariant culture: Android can't parse a culture-specific minus sign (e.g. U+2212 in sv-SE).
+            return System.Convert.ToString(value, CultureInfo.InvariantCulture)!;
         }
     }
 }

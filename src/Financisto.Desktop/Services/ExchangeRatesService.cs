@@ -94,8 +94,8 @@ namespace Financisto.Desktop.Services
                         {
                             var fromCurrency = pair.Key;
                             var toCurrency = pair.Value;
-                            float fromToUsd = 1.0f / exchangeRates.rates.FirstOrDefault(r => r.Key == fromCurrency.Name).Value;
-                            float usdTo = exchangeRates.rates.FirstOrDefault(r => r.Key == toCurrency.Name).Value;
+                            double fromToUsd = 1.0 / exchangeRates.rates.FirstOrDefault(r => r.Key == fromCurrency.Name).Value;
+                            double usdTo = exchangeRates.rates.FirstOrDefault(r => r.Key == toCurrency.Name).Value;
 
                             result.Add(new CurrencyExchangeRate
                             {
@@ -185,7 +185,7 @@ namespace Financisto.Desktop.Services
                     {
                         FromCurrencyId = fromCurrency.Id ?? 0,
                         ToCurrencyId = toCurrency.Id ?? 0,
-                        Rate = (float)exchangeRate,
+                        Rate = exchangeRate,
                         Date = rate.Date * 1000,
                         UpdatedOn = updatedOn
                     });
@@ -386,7 +386,7 @@ namespace Financisto.Desktop.Services
             return "https://freecurrencyrates.com/api/action.php?s=fcr&iso=" + toCurrency + "&f=" + fromCurrency + "&v=1&do=cvals";
         }
 
-        public static (long UpdatedOn, float Rate) ParseExchangeRateJson(string json)
+        public static (long UpdatedOn, double Rate) ParseExchangeRateJson(string json)
         {
             var obj = JObject.Parse(json);
             var updated = long.Parse(obj["updated"].Value<string>());
@@ -395,7 +395,7 @@ namespace Financisto.Desktop.Services
             var currencyProperty = obj.Properties()
                 .FirstOrDefault(p => p.Name != "updated");
 
-            return (updated, currencyProperty.Value.Value<float>());
+            return (updated, currencyProperty.Value.Value<double>());
         }
 
         private sealed class OpenExchangeCurrencyRates
@@ -404,7 +404,7 @@ namespace Financisto.Desktop.Services
             public string license { get; set; }
             public long timestamp { get; set; }
             public string @base { get; set; }
-            public Dictionary<string, float> rates { get; set; }
+            public Dictionary<string, double> rates { get; set; }
         }
 
         private sealed class MonobankRate

@@ -76,7 +76,7 @@ namespace Financisto.Adapter
             var byType = entities.ToLookup(e => e.GetType());
             foreach (Type type in ExportOrder)
             {
-                foreach (Entity item in byType[type])
+                foreach (Entity item in byType[type].InBackupOrder(type))
                     item.WriteBackupLines(bw, columnData);
             }
         }

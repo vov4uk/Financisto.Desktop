@@ -26,10 +26,10 @@ namespace Financisto.DataAccess.Data
         public int Type { get; set; }
 
         [Column("last_location_id")]
-        public int? LastLocationId { get; set; }
+        public int? LastLocationId { get; set; } = 0;
 
         [Column("last_project_id")]
-        public int? LastProjectId { get; set; }
+        public int? LastProjectId { get; set; } = 0;
 
         [Column(Backup.UpdatedOnColumn)]
         public long UpdatedOn { get; set; }
