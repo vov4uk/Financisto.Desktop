@@ -38,6 +38,18 @@
         <Setter Property="Background" Value="Transparent" />
     </Style>
 
+    <!--  Account balances: the accounts grid's total and the From-account balance in the transaction/transfer dialogs  -->
+    <Style Selector="TextBlock.balanceAmount">
+        <Setter Property="Foreground" Value="DarkGreen" />
+    </Style>
+    <Style Selector="TextBlock.balanceAmount.negative">
+        <Setter Property="Foreground" Value="DarkRed" />
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    <Style Selector="StackPanel.accountBalance > TextBlock">
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+
 </Styles>
 
 

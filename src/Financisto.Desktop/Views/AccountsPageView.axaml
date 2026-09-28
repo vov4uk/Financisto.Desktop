@@ -27,13 +27,6 @@
             <Setter Property="HorizontalAlignment" Value="Right" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
-        <Style Selector="TextBlock.totalAmount.negative">
-            <Setter Property="Foreground" Value="DarkRed" />
-            <Setter Property="FontWeight" Value="Bold" />
-        </Style>
-        <Style Selector="TextBlock.totalAmount.positive">
-            <Setter Property="Foreground" Value="DarkGreen" />
-        </Style>
     </UserControl.Styles>
     <Grid
         Margin="10"
@@ -100,12 +93,15 @@
                                 <!--  Icon text (e.g. an emoji) replaces the image, like Android's setAccountIcon  -->
                                 <TextBlock
                                     MinWidth="64"
+                                    MaxWidth="100"
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     FontSize="40"
                                     IsVisible="{Binding Icon, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                    MaxLines="1"
                                     Text="{Binding Icon}"
-                                    TextAlignment="Center" />
+                                    TextAlignment="Center"
+                                    TextTrimming="CharacterEllipsis" />
                                 <Image
                                     Height="24"
                                     HorizontalAlignment="Right"
@@ -122,9 +118,8 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock
-                                Classes="totalAmount"
+                                Classes="totalAmount balanceAmount"
                                 Classes.negative="{Binding IsTotalAmountNegative}"
-                                Classes.positive="{Binding !IsTotalAmountNegative}"
                                 Text="{Binding Path=AmountTitle}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>

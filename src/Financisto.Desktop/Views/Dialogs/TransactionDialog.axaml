@@ -25,17 +25,6 @@
         <Style Selector="Border.positive">
             <Setter Property="Background" Value="YellowGreen" />
         </Style>
-        <!--  Same colors as the accounts grid's total amount  -->
-        <Style Selector="TextBlock.accountBalance">
-            <Setter Property="FontSize" Value="12" />
-        </Style>
-        <Style Selector="TextBlock.accountBalance.amount">
-            <Setter Property="Foreground" Value="DarkGreen" />
-        </Style>
-        <Style Selector="TextBlock.accountBalance.amount.negative">
-            <Setter Property="Foreground" Value="DarkRed" />
-            <Setter Property="FontWeight" Value="Bold" />
-        </Style>
     </UserControl.Styles>
 
     <UserControl.Resources>
@@ -149,12 +138,13 @@
                         <!--  Current balance of the selected account, formatted like the accounts grid  -->
                         <StackPanel
                             Margin="2,2,0,0"
+                            Classes="accountBalance"
                             IsVisible="{Binding FromAccountBalance, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                             Orientation="Horizontal">
-                            <TextBlock Classes="accountBalance" Text="{loc:Translate Key=balance}" />
-                            <TextBlock Classes="accountBalance" Text=": " />
+                            <TextBlock Text="{loc:Translate Key=balance}" />
+                            <TextBlock Text=": " />
                             <TextBlock
-                                Classes="accountBalance amount"
+                                Classes="balanceAmount"
                                 Classes.negative="{Binding IsFromAccountBalanceNegative}"
                                 Text="{Binding FromAccountBalance}" />
                         </StackPanel>

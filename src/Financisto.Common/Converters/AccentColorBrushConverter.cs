@@ -17,7 +17,8 @@ namespace Financisto.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (!AndroidColor.TryParse(value as string, out var color))
+            // Trimmed like the account dialog's preview (and like saving does), so both show the same color.
+            if (!AndroidColor.TryParse((value as string)?.Trim(), out var color))
                 return null;
 
             return new LinearGradientBrush

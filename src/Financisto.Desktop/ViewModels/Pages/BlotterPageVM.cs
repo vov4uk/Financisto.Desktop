@@ -546,7 +546,7 @@ namespace Financisto.Desktop.ViewModels.Pages
 
             if (items != null)
             {
-                Entities = new System.Collections.ObjectModel.ObservableCollection<BlotterModel>(items.OrderByDescending(x => x.Datetime));
+                Entities = new System.Collections.ObjectModel.ObservableCollection<BlotterModel>(items.OrderByDescending(x => x.Datetime).ThenByDescending(x => x.Id));
             }
         }
     }

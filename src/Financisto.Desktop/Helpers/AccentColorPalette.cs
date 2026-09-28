@@ -9,6 +9,9 @@ namespace Financisto.Desktop.Helpers;
 /// </summary>
 public sealed class AccentColorPalette : IColorPalette
 {
+    /// <summary>ColorView.SelectedIndex of the palette tab, so the picker opens on these colors like Android's list.</summary>
+    public const int PaletteTab = (int)ColorViewTab.Palette;
+
     private static readonly Color[] Colors =
     [
         Color.Parse("#000000"), Color.Parse("#ffffff"), Color.Parse("#ff0000"), Color.Parse("#800000"), Color.Parse("#ff00ff"),
