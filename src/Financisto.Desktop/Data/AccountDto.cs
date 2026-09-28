@@ -5,9 +5,11 @@ namespace Financisto.Desktop.Data
 {
     public class AccountDto : BindableBase
     {
+        private string accentColor;
         private string cardIssuer;
         private int closingDay;
         private int currencyId;
+        private string icon;
         private bool isActive;
         private bool isIncludeIntoTotals;
         private string issuer;
@@ -37,6 +39,14 @@ namespace Financisto.Desktop.Data
             Note = account.Note;
             ClosingDay = account.ClosingDay;
             PaymentDay = account.PaymentDay;
+            AccentColor = account.AccentColor;
+            Icon = account.Icon;
+        }
+
+        public string AccentColor
+        {
+            get => accentColor;
+            set { SetProperty(ref accentColor, value, nameof(AccentColor)); }
         }
 
         public string CardIssuer
@@ -55,6 +65,12 @@ namespace Financisto.Desktop.Data
         {
             get => currencyId;
             set { SetProperty(ref currencyId, value, nameof(CurrencyId)); }
+        }
+
+        public string Icon
+        {
+            get => icon;
+            set { SetProperty(ref icon, value, nameof(Icon)); }
         }
 
         public int Id { get; set; }

@@ -19,6 +19,7 @@
             </ResourceDictionary.MergedDictionaries>
             <conv:UnixTimeConverter x:Key="UnixTimeConverter" />
             <conv:AccountTypeConverter x:Key="AccountTypeConverter" />
+            <conv:AccentColorBrushConverter x:Key="AccentColorBrushConverter" />
         </ResourceDictionary>
     </UserControl.Resources>
     <UserControl.Styles>
@@ -86,7 +87,9 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Panel Height="64">
-                                <Image Height="64">
+                                <!--  Accent color: Android draws it as a gradient behind the account icon  -->
+                                <Border Background="{Binding AccentColor, Converter={StaticResource AccentColorBrushConverter}}" />
+                                <Image Height="64" IsVisible="{Binding Icon, Converter={x:Static StringConverters.IsNullOrEmpty}}">
                                     <Image.Source>
                                         <MultiBinding Converter="{StaticResource AccountTypeConverter}">
                                             <Binding Path="Type" />
@@ -94,6 +97,15 @@
                                         </MultiBinding>
                                     </Image.Source>
                                 </Image>
+                                <!--  Icon text (e.g. an emoji) replaces the image, like Android's setAccountIcon  -->
+                                <TextBlock
+                                    MinWidth="64"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontSize="40"
+                                    IsVisible="{Binding Icon, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                    Text="{Binding Icon}"
+                                    TextAlignment="Center" />
                                 <Image
                                     Height="24"
                                     HorizontalAlignment="Right"

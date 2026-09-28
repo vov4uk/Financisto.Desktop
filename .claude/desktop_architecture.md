@@ -203,6 +203,10 @@ All in `src/Financisto.Desktop/ViewModels/Dialogs/`. Views are in `Views/Dialogs
 | Dialog VM | View | DTO | Save guard |
 |---|---|---|---|
 | `AccountDialogVM(AccountDto, bool isNew)` | `AccountDialog` | `AccountDto` | Title not blank && `CurrencyId > 0` |
+
+**Account accent color** (Android `AccountActivity` "Accent color code"): a TextBox bound to `Entity.AccentColor` plus an Avalonia `ColorPicker` (package `Avalonia.Controls.ColorPicker`, theme `Themes/Fluent/Fluent.xaml` included in `App.axaml`) bound to `AccountDialogVM.SelectedAccentColor`, opening on the palette tab with Android's 20 colors (`Helpers/AccentColorPalette`, 5×4). The text is the source of truth: it may be a name (`teal`), so a picked color only replaces it when it's a different color, and text→picker updates run under a guard flag so the picker's write-back can't rewrite what the user is typing. Empty/invalid text shows as transparent. `AccountsPageView` draws the color as a gradient behind the icon via `AccentColorBrushConverter`.
+
+**Account icon text** (Android "Text to show as icon"): a TextBox above the accent row bound to `Entity.Icon`. When non-empty, `AccountsPageView` hides the type/issuer image and shows the text instead (FontSize 40, `StringConverters.IsNullOrEmpty`/`IsNotNullOrEmpty`), like Android's `AccountRecyclerAdapter.setAccountIcon`. Android paints it white on its black list; the desktop uses the theme foreground (emoji render in color via font fallback).
 | `CategoryDialogVM` | `CategoryDialog` | `CategoryDto` | — |
 | `SubTransactionDialogVM(TransactionDto)` | `SubTransactionDialog` | `TransactionDto` | `!IsSplitCategory \|\| UnsplitAmount == 0` |
 | `TransactionDialogVM(TransactionDto, IDialogWrapper) : SubTransactionDialogVM` | `TransactionDialog` | `TransactionDto` | `FromAccount != null && FromAmount != 0 && base` |
@@ -218,7 +222,7 @@ All in `src/Financisto.Desktop/ViewModels/Dialogs/`. Views are in `Views/Dialogs
 
 All in `src/Financisto.Desktop/Data/` (namespace `Financisto.Desktop.Data`), Prism `BindableBase`. Each has a constructor from its entity. Writing back is manual: done in the page VM, or in `Helpers/MapperHelper` for transactions and transfers.
 
-- **AccountDto:** Id, Title, Type (string, `AccountType` name), CurrencyId, CardIssuer, Issuer, Number, LimitAmount, SortOrder, IsActive, IsIncludeIntoTotals, Note, ClosingDay, PaymentDay, OpeningAmount.
+- **AccountDto:** Id, Title, Type (string, `AccountType` name), Icon (icon text) and AccentColor (Android color code) — `ApplyDto` trims both and stores `""` for null (NOT NULL columns), CurrencyId, CardIssuer, Issuer, Number, LimitAmount, SortOrder, IsActive, IsIncludeIntoTotals, Note, ClosingDay, PaymentDay, OpeningAmount.
 - **BaseTransactionDto** (abstract): `Date` + `Time` → computed `DateTime`, Id, Note, `IsSubTransaction`, virtual `RealFromAmount`, `SubTransactionTitle`, `IsAmountNegative`, `Rate`.
 - **TransactionDto : BaseTransactionDto:** FromAccountId/FromAccount (`AccountFilterModel`), CategoryId/Category, PayeeId, ProjectId, LocationId, OriginalCurrencyId/OriginalCurrency, OriginalFromAmount, FromAmount, `SubTransactions` (`ObservableCollection<BaseTransactionDto>`, which holds `TransactionDto` and `TransferDto`), `SelectedTags` (`ObservableCollection<TagModel>`). Computed: `IsSplitCategory` (CategoryId == -1), `SplitAmount`, `UnsplitAmount`, `IsOriginalFromAmountVisible`, `RateString`. `TagsDelimiter = "\\n"`.
 - **TransferDto : BaseTransactionDto:** FromAccountId/FromAccount, ToAccountId/ToAccount, FromAmount, ToAmount, currencies. Computed: `IsToAmountVisible` (different currencies), `RateString`. `IsAmountNegative` is always `true`, and `RealFromAmount = -|FromAmount|`.

@@ -786,6 +786,12 @@
   <data name="confirm_delete_account" xml:space="preserve">
     <value>Mark this account as inactive?</value>
   </data>
+  <data name="icon_text" xml:space="preserve">
+    <value>Text to Show as Icon (try an emoji!)</value>
+  </data>
+  <data name="accent_color" xml:space="preserve">
+    <value>Accent Color Code</value>
+  </data>
   <data name="liabilities_usd" xml:space="preserve">
     <value>Liabilities (USD)</value>
   </data>

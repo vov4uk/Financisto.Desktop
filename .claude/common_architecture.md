@@ -55,7 +55,7 @@ All derive from `BaseModel` (an empty marker). Two ways they get filled:
 | Model | Filled from | Notes / computed |
 |---|---|---|
 | `AccountFilterModel : IActive` | `DbManual` SQL on `account ⨝ currency` | Id, Title, IsActive, SortOrder, Type, CurrencyId, CurrencyName, TotalAmount, LastTransactionId, Number, CardIssuer, Issuer. Used by dropdowns. |
-| `AccountModel : AccountFilterModel` | `new AccountModel(Account)` (with `Currency` included) | `Currency` (CurrencyModel), `IsIncludeIntoTotals`, `LastTransactionDate`, `AmountTitle`, `AccountDescription`, `IsTotalAmountNegative` |
+| `AccountModel : AccountFilterModel` | `new AccountModel(Account)` (with `Currency` included) | `Currency` (CurrencyModel), `AccentColor` (raw Android color code), `Icon` (icon text, e.g. an emoji), `IsIncludeIntoTotals`, `LastTransactionDate`, `AmountTitle`, `AccountDescription`, `IsTotalAmountNegative` |
 | `BlotterModel` | projection of the `v_blotter` view | `Type` ("Transfer" if ToAccountId>0 && CategoryId==0 && FromAccountId>0; "Share" if CategoryId==-1; "Income" if FromAmount>0; else "Expense"), `TransactionTitle`, `AmountTitle`, `BalanceTitle`, `AccountTitle`, `HasNoCategory`, `Tags` (raw), `TagsTitle` (joined " \| ") |
 | `CategoryModel` | `DbManual` SQL | Id, Title, Level (computed in SQL), Left, Right, Type |
 | `CategoryTreeModel` | built in `CategoriesPageVM` | Id, Left, Right, Title, IsExpanded, IsSelected, `SubCategoties` (sic) |
@@ -124,6 +124,7 @@ Avalonia specifics: there is no `Visibility` enum, so "…ToVisibility" converte
 | `TransactionTypeBrushConverter` / `TransactionTypeIconConverter` | `BlotterModel.Type` → brush / `Icon*` resource | blotter rows |
 | `MccConverter` | MCC int → `Mcc` via `DbManual.MCCCodes` | |
 | `EnumDescriptionConverter` | Enum → description text | |
+| `AccentColorBrushConverter` | account `accent_color` code → left-to-right `LinearGradientBrush` (color → transparent), `null` if empty/invalid | the highlight behind the account icon (Android `AccountRecyclerAdapter`); parses with `AndroidColor` |
 | `AccountTypeConverter` (multi) | (type, card_issuer) → `Bitmap` | `avares://Financisto.Common/Assets/AccountType/...png` |
 | `CategoryTitleConverter` (multi) | (title, level) → title padded with `-` per level | |
 | `LocalizedFormatConverter` (multi) | 2 values → `"Label (value)"`; 3+ → `string.Format` | |
@@ -144,6 +145,7 @@ Avalonia specifics: there is no `Visibility` enum, so "…ToVisibility" converte
 
 - **BlotterUtils:** `TRANSFER_DELIMITER = " » "`, `GetTransferAmountText(fromCur, fromAmt, toCur, toAmt)`, `SetAmountText(currency, amount, addPlus)`, `SetTransferBalanceText(...)`, `GetAccountDescription(issuer, number, type)`.
 - **TransactionTitleUtils:** `GenerateTransactionTitle(payee, note, location, categoryId, category, toAccount)` handles split (`-1`), regular and transfer transactions.
+- **AndroidColor:** port of Android `Color.parseColor` (`#RRGGBB`, `#AARRGGBB`, Android's 23 color names; Android `green` = `#00FF00`, `gray` = `#888888`, no `#RGB`) → `TryParse(text, out Color)`; `ToHex(color)` writes `#rrggbb` (or `#aarrggbb` when not opaque) like Android's palette. Used for `account.accent_color`.
 - **DoubleUtils:** `GetDouble(text)` (flexible separator), `DoubleEqual`/`DoubleNotEqual`.
 
 ## Attributes (`Attribute/`)

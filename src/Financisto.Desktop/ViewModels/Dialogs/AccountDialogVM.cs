@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
+using Avalonia.Media;
 using Financisto.Common.Entities;
 using Financisto.Common.Model;
+using Financisto.Common.Utils;
 using Financisto.Desktop.Data;
 using Prism.Commands;
 
@@ -14,6 +16,7 @@ namespace Financisto.Desktop.ViewModels.Dialogs
         private ElectronicType selectedElectronicType;
         private CurrencyModel selectedCurrency;
         private DelegateCommand _clearTitleCommand;
+        private bool syncingAccentColor;
 
         public AccountDialogVM(AccountDto entity, bool isNew)
         {
@@ -27,7 +30,41 @@ namespace Financisto.Desktop.ViewModels.Dialogs
             {
                 if (e.PropertyName is nameof(AccountDto.Title) or nameof(AccountDto.CurrencyId))
                     SaveCommand.NotifyCanExecuteChanged();
+                else if (e.PropertyName == nameof(AccountDto.AccentColor))
+                    RaiseAccentColorChanged();
             };
+        }
+
+        /// <summary>
+        /// The ColorPicker side of <see cref="AccountDto.AccentColor"/>. The text stays the source of truth (like
+        /// Android, it may be a color name such as "teal"), so a picked color only replaces it when it's a different
+        /// color. Empty or invalid text shows as transparent.
+        /// </summary>
+        public Color SelectedAccentColor
+        {
+            get => AndroidColor.TryParse(Entity.AccentColor?.Trim(), out var color) ? color : Colors.Transparent;
+            set
+            {
+                if (syncingAccentColor)
+                    return;
+
+                if (AndroidColor.TryParse(Entity.AccentColor?.Trim(), out var current))
+                {
+                    if (current == value)
+                        return;
+                }
+                else if (value == Colors.Transparent)
+                {
+                    return; // the picker echoing "no color"
+                }
+                else if (value.A == 0)
+                {
+                    // First pick in the spectrum starting from "no color" keeps its zero alpha; an invisible accent is no accent.
+                    value = Color.FromArgb(0xFF, value.R, value.G, value.B);
+                }
+
+                Entity.AccentColor = AndroidColor.ToHex(value);
+            }
         }
 
         public DelegateCommand ClearTitleCommand =>
@@ -121,6 +158,20 @@ namespace Financisto.Desktop.ViewModels.Dialogs
 
             if (Entity.CurrencyId > 0)
                 selectedCurrency = Currencies.Find(x => x.Id == Entity.CurrencyId);
+        }
+
+        // Text -> picker only: while the picker takes the new value, anything it writes back must not rewrite the text.
+        private void RaiseAccentColorChanged()
+        {
+            syncingAccentColor = true;
+            try
+            {
+                OnPropertyChanged(nameof(SelectedAccentColor));
+            }
+            finally
+            {
+                syncingAccentColor = false;
+            }
         }
 
         // Same as Android AccountActivity.selectAccountType: card_issuer holds a card issuer for cards, an electronic

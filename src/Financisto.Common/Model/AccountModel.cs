@@ -15,6 +15,10 @@ namespace Financisto.Common.Model
 
         public CurrencyModel Currency { get; set; }
 
+        public string AccentColor { get; set; }
+
+        public string Icon { get; set; }
+
         public string AmountTitle => BlotterUtils.SetAmountText(Currency, TotalAmount, false);
         public string AccountDescription => BlotterUtils.GetAccountDescription(Issuer, Number,Type);
 
@@ -34,6 +38,8 @@ namespace Financisto.Common.Model
             CardIssuer = acc.CardIssuer;
             Issuer = acc.Issuer;
             Number= acc.Number;
+            AccentColor = acc.AccentColor;
+            Icon = acc.Icon;
             Currency = acc.Currency != null ? new CurrencyModel(acc.Currency) : default;
         }
     }

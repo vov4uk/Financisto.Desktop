@@ -121,6 +121,8 @@ namespace Financisto.Desktop.ViewModels.Pages
             account.Note = dto.Note;
             account.ClosingDay = dto.ClosingDay;
             account.PaymentDay = dto.PaymentDay;
+            account.Icon = dto.Icon?.Trim() ?? string.Empty; // NOT NULL columns; Android trims too
+            account.AccentColor = dto.AccentColor?.Trim() ?? string.Empty;
         }
     }
 }

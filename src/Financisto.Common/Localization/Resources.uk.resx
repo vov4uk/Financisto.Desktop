@@ -786,6 +786,12 @@
   <data name="confirm_delete_account" xml:space="preserve">
     <value>Позначити цей рахунок як неактивний?</value>
   </data>
+  <data name="icon_text" xml:space="preserve">
+    <value>Текст замість значка (спробуйте емодзі!)</value>
+  </data>
+  <data name="accent_color" xml:space="preserve">
+    <value>Код акцентного кольору</value>
+  </data>
   <data name="liabilities_usd" xml:space="preserve">
     <value>Зобов'язання (дол. США)</value>
   </data>
