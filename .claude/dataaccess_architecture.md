@@ -67,6 +67,7 @@ public interface IFinancistoDatabase : IUnitOfWorkFactory, IDisposable
 {
     Task ImportEntitiesAsync(IEnumerable<Entity> entities);
     Task RebuildAccountBalanceAsync(int accountId);
+    Task<Dictionary<int, long>> GetLastRunningBalancesAsync();    // account id -> balance of its latest running_balance row
     Task AddTransactionsAsync(IEnumerable<Transaction> transactions);
     Task<T> GetOrCreateAsync<T>(int id) where T : class, IIdentity, new();
     Task<List<T>> ExecuteQuery<T>(string query) where T : class, new();
@@ -88,7 +89,8 @@ Semantics that matter:
   2. Inserts **only `IIdentity` rows with `Id > 0`**.
   3. Runs `Backup.RESTORE_SCRIPTS` (Android's post-import fix-ups: account types, template splits, electronic account type) after the insert.
   4. Calls `RebuildAccountBalanceAsync` for every imported account.
-- **`RebuildAccountBalanceAsync(accountId)`** deletes that account's `running_balance` rows and walks `v_blotter_for_account_with_splits` in date order. It skips split rows with `ParentId > 0 && IsTransfer >= 0` (only the `is_transfer = -1` half of a split transfer counts) and self-transfers. It accumulates `FromAmount`, writes `RunningBalance` rows, and updates `Account.TotalAmount`, `LastTransactionDate` and `LastTransactionId`. **Call it for every affected account** (from and to) after writing transactions.
+- **`RebuildAccountBalanceAsync(accountId)`** deletes that account's `running_balance` rows and walks `v_blotter_for_account_with_splits` ordered by `datetime, _id` (Android's `rebuildRunningBalanceForAccount` order) and stores each row's `datetime`, so the latest row by `(datetime, transaction_id)` holds the account total. It skips split rows with `ParentId > 0 && IsTransfer >= 0` (only the `is_transfer = -1` half of a split transfer counts) and self-transfers. It accumulates `FromAmount`, writes `RunningBalance` rows, and updates `Account.TotalAmount`, `LastTransactionDate` and `LastTransactionId`. **Call it for every affected account** (from and to) after writing transactions.
+- **`GetLastRunningBalancesAsync()`** is Android's `getLastRunningBalanceForAccount` (`order by datetime desc, transaction_id desc limit 1`) for all accounts in one `ROW_NUMBER()` query. It equals `account.total_amount`; accounts without transactions are missing (balance 0).
 
 ## Repository / Unit of Work
 

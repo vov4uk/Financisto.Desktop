@@ -13,6 +13,19 @@
     x:CompileBindings="False"
     x:DataType="vm:TransferDialogVM"
     mc:Ignorable="d">
+    <UserControl.Styles>
+        <!--  Same colors as the accounts grid's total amount  -->
+        <Style Selector="TextBlock.accountBalance">
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+        <Style Selector="TextBlock.accountBalance.amount">
+            <Setter Property="Foreground" Value="DarkGreen" />
+        </Style>
+        <Style Selector="TextBlock.accountBalance.amount.negative">
+            <Setter Property="Foreground" Value="DarkRed" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+    </UserControl.Styles>
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -36,9 +49,9 @@
             <Grid Margin="5">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="30" />
-                    <!--  FromAccount  -->
+                    <!--  FromAccount (+ its balance)  -->
                     <RowDefinition Height="18" />
-                    <RowDefinition Height="32" />
+                    <RowDefinition Height="Auto" />
                     <!--  ToAccount  -->
                     <RowDefinition Height="18" />
                     <RowDefinition Height="32" />
@@ -97,19 +110,34 @@
                     Grid.ColumnSpan="3"
                     Text="{Binding Transfer.FromAccountCaption}" />
 
-                <ComboBox
+                <StackPanel
                     Grid.Row="2"
                     Grid.Column="0"
-                    Grid.ColumnSpan="3"
-                    HorizontalAlignment="Stretch"
-                    IsEnabled="{Binding Transfer.IsSubTransaction, Converter={StaticResource InverseBooleanConverter}}"
-                    IsTextSearchEnabled="True"
-                    ItemTemplate="{StaticResource IActive}"
-                    ItemsSource="{x:Static entities:DbManual.Account}"
-                    SelectedItem="{Binding Transfer.FromAccount}"
-                    SelectedValue="{Binding Transfer.FromAccountId}"
-                    SelectedValueBinding="{Binding Id}"
-                    TextSearch.TextBinding="{Binding Title}" />
+                    Grid.ColumnSpan="3">
+                    <ComboBox
+                        Height="32"
+                        HorizontalAlignment="Stretch"
+                        IsEnabled="{Binding Transfer.IsSubTransaction, Converter={StaticResource InverseBooleanConverter}}"
+                        IsTextSearchEnabled="True"
+                        ItemTemplate="{StaticResource IActive}"
+                        ItemsSource="{x:Static entities:DbManual.Account}"
+                        SelectedItem="{Binding Transfer.FromAccount}"
+                        SelectedValue="{Binding Transfer.FromAccountId}"
+                        SelectedValueBinding="{Binding Id}"
+                        TextSearch.TextBinding="{Binding Title}" />
+                    <!--  Current balance of the selected account, formatted like the accounts grid  -->
+                    <StackPanel
+                        Margin="2,2,0,0"
+                        IsVisible="{Binding FromAccountBalance, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                        Orientation="Horizontal">
+                        <TextBlock Classes="accountBalance" Text="{loc:Translate Key=balance}" />
+                        <TextBlock Classes="accountBalance" Text=": " />
+                        <TextBlock
+                            Classes="accountBalance amount"
+                            Classes.negative="{Binding IsFromAccountBalanceNegative}"
+                            Text="{Binding FromAccountBalance}" />
+                    </StackPanel>
+                </StackPanel>
 
                 <TextBlock
                     Grid.Row="3"

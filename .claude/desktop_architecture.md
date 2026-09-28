@@ -209,14 +209,16 @@ All in `src/Financisto.Desktop/ViewModels/Dialogs/`. Views are in `Views/Dialogs
 **Account icon text** (Android "Text to show as icon"): a TextBox above the accent row bound to `Entity.Icon`. When non-empty, `AccountsPageView` hides the type/issuer image and shows the text instead (FontSize 40, `StringConverters.IsNullOrEmpty`/`IsNotNullOrEmpty`), like Android's `AccountRecyclerAdapter.setAccountIcon`. Android paints it white on its black list; the desktop uses the theme foreground (emoji render in color via font fallback).
 | `CategoryDialogVM` | `CategoryDialog` | `CategoryDto` | — |
 | `SubTransactionDialogVM(TransactionDto)` | `SubTransactionDialog` | `TransactionDto` | `!IsSplitCategory \|\| UnsplitAmount == 0` |
-| `TransactionDialogVM(TransactionDto, IDialogWrapper) : SubTransactionDialogVM` | `TransactionDialog` | `TransactionDto` | `FromAccount != null && FromAmount != 0 && base` |
-| `TransferDialogVM(TransferDto)` | `TransferDialog` | `TransferDto` | From and To set && `FromAccountId != ToAccountId` |
+| `TransactionDialogVM(TransactionDto, IDialogWrapper, accountBalances = null) : SubTransactionDialogVM` | `TransactionDialog` | `TransactionDto` | `FromAccount != null && FromAmount != 0 && base` |
+| `TransferDialogVM(TransferDto, accountBalances = null)` | `TransferDialog` | `TransferDto` | From and To set && `FromAccountId != ToAccountId` |
 | `TagDialogVM(TagDto)` | `TagDialog` | `TagDto` | — (`ShowAliases` = `Entity.SupportsAliases`) |
 | `LocationDialogVM : TagDialogVM` | `LocationDialog` | `LocationDto` | — |
 | `CurrencyDialogVM` | `CurrencyDialog` | `CurrencyDto` | — |
 | `NewCurrencyDialogVM` | `NewCurrencyDialog` | returns `CurrencyTemplateItem` | — |
 
 `TransactionDialogVM` opens nested dialogs for split parts: `AddSubTransactionCommand` / `EditSubTransactionCommand` → `SubTransactionDialog`, and `AddSubTransferCommand` → `TransferDialog` with `IsSubTransaction = true`. It edits working copies and copies them back on save.
+
+**From-account balance:** right before opening `TransactionDialog`/`TransferDialog`, `BlotterPageVM` reads `db.GetLastRunningBalancesAsync()` (account id → last running balance) and passes it to the dialog VM; nothing is cached between dialogs. The VM exposes `FromAccountBalance` (`BlotterUtils.SetAmountText(FromAccountCurrency, balance, false)`, the accounts grid's `AmountTitle` format; `null` for the empty entry or when no balances were passed) and `IsFromAccountBalanceNegative`, re-raised when the DTO's `FromAccount` changes. The views show "Balance: …" under the From account combobox (row height `Auto`, combobox + balance in a StackPanel), DarkGreen / bold DarkRed like the grid. Split-part transfers get no balances (small dialog, fixed parent account). When editing, the balance already includes the transaction being edited.
 
 ## DTOs
 

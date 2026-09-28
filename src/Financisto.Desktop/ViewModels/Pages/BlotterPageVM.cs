@@ -297,7 +297,7 @@ namespace Financisto.Desktop.ViewModels.Pages
 
         private async Task OpenTransferDialogAsync(Transaction transfer)
         {
-            TransferDialogVM dialogVm = new TransferDialogVM(new TransferDto(transfer));
+            TransferDialogVM dialogVm = new TransferDialogVM(new TransferDto(transfer), await db.GetLastRunningBalancesAsync());
 
             var result = await dialogWrapper.ShowDialogAsync<TransferDialog>(dialogVm, 480, 440, LocalizationService.Instance.transfer);
 
@@ -349,7 +349,7 @@ namespace Financisto.Desktop.ViewModels.Pages
         {
             var transactionDto = new TransactionDto(transaction, subTransactions);
 
-            TransactionDialogVM dialogVm = new TransactionDialogVM(transactionDto, dialogWrapper);
+            TransactionDialogVM dialogVm = new TransactionDialogVM(transactionDto, dialogWrapper, await db.GetLastRunningBalancesAsync());
 
             var result = await dialogWrapper.ShowDialogAsync<TransactionDialog>(dialogVm, 640, 440, LocalizationService.Instance.transaction);
             var resultVm = result as TransactionDto;
