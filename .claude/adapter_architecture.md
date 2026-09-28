@@ -27,6 +27,7 @@ $$
 
 - Header `KEY:VALUE` lines come before `#START`. Entity blocks run `$ENTITY:<table>` → zero or more `column:value` lines → `$$`. Constants are in `DataAccess/Data/Backup.cs`.
 - `Line` (struct) splits on the **first** `:` only, because values may contain `:`.
+- The text is UTF-8 with `\n` line endings, like Android's export. `BackupWriter` sets `StreamWriter.NewLine = "\n"`, since the default on Windows is `\r\n`. The reader accepts both.
 - Every value must stay on one line. Android always escapes `aliases` and `tags` (`\n` → `\\n`, `\` → `\\`). Other columns get newlines replaced by a space (this is Android's default `backup_newlines` = off). The reader never unescapes, so aliases and tags stay in escaped form in memory.
 - `sort_order` is exported **only for `account`**. The tables in `Backup.BACKUP_TABLES_WITH_SORT_ORDER` (account, sms_template, project, payee, budget, currency, locations, attributes, tag) are exported `order by sort_order`, and on import the order is rebuilt from the row order.
 - Android import drops rows with `_id <= 0`, drops `updated_on`, `remote_key` and unknown columns, and fills missing columns with DB defaults.

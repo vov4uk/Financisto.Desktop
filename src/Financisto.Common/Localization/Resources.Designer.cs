@@ -77,7 +77,16 @@ namespace Financisto.Common.Localization {
                 return ResourceManager.GetString("a_bank", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Accent Color Code.
+        /// </summary>
+        public static string accent_color {
+            get {
+                return ResourceManager.GetString("accent_color", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Account.
         /// </summary>
@@ -1022,7 +1031,16 @@ namespace Financisto.Common.Localization {
                 return ResourceManager.GetString("highlight_tooltip", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Text to Show as Icon (try an emoji!).
+        /// </summary>
+        public static string icon_text {
+            get {
+                return ResourceManager.GetString("icon_text", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to ID.
         /// </summary>

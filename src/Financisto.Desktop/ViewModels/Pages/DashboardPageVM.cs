@@ -47,7 +47,7 @@ FROM   (SELECT a.title AS account_title,
                a.type AS account_type,
                a.sort_order,
                Row_number() OVER ( partition BY a._id
-                                   ORDER BY Date(t.datetime / 1000, 'unixepoch') DESC, t.datetime DESC
+                                   ORDER BY Date(t.datetime / 1000, 'unixepoch') DESC, t.datetime DESC, r.transaction_id DESC
                ) AS RowNum,
                CASE( SELECT _id FROM currency WHERE is_default = 1)
                WHEN c._id THEN r.balance / 100.0

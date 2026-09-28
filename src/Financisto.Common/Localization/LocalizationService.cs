@@ -201,4 +201,6 @@ public sealed class LocalizationService : INotifyPropertyChanged
     public string card_number => Get();
     public string issuer => Get();
     public string confirm_delete_account => Get();
+    public string icon_text => Get();
+    public string accent_color => Get();
 }

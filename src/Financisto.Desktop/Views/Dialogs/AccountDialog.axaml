@@ -5,6 +5,7 @@
     xmlns:conv="using:Financisto.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:ent="clr-namespace:Financisto.Common.Entities;assembly=Financisto.Common"
+    xmlns:helpers="using:Financisto.Desktop.Helpers"
     xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:Financisto.Desktop.ViewModels.Dialogs"
@@ -30,6 +31,7 @@
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <Grid Margin="4">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -267,9 +269,45 @@
                         TextWrapping="Wrap" />
                 </GroupBox>
 
-                <!--  Sort Order  -->
+                <!--  Icon Text: shown in the accounts list instead of the type/issuer image  -->
                 <GroupBox
                     Grid.Row="12"
+                    Grid.ColumnSpan="2"
+                    Margin="0,0,0,4"
+                    BorderThickness="0"
+                    Header="{loc:Translate Key=icon_text}">
+                    <TextBox Classes="clearButton" Text="{Binding Entity.Icon, UpdateSourceTrigger=PropertyChanged}" />
+                </GroupBox>
+
+                <!--  Accent Color: Android color code (#rrggbb, #aarrggbb or a name) + Android's palette  -->
+                <GroupBox
+                    Grid.Row="13"
+                    Grid.ColumnSpan="2"
+                    Margin="0,0,0,4"
+                    BorderThickness="0"
+                    Header="{loc:Translate Key=accent_color}">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBox
+                            Grid.Column="0"
+                            Classes="clearButton"
+                            PlaceholderText="yellow, teal, #a52a2a"
+                            Text="{Binding Entity.AccentColor, UpdateSourceTrigger=PropertyChanged}" />
+                        <ColorPicker
+                            Grid.Column="1"
+                            Margin="4,0,0,0"
+                            VerticalAlignment="Stretch"
+                            Color="{Binding SelectedAccentColor, Mode=TwoWay}"
+                            SelectedIndex="{x:Static helpers:AccentColorPalette.PaletteTab}">
+                            <ColorPicker.Palette>
+                                <helpers:AccentColorPalette />
+                            </ColorPicker.Palette>
+                        </ColorPicker>
+                    </Grid>
+                </GroupBox>
+
+                <!--  Sort Order  -->
+                <GroupBox
+                    Grid.Row="14"
                     Grid.ColumnSpan="2"
                     Margin="0,0,0,4"
                     BorderThickness="0"
@@ -279,7 +317,7 @@
 
                 <!--  Checkboxes  -->
                 <StackPanel
-                    Grid.Row="13"
+                    Grid.Row="15"
                     Grid.ColumnSpan="2"
                     Margin="4,4,0,8"
                     Orientation="Horizontal">
@@ -292,7 +330,7 @@
 
                 <!--  Save / Cancel  -->
                 <Grid
-                    Grid.Row="14"
+                    Grid.Row="16"
                     Grid.ColumnSpan="2"
                     Margin="0,8,0,0">
                     <Grid.ColumnDefinitions>

@@ -133,7 +133,10 @@ namespace Financisto.DataAccess
                     await context.Database.ExecuteSqlRawAsync("delete from running_balance where account_id=@p0", accountId);
                     await context.SaveChangesAsync();
 
-                    var transactions = await context.BlotterTransactionsForAccountWithSplits.Where(x => x.FromAccountId == accountId).OrderBy(x => x.DateTime).ToListAsync();
+                    // Same order as Android's rebuildRunningBalanceForAccount, so the last row by (datetime, transaction_id)
+                    // holds the account's total, as GetLastRunningBalancesAsync expects.
+                    var transactions = await context.BlotterTransactionsForAccountWithSplits.Where(x => x.FromAccountId == accountId)
+                        .OrderBy(x => x.DateTime).ThenBy(x => x.Id).ToListAsync();
                     long balance = 0;
 
                     foreach (var transaction in transactions)
@@ -152,7 +155,7 @@ namespace Financisto.DataAccess
                             continue;
                         }
                         balance += transaction.FromAmount;
-                        context.RunningBalance.Add(new RunningBalance { Balance = balance, AccountId = accountId, TransactionId = transaction.Id });
+                        context.RunningBalance.Add(new RunningBalance { Balance = balance, AccountId = accountId, TransactionId = transaction.Id, Datetime = transaction.DateTime });
                     }
 
                     var acc = context.Accounts.FirstOrDefault(x => x.Id == accountId);
@@ -167,6 +170,19 @@ namespace Financisto.DataAccess
                     await context.SaveChangesAsync();
                 }
             }
+        }
+
+        public async Task<Dictionary<int, long>> GetLastRunningBalancesAsync()
+        {
+            // Android's getLastRunningBalanceForAccount ("order by datetime desc, transaction_id desc limit 1") for every account at once.
+            // An account without transactions has no rows, i.e. a balance of 0.
+            var rows = await ExecuteQuery<RunningBalance>(@"
+SELECT account_id, transaction_id, datetime, balance
+FROM   (SELECT *,
+               ROW_NUMBER() OVER (PARTITION BY account_id ORDER BY datetime DESC, transaction_id DESC) AS row_num
+        FROM   running_balance)
+WHERE  row_num = 1");
+            return rows.ToDictionary(x => x.AccountId, x => x.Balance);
         }
 
         public async Task AddTransactionsAsync(IEnumerable<Transaction> transactions)

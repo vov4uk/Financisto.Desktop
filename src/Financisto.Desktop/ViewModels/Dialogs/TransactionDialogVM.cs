@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using Financisto.Common;
 using Financisto.Common.Entities;
 using Financisto.Common.Localization;
 using Financisto.Common.Model;
+using Financisto.Common.Utils;
 using Financisto.Desktop.Data;
 using Financisto.Desktop.Helpers;
 using Financisto.Desktop.Views.Dialogs;
@@ -15,6 +17,7 @@ namespace Financisto.Desktop.ViewModels.Dialogs;
 public class TransactionDialogVM : SubTransactionDialogVM
 {
     private readonly IDialogWrapper dialogWrapper;
+    private readonly IReadOnlyDictionary<int, long> accountBalances;
     private Common.IAsyncCommand _addSubTransactionCommand;
     private Common.IAsyncCommand _addSubTransferCommand;
     private DelegateCommand _clearLocationCommand;
@@ -23,13 +26,34 @@ public class TransactionDialogVM : SubTransactionDialogVM
     private DelegateCommand<BaseTransactionDto> _deleteSubTransactionCommand;
     private AsyncCommand<BaseTransactionDto> _editSubTransaction;
 
+    /// <param name="accountBalances">Account id → current balance (<c>IFinancistoDatabase.GetLastRunningBalancesAsync</c>), read right before
+    /// the dialog opens; shown under the account combobox. Null shows no balance.</param>
     public TransactionDialogVM(
         TransactionDto transaction,
-        IDialogWrapper dialogWrapper)
+        IDialogWrapper dialogWrapper,
+        IReadOnlyDictionary<int, long> accountBalances = null)
         : base(transaction)
     {
         this.dialogWrapper = dialogWrapper;
+        this.accountBalances = accountBalances;
+        Transaction.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(TransactionDto.FromAccount))
+            {
+                OnPropertyChanged(nameof(FromAccountBalance));
+                OnPropertyChanged(nameof(IsFromAccountBalanceNegative));
+            }
+        };
     }
+
+    /// <summary>The selected account's current balance, formatted like the accounts grid (AccountModel.AmountTitle).</summary>
+    public string FromAccountBalance =>
+        FromAccountBalanceValue is long balance ? BlotterUtils.SetAmountText(Transaction.FromAccountCurrency, balance, false) : null;
+
+    public bool IsFromAccountBalanceNegative => FromAccountBalanceValue < 0;
+
+    private long? FromAccountBalanceValue =>
+        accountBalances != null && Transaction.FromAccount?.Id is int id ? accountBalances.GetValueOrDefault(id) : null;
 
     public Common.IAsyncCommand AddSubTransactionCommand => _addSubTransactionCommand ??= new AsyncCommand(() => ShowSubTransactionDialog(new TransactionDto(), true));
     public Common.IAsyncCommand AddSubTransferCommand => _addSubTransferCommand ??= new AsyncCommand(() => ShowSubTransferDialog(new TransferDto(), true));

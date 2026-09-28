@@ -11,6 +11,9 @@ namespace Financisto.DataAccess.Abstractions
 
         Task RebuildAccountBalanceAsync(int accountId);
 
+        /// <summary>Account id → current balance, the last running balance like Android's getLastRunningBalanceForAccount.</summary>
+        Task<Dictionary<int, long>> GetLastRunningBalancesAsync();
+
         Task AddTransactionsAsync(IEnumerable<Transaction> transactions);
 
         Task<T> GetOrCreateAsync<T>(int id)

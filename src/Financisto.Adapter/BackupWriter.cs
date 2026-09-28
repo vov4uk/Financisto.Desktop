@@ -44,7 +44,8 @@ namespace Financisto.Adapter
             {
                 await using (var fileStream = File.Create(tempFileName))
                 await using (var gzipStream = new GZipStream(fileStream, CompressionMode.Compress))
-                await using (var writer = new StreamWriter(gzipStream))
+                // Android writes "\n" line endings; StreamWriter defaults to Environment.NewLine ("\r\n" on Windows).
+                await using (var writer = new StreamWriter(gzipStream) { NewLine = "\n" })
                 {
                     WriteHeader(writer, backupVersion);
                     WriteBody(writer, entities, entityColumnsOrder);

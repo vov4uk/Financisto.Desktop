@@ -51,9 +51,9 @@
                 <Grid Margin="5">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="30" />
-                        <!--  Account  -->
+                        <!--  Account (+ its balance)  -->
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="32" />
+                        <RowDefinition Height="Auto" />
                         <!--  payee  -->
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="32" />
@@ -121,18 +121,34 @@
                         Grid.ColumnSpan="2"
                         Text="{loc:Translate Key=account}" />
 
-                    <ComboBox
+                    <StackPanel
                         Grid.Row="2"
                         Grid.Column="0"
-                        Grid.ColumnSpan="2"
-                        HorizontalAlignment="Stretch"
-                        IsTextSearchEnabled="True"
-                        ItemTemplate="{StaticResource IActive}"
-                        ItemsSource="{x:Static entities:DbManual.Account}"
-                        SelectedItem="{Binding Transaction.FromAccount}"
-                        SelectedValue="{Binding Transaction.FromAccountId}"
-                        SelectedValueBinding="{Binding Id}"
-                        TextSearch.TextBinding="{Binding Title}" />
+                        Grid.ColumnSpan="2">
+                        <ComboBox
+                            Height="32"
+                            HorizontalAlignment="Stretch"
+                            IsTextSearchEnabled="True"
+                            ItemTemplate="{StaticResource IActive}"
+                            ItemsSource="{x:Static entities:DbManual.Account}"
+                            SelectedItem="{Binding Transaction.FromAccount}"
+                            SelectedValue="{Binding Transaction.FromAccountId}"
+                            SelectedValueBinding="{Binding Id}"
+                            TextSearch.TextBinding="{Binding Title}" />
+                        <!--  Current balance of the selected account, formatted like the accounts grid  -->
+                        <StackPanel
+                            Margin="2,2,0,0"
+                            Classes="accountBalance"
+                            IsVisible="{Binding FromAccountBalance, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                            Orientation="Horizontal">
+                            <TextBlock Text="{loc:Translate Key=balance}" />
+                            <TextBlock Text=": " />
+                            <TextBlock
+                                Classes="balanceAmount"
+                                Classes.negative="{Binding IsFromAccountBalanceNegative}"
+                                Text="{Binding FromAccountBalance}" />
+                        </StackPanel>
+                    </StackPanel>
 
                     <TextBlock
                         Grid.Row="3"
