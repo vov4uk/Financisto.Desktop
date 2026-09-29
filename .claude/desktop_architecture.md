@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The runnable Avalonia 12 app (`net10.0`, `WinExe`, self-contained single-file, `win-x64` by default; CI also publishes macOS through `MacBundle`). It holds the shell window, page and dialog VMs and views, DTOs, services (settings, exchange rates, updates, dashboard totals), and the bank statement import (parsers, wizards, rules). It references Common, DataAccess and Adapter.
+The runnable Avalonia 12 app (`net10.0`, `WinExe`, self-contained single-file, `win-x64` by default; CI also publishes macOS through `MacBundle`). It holds the shell window, page and dialog VMs and views, DTOs, services (settings, exchange rates, updates, dashboard totals), and the bank statement import (parsers, wizards, rules). It references Common, DataAccess, Adapter and Reports (the Reports page is its own project, see `reports_architecture.md`).
 
 There is **no DI container**: the `MainWindow` constructor creates every dependency itself.
 
@@ -84,11 +84,12 @@ public class MainWindowVM : BindableBase
 | `ExchangeRateModel` | `ExchangeRatesPageVM` | `ExchangeRatesPageView` | IconArrowTrendUp |
 | `BlotterModel` | `BlotterPageVM` | `BlotterPageView` | IconReceipt |
 | `RuleModel` | `RulesPageVM` | `RulesPageView` | IconBoltLightning |
+| `ReportsControlVM` | `ReportsControlVM` (Financisto.Reports) | `ReportsControl` (Financisto.Reports) | IconChartBar |
 | `SettingsPageVM` (bottom list) | `SettingsPageVM` | `SettingsPageView` | IconGear |
 
 ### Adding a new page
 
-1. Create the VM in `ViewModels/Pages/`. For a list page, derive from `EntityBaseVM<TModel>` with ctor `(IFinancistoDatabase, IDialogWrapper)`. For a tag-like page, derive from `TagBasePageVM<TModel>`. Otherwise use `BindableBase, IDataRefresh`.
+1. Create the VM in `ViewModels/Pages/`. For a list page, derive from `EntityBaseVM<TModel>` with ctor `(IFinancistoDatabase, IDialogWrapper)`. For a tag-like page, derive from `TagBasePageVM<TModel>`. Otherwise use `BindableBase, IDataRefresh`. (A page can also come from another project: `ReportsControlVM`/`ReportsControl` live in `Financisto.Reports` and are only registered here, in `GetOrCreatePage` and `ViewLocator.PageViews`.)
 2. Add a `case nameof(...)` to `MainWindowVM.GetOrCreatePage(Type)`.
 3. Add a `ListItemTemplate` to `ItemsTop` or `ItemsBottom`, with a `LocalizationService.Instance.<key>` label and an `Icon*` resource key. Icons live in `Financisto.Common/Assets/Generic.axaml`.
 4. Create `Views/XxxPageView.axaml` with `x:DataType="vm:XxxPageVM"` and register it in `ViewLocator.PageViews`.
@@ -157,7 +158,7 @@ public abstract class EntityBaseVM<T> : BaseViewModel<T>   // Common; gives db, 
 
 ### BlotterPageVM details
 
-- **Filters** (bound from `BlotterPageView` to Common's filter controls): `PeriodType`, `From`/`To` (`DateTime?`), `Account`, `Category`, `Payee`, `Project`, `Location` (models from `DbManual`; the "all" entry has `Id == null`), and `Tags` (`ObservableCollection<TagModel>`, OR-matched with a substring `Contains`).
+- **Filters** (bound from `BlotterPageView` to Common's filter controls): `PeriodType`, `From`/`To` (`DateTime?`; the `PeriodFilter`'s own `From`/`To` are bound two-way, so a preset such as "Current month" fills them), `Account`, `Category`, `Payee`, `Project`, `Location` (models from `DbManual`; the "all" entry has `Id == null`), and `Tags` (`ObservableCollection<TagModel>`, OR-matched with a substring `Contains`).
 - **RefreshData** builds an `Expression<Func<BlotterTransactions,bool>>` with `ExpressionExtensions.And/Or` and passes it to `internal static QueryAsync(db, predicate)`, which queries the `v_blotter` view through `FindManyAndProjectAsync` and projects into `BlotterModel` (currencies and projects resolved from `DbManual.CurrencyIds`/`ProjectIds`); the rows are ordered by date descending. The import also uses `QueryAsync` for the accounts' last transactions.
 - **Edit/Duplicate** dispatch on `BlotterModel.Type == "Transfer"`. Duplicate sets `Id = 0` on the parent and every split part.
 - **Save transaction:** `MapperHelper.MapTransaction` → split parts get `Parent`, `FromAccountId` and `ParentAccountId` from the parent. Sub-transfers use `MapperHelper.MapTransfer`; they are **dropped when the parent has a foreign original currency**. Then `InsertOrUpdateAsync(all)`, delete removed parts, `RebuildAccountBalanceAsync` for the from-account and every to-account, and `RefreshData`.
@@ -183,6 +184,8 @@ public interface IDialogWrapper
 Everything is async and uses Avalonia `StorageProvider` pickers. The owner is `desktop.MainWindow`; without an owner, the calls return `null`, `""` or `true`.
 
 `IToastNotifierWrapper` → `ToastNotifierWrapper` (`ShowMessage`, `ShowWarning`) is built on Message.Avalonia, with a `<msg:MessageHost/>` in `MainWindow.axaml`.
+
+`ReportDialogService : Financisto.Reports.IDialogService` (`Helpers/`) shows a report's message (`ShowMessage(string)`, a `void`) through `IDialogWrapper.ShowMessageBoxAsync`, fire and forget; `MainWindowVM` hands it to `ReportsControlVM`.
 
 ### DialogBaseVM
 
@@ -310,7 +313,7 @@ Ported from the Financier WPF repo (xunit v3, AutoFixture, Moq). In `Financisto.
 - `Financisto.Tests.Common`: shared fixtures (`AutoMoqData`, `PredefinedData`, `JsonDeserializer` for backup-style JSON rows).
 - `Financisto.Adapter.Tests`, `Financisto.DataAccess.Tests` (in-memory SQLite through `FinancistoDatabase`), `Financisto.Common.Test` (assembly `Financisto.Converters.Tests`: converter tests; the visibility converters return `bool` for `IsVisible`).
 - `Financisto.Desktop.Tests`: VMs, wizards, `Integration/MinBackupIntegrationTests` (imports `Assets/min.backup` into the real in-memory DB and checks that `RebuildAccountBalanceAsync` reproduces the backup's account totals and that open→save writes the same text back, modulo location `0`→`0.0` and exchange-rate row order), bank parsers (`Assets/` statements copied to the output dir), `ExchangeRatesService`. It `ProjectReference`s the self-contained win-x64 `Financisto.Desktop` exe, so it has to be `SelfContained` + `win-x64` too (NETSDK1151).
-- `Financisto.Reports.Tests` is a leftover from Financier and is **not** in the solution: Financisto has no Reports project.
+- `Financisto.Reports.Tests` (copied from Financier) is **not** in the solution yet: it still asserts on OxyPlot `PlotModel`s and needs porting to the LiveCharts-based `ReportChart` (see `reports_architecture.md`, "Tests").
 
 **Running:** `dotnet test` doesn't work here (Microsoft.Testing.Platform reports "Zero tests ran", also in the WPF repo). Build, then run the xunit exe: `src/Tests/<project>/bin/Debug/net10.0[/win-x64]/<AssemblyName>.exe`, optionally `-class Financisto.Desktop.Tests.Pages.BlotterVMIntegrationTests`.
 

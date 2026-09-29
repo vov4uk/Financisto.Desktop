@@ -13,6 +13,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
             </ResourceDictionary.MergedDictionaries>
+            <conv:DateTimeToDateTimeOffsetConverter x:Key="DateTimeToDateTimeOffsetConverter" />
             <conv:UnixTimeConverter x:Key="UnixTimeConverter" />
             <conv:TransactionTypeBrushConverter x:Key="TransactionTypeBrushConverter" />
             <conv:TransactionTypeIconConverter x:Key="TransactionTypeIconConverter" />
@@ -81,11 +82,14 @@
             IsExpanded="True">
             <Grid ColumnDefinitions="*,Auto">
                 <WrapPanel Grid.Column="0" Orientation="Horizontal">
+                    <!--  A preset only sets the control's own From/To, so they have to be bound to the VM for the preset to filter  -->
                     <filters:PeriodFilter
                         Margin="0"
                         DataContext="{Binding}"
+                        From="{Binding From, Mode=TwoWay, Converter={StaticResource DateTimeToDateTimeOffsetConverter}}"
                         Orientation="Horizontal"
-                        SelectedPeriodType="{Binding PeriodType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        SelectedPeriodType="{Binding PeriodType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        To="{Binding To, Mode=TwoWay, Converter={StaticResource DateTimeToDateTimeOffsetConverter}}" />
                     <filters:AccountFilter MinWidth="120" Margin="4" />
                     <filters:CategoryFilter MinWidth="120" Margin="4" />
                     <filters:ProjectFilter MinWidth="120" Margin="4" />

@@ -543,6 +543,9 @@
   <data name="please_select_categories" xml:space="preserve">
     <value>Proszę wybrać kategorie</value>
   </data>
+  <data name="please_select_date" xml:space="preserve">
+    <value>Proszę wybrać datę</value>
+  </data>
   <data name="please_select_account" xml:space="preserve">
     <value>Proszę wybrać konto</value>
   </data>

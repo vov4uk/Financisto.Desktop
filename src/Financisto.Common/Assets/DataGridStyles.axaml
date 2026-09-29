@@ -12,4 +12,9 @@
         <Setter Property="Opacity" Value="{Binding IsActive, Converter={StaticResource activeStatusOpacity}}" />
     </Style>
 
+    <!--  Numeric columns of DataGridAutoHeaders  -->
+    <Style Selector="DataGridCell.numeric TextBlock">
+        <Setter Property="HorizontalAlignment" Value="Right" />
+    </Style>
+
 </Styles>

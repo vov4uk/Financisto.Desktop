@@ -489,6 +489,30 @@
         }
 
         [Fact]
+        public async Task Filter_ClearFilters_ResetsPeriodAndRaisesPropertyChanged()
+        {
+            await SetupDb(FilterTransactions());
+
+            var vm = new BlotterPageVM(db, dialogMock.Object);
+            vm.PeriodType = PeriodType.Custom;
+            vm.From = UnixTimeConverter.Convert(1644825373000);
+            vm.To = UnixTimeConverter.Convert(1645004465000);
+            var changedProperties = new List<string>();
+            (vm as System.ComponentModel.INotifyPropertyChanged).PropertyChanged += (s, e) => changedProperties.Add(e.PropertyName);
+
+            await vm.ClearFiltersCommand.ExecuteAsync();
+
+            Assert.Equal(PeriodType.AllTime, vm.PeriodType);
+            Assert.Null(vm.From);
+            Assert.Null(vm.To);
+
+            // the period filter's date pickers are bound to these, so they only clear when the change is raised
+            Assert.Contains(nameof(BlotterPageVM.From), changedProperties);
+            Assert.Contains(nameof(BlotterPageVM.To), changedProperties);
+            Assert.Equal(18, vm.Entities.Count);
+        }
+
+        [Fact]
         public void PropertySetters_Account_RaisesPropertyChanged()
         {
             var db = new FinancistoDatabase();

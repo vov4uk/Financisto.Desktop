@@ -22,6 +22,7 @@ using Financisto.Desktop.Services;
 using Financisto.Desktop.ViewModels.Pages;
 using Financisto.Desktop.Wizards;
 using Financisto.Desktop.Wizards.MonoWizard.ViewModel;
+using Financisto.Reports;
 using Prism.Mvvm;
 using IAsyncCommand = Financisto.Common.IAsyncCommand;
 
@@ -113,7 +114,7 @@ namespace Financisto.Desktop.ViewModels
             new(typeof(ExchangeRateModel), () => LocalizationService.Instance.exchange_rates, "IconArrowTrendUp"),
             new(typeof(BlotterModel), () => LocalizationService.Instance.blotter, "IconReceipt"),
             new(typeof(RuleModel), () => LocalizationService.Instance.rules, "IconBoltLightning"),
-            //new(typeof(ReportsVM), "Reports", "book_pulse_regular"),
+            new(typeof(ReportsControlVM), () => LocalizationService.Instance.reports, "IconChartBar"),
         };
 
         public IAsyncCommand<WizardTypes> ImportCommand => _importCommand ??= new AsyncCommand<WizardTypes>(OpenImportWizardAsync, _ => IsBackupLoaded);
@@ -303,8 +304,8 @@ namespace Financisto.Desktop.ViewModels
                     return GetOrCreatePage<RuleModel, RulesPageVM>();
                 case nameof(ExchangeRateModel):
                     return _pages.GetOrAdd(type, _ => new ExchangeRatesPageVM(db, dialogWrapper, notifier));
-                //case nameof(ReportsControlVM):
-                //    return _pages.GetOrAdd(type, _ => new ReportsControlVM(db));
+                case nameof(ReportsControlVM):
+                    return _pages.GetOrAdd(type, _ => new ReportsControlVM(db, new ReportDialogService(dialogWrapper)));
                 case nameof(SettingsPageVM):
                     return _pages.GetOrAdd(type, _ => new SettingsPageVM(db, dialogWrapper, notifier, updateService));
                 case nameof(DashboardPageVM):

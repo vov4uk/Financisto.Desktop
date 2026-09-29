@@ -543,6 +543,9 @@
   <data name="please_select_categories" xml:space="preserve">
     <value>Виберіть категорії</value>
   </data>
+  <data name="please_select_date" xml:space="preserve">
+    <value>Виберіть дату</value>
+  </data>
   <data name="please_select_account" xml:space="preserve">
     <value>Виберіть рахунок</value>
   </data>

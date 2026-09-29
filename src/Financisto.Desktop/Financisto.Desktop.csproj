@@ -71,6 +71,7 @@
         <ProjectReference Include="..\Financisto.Common\Financisto.Common.csproj" />
         <ProjectReference Include="..\Financisto.DataAccess\Financisto.DataAccess.csproj" />
         <ProjectReference Include="..\Financisto.Adapter\Financisto.Adapter.csproj" />
+        <ProjectReference Include="..\Financisto.Reports\Financisto.Reports.csproj" />
     </ItemGroup>
 
 </Project>

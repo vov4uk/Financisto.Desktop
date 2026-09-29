@@ -146,6 +146,7 @@ public sealed class LocalizationService : INotifyPropertyChanged
     public string tags => Get();
     public string exchange_rates => Get();
     public string blotter => Get();
+    public string reports => Get();
     public string categories => Get();
     // RecipesWizard Page1
     public string recipe_wizard_total_format => Get();
@@ -187,6 +188,7 @@ public sealed class LocalizationService : INotifyPropertyChanged
     public string rule_title_and => Get();
     public string please_select_categories => Get();
     public string please_select_account => Get();
+    public string please_select_date => Get();
     public string please_select_transaction_title => Get();
 
     // Account dialog

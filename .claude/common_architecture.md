@@ -66,7 +66,7 @@ All derive from `BaseModel` (an empty marker). Two ways they get filled:
 | `ExchangeRateModel` | `ExchangeRatesPageVM` | FromCurrencyId, ToCurrencyId, Date, `Rate` (double), From/To `CurrencyModel` |
 | `YearMonths`, `Years` | `DbManual` SQL over `v_report_transactions` | period pickers |
 | `RuleModel : IActive` (+ enum `RuleConditionType`: DescriptionContains, DescriptionMatches, MCC) | `rules.json` (Newtonsoft) | import rule: Id, Created, Condition, Description, `MCCCategory` (`Mcc`), IsActive, action ids `CategoryId`/`LocationId`/`PayeeId`/`ProjectId` (`int?`). `UpdateTitles()` fills the display-only `Title` (the actions, from `DbManual` lists) and `UserFirendlyDescription` (sic; the description or the MCC title). |
-| `TreeNode` (+ `[Header]`) | — | leftover from Financier's reports tree; currently unused |
+| `TreeNode` (+ `[Header]`) | — | a node of the reports tree (`ReportsControlVM`): `Name` (localized), `Type` (a report VM's full type name, empty for a group), `Child` |
 
 `IActive` (`int? Id`, `bool IsActive`, `string Title`) is what the shared `IActive` item template renders (inactive = different brush).
 
@@ -138,9 +138,11 @@ Avalonia specifics: there is no `Visibility` enum, so "…ToVisibility" converte
 ## Controls, filters, behaviors
 
 - `Filters/*` are UserControls with a header `TextBlock` + a picker. Most bind **loosely to the host DataContext** by convention (e.g. `AccountFilter` binds `SelectedItem="{Binding Account}"` with `ItemsSource` = `DbManual.Account`). The csproj sets `AvaloniaUseCompiledBindingsByDefault=false` for this reason. The host VM must expose the matching property names: `Account`, `Category`, `Payee`, `Project`, `Location`, …
-- `PeriodFilter` exposes real styled properties: `SelectedPeriodType` (`PeriodType`), `From`/`To` (`DateTimeOffset?`), `Orientation`. Period presets set From/To directly; picker edits merge date and time.
+- `PeriodFilter` exposes real styled properties: `SelectedPeriodType` (`PeriodType`), `From`/`To` (`DateTimeOffset?`), `Orientation`. Period presets set From/To directly; picker edits merge date and time. **Its inner date pickers bind to the host's `From`/`To` (a `DateTime?` each), but the presets only set the control's own `From`/`To`**, so a host must also bind the control's `From`/`To` to its VM (two-way, through `DateTimeToDateTimeOffsetConverter`) for a preset to have any effect: `BlotterPageView` and `ByCategoryReportView` both do. A VM that resets its filters must clear `From`/`To` through the properties (as `BlotterPageVM.ClearFilters` does), so the pickers follow.
+- `DateFilter` binds a `DateTimeOffset?`-typed `DatePicker` to the host's `DateFilter` (`DateTime?`) through `DateTimeToDateTimeOffsetConverter`; `ConvertBack` gives `null` for a `DateTime?` target when there is no date (a `DateTime` target gets `DateTime.MinValue`).
 - `TagFilter` / `Controls/TagSelector`: styled property `SelectedTags` (`ObservableCollection<TagModel>`), a flyout of checkboxes over `DbManual.Tag`, header joined with " | ".
 - Also: `CategoryFilter`, `TopCategoryFilter`, `CurrencyFilter`, `DateFilter`, `Start/EndYearMonthFilter`, `LocationFilter`, `PayeeFilter`, `ProjectFilter`. The blotter uses Account, Category, Payee, Project, Location, Period and Tag.
+- `Controls/DataGridAutoHeaders : DataGrid` is a read-only table that builds its columns from the row type (the reports' models): only properties with `[DisplayName("key")]` get a column (others are cancelled in `AutoGeneratingColumn`), the header is `LocalizationService.Instance[key]`, and `long`/`double` columns get the `numeric` cell class (right-aligned by a style in `Assets/DataGridStyles.axaml`). The row type is read from the `IEnumerable<T>` of `ItemsSource`. It overrides `StyleKeyOverride` (`typeof(DataGrid)`): a `DataGrid` subclass has no control theme of its own and would be drawn unstyled.
 - `Behaviors/CommandBehavior.DoubleTappedCommand` (+`…Parameter`) is an attached property that replaces WPF `MouseBinding`.
 - `Behaviors/DataGridSelectionBehavior.SelectionChangedCommand` passes `DataGrid.SelectedItems` to the command (used by the blotter selection summary).
 
@@ -155,7 +157,7 @@ Avalonia specifics: there is no `Visibility` enum, so "…ToVisibility" converte
 
 - `[LocalizedDescription("key")]` : `DescriptionAttribute`, resolved through `LocalizationService`.
 - `[LocalizedMccDescription("key")]` resolves through `ResourcesMcc`. `[MccCodes(params int[])]` maps `Mcc` enum values to numeric MCC codes.
-- `[Header("key")]` is only used by the unused `TreeNode`.
+- `[Header("key")]` on a report VM gives its localized tab title and tree node name (`TreeNode`, `ReportsControlVM`).
 
 ## Enums (`Entities/`, namespace `Financisto.Common.Entities`)
 
@@ -167,4 +169,4 @@ Avalonia specifics: there is no `Visibility` enum, so "…ToVisibility" converte
 - `TextSearch.TextPath="X"` becomes `IsTextSearchEnabled="True"` + `TextSearch.TextBinding="{Binding X}"`. `DisplayMemberPath` becomes `DisplayMemberBinding`.
 - Date/time pickers use `DateTimeOffset?` / `TimeSpan?`.
 - Resources are loaded with `avares://Financisto.Common/...`. PNG assets must be listed as `AvaloniaResource` in the csproj (they are listed individually).
-- `InternalsVisibleTo` is granted to `Financisto.Desktop.Tests` and `Financisto.Reports.Tests` (the latter has no project to test yet). DataAccess and Desktop grant it to `Financisto.Desktop.Tests` too, DataAccess also to `Financisto.DataAccess.Tests`.
+- `InternalsVisibleTo` is granted to `Financisto.Desktop.Tests` and `Financisto.Reports.Tests` (the latter is not in the solution yet, see `reports_architecture.md`). DataAccess and Desktop grant it to `Financisto.Desktop.Tests` too, DataAccess also to `Financisto.DataAccess.Tests`.

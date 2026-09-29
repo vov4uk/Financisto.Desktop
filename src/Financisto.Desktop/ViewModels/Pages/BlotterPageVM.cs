@@ -188,8 +188,9 @@ namespace Financisto.Desktop.ViewModels.Pages
         private async Task ClearFilters()
         {
             PeriodType = PeriodType.AllTime;
-            _from = null;
-            _to = null;
+            // through the properties, so the period filter's date pickers clear too, also when the type was already AllTime
+            From = null;
+            To = null;
             Account = default;
             Category = default;
             Payee = default;

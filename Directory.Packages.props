@@ -42,8 +42,6 @@
     <PackageVersion Include="ToastNotifications.Messages.Net5" Version="3.0.1" />
     <PackageVersion Include="ToastNotifications.Net5" Version="3.0.0" />
     <PackageVersion Include="WPFChromeTabsMVVM" Version="1.4.0" />
-    <!-- Production packages - Financier.Reports -->
-    <PackageVersion Include="OxyPlot.Wpf" Version="2.2.0" />
     <!-- Production packages - Financier.DataAccess -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.12" />
     <!-- Production packages - Financier.Adapter -->
