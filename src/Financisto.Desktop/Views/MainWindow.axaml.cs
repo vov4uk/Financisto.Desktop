@@ -11,6 +11,7 @@ using Financisto.Common.Localization;
 using Financisto.DataAccess;
 using Financisto.Desktop.Data;
 using Financisto.Desktop.Helpers;
+using Financisto.Desktop.Helpers.BankHelper;
 using Financisto.Desktop.Services;
 using Financisto.Desktop.ViewModels;
 
@@ -28,7 +29,10 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        this.ViewModel = new MainWindowVM(new DialogWrapper(), new FinancistoDatabaseFactory(), new EntityReader(), new BackupWriter(), notificator, new UpdateService());
+        // Import rules aren't part of the backup; keep them next to the settings file.
+        DbManual.RulesPath = Path.Combine(Path.GetDirectoryName(StartOptions.Current.SettingsPath) ?? string.Empty, "rules.json");
+
+        this.ViewModel = new MainWindowVM(new DialogWrapper(), new FinancistoDatabaseFactory(), new EntityReader(), new BackupWriter(), notificator, new BankHelperFactory(), new UpdateService());
 
         DataContext = ViewModel;
         var version = typeof(MainWindow).Assembly.GetName().Version;

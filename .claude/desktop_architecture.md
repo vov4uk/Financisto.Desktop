@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The runnable Avalonia 12 app (`net10.0`, `WinExe`, self-contained single-file, `win-x64` by default; CI also publishes macOS through `MacBundle`). It holds the shell window, page and dialog VMs and views, DTOs, and services (settings, exchange rates, updates, dashboard totals). It references Common, DataAccess and Adapter.
+The runnable Avalonia 12 app (`net10.0`, `WinExe`, self-contained single-file, `win-x64` by default; CI also publishes macOS through `MacBundle`). It holds the shell window, page and dialog VMs and views, DTOs, services (settings, exchange rates, updates, dashboard totals), and the bank statement import (parsers, wizards, rules). It references Common, DataAccess and Adapter.
 
 There is **no DI container**: the `MainWindow` constructor creates every dependency itself.
 
@@ -10,7 +10,8 @@ There is **no DI container**: the `MainWindow` constructor creates every depende
 
 - Page VMs, `MainWindowVM` and DTOs use Prism `BindableBase` (`SetProperty` / `RaisePropertyChanged`). Page commands are Common's `AsyncCommand` / `IAsyncCommand`.
 - `DialogBaseVM` uses a CommunityToolkit `ObservableObject`. `[RelayCommand]` generates `SaveCommand` and `CancelCommand`. Extra dialog commands use Prism `DelegateCommand` or Common's `AsyncCommand`.
-- `AvaloniaUseCompiledBindingsByDefault=true`, so every view declares `x:DataType`. Views that need loose bindings (`$parent[...]`, DTOs reached through polymorphic collections) opt out with `x:CompileBindings="False"`: `AccountDialog`, `TransactionDialog`, `SubTransactionDialog`, `Controls/AmountControl`, and the `TreeViewItem` style in `CategoriesPageView`.
+- `AvaloniaUseCompiledBindingsByDefault=true`, so every view declares `x:DataType`. Views that need loose bindings (`$parent[...]`, DTOs reached through polymorphic collections) opt out with `x:CompileBindings="False"`: `AccountDialog`, `TransactionDialog`, `SubTransactionDialog`, `Controls/AmountControl`, the import wizard's `MonoWizard/Page3`, the recipes wizard's `RecipesWizard/Page2`, and the `TreeViewItem` style in `CategoriesPageView`.
+- A `DataGridTextColumn` binding with a one-way converter (no `ConvertBack`) needs `Mode=OneWay`, or every cell logs a ConvertBack binding warning.
 - A DataGrid column can't bind to the page VM (it isn't in the visual tree). `TagPageView` toggles its aliases column from code-behind (`Tag="aliases"` + `ITagBaseVM.HasAliases`).
 
 ## Startup
@@ -19,9 +20,13 @@ There is **no DI container**: the `MainWindow` constructor creates every depende
 
 ```csharp
 // Views/MainWindow.axaml.cs
+DbManual.RulesPath = Path.Combine(Path.GetDirectoryName(StartOptions.Current.SettingsPath), "rules.json");
 ViewModel = new MainWindowVM(new DialogWrapper(), new FinancistoDatabaseFactory(), new EntityReader(),
-                             new BackupWriter(), notificator /* ToastNotifierWrapper */, new UpdateService());
+                             new BackupWriter(), notificator /* ToastNotifierWrapper */,
+                             new BankHelperFactory(), new UpdateService());
 ```
+
+Import rules are not part of the backup; `rules.json` lives next to `Settings.dat` (see [Bank statement import](#bank-statement-import-wizards)).
 
 `MainWindow_Loaded` (code-behind) runs these steps:
 1. `SettingsService.Current.Load()` reads the Cogwheel JSON settings from `Settings.dat` next to the exe, or from `FINANCISTO_SETTINGS_PATH` (see `StartOptions`). If the file is corrupt or missing, it falls back to defaults and shows a warning toast.
@@ -37,7 +42,7 @@ ViewModel = new MainWindowVM(new DialogWrapper(), new FinancistoDatabaseFactory(
 public class MainWindowVM : BindableBase
 {
     MainWindowVM(IDialogWrapper, IFinancistoDatabaseFactory, IEntityReader, IBackupWriter,
-                 IToastNotifierWrapper, UpdateService);
+                 IToastNotifierWrapper, IBankHelperFactory, UpdateService);
 
     BindableBase CurrentPage { get; private set; }
     bool IsLoading { get; }            // disables the menu and sidebar, shows the loading indicator
@@ -50,6 +55,7 @@ public class MainWindowVM : BindableBase
     IAsyncCommand<Type> MenuNavigateCommand;
     IAsyncCommand OpenBackupCommand;
     IAsyncCommand SaveBackupCommand, SaveBackupAsDbCommand;         // CanExecute: a backup is loaded
+    IAsyncCommand<WizardTypes> ImportCommand;                       // Import menu; CanExecute: a backup is loaded
     IAsyncCommand OpenPanelCommand;
 
     Task OpenBackup(string backupPath);   // also used by the startup auto-load
@@ -77,6 +83,7 @@ public class MainWindowVM : BindableBase
 | `CurrencyModel` | `CurrenciesPageVM` | `CurrenciesPageView` | IconDollarSign |
 | `ExchangeRateModel` | `ExchangeRatesPageVM` | `ExchangeRatesPageView` | IconArrowTrendUp |
 | `BlotterModel` | `BlotterPageVM` | `BlotterPageView` | IconReceipt |
+| `RuleModel` | `RulesPageVM` | `RulesPageView` | IconBoltLightning |
 | `SettingsPageVM` (bottom list) | `SettingsPageVM` | `SettingsPageView` | IconGear |
 
 ### Adding a new page
@@ -91,9 +98,9 @@ public class MainWindowVM : BindableBase
 1. `entityReader.ParseBackupFileAsync(path)` runs on a worker thread.
 2. The entities are imported into a **new** database (`dbFactory.CreateDatabase()` + `ImportEntitiesAsync`). If that fails, the new database is disposed and the currently loaded one stays intact.
 3. `db` is swapped, `_pages.Clear()` is called, and the old database is disposed. Pages are recreated lazily on the next navigation, bound to the new `db`.
-4. `_backupVersion` and `_entityColumnsOrder` are stored (saving needs both), and CanExecute is raised on the save commands.
+4. `_backupVersion` and `_entityColumnsOrder` are stored (saving needs both), and CanExecute is raised on the save and import commands.
 5. Keyless entities (`CCardClosingDate`, `CategoryAttribute`, `TransactionAttribute`) are kept in `keyLessEntities`. `ImportEntitiesAsync` inserts only `IIdentity` rows with `Id > 0`, so these rows never reach the DB and are written back as-is on save.
-6. `DbManual.ResetAllDatabaseManuals()` and `DbManual.SetupAsync(db)` run, the app navigates to the Blotter and shows a toast. If `Settings.ExchangeRates.UpdateOnStart` is set, exchange rates are refreshed.
+6. `DbManual.ResetAllDatabaseManuals()`, `DbManual.SetupAsync(db)` and `DbManual.LoadRulesAsync()` run, the app navigates to the Blotter and shows a toast. If `Settings.ExchangeRates.UpdateOnStart` is set, exchange rates are refreshed.
 
 ### Backup save
 
@@ -145,12 +152,13 @@ public abstract class EntityBaseVM<T> : BaseViewModel<T>   // Common; gives db, 
 | `ProjectsPageVM` | `TagBasePageVM<ProjectModel>` | same | Delete not implemented. |
 | `TagsPageVM` | `TagBasePageVM<TagModel>` | same | **Bug:** `OnAdd` calls `OpenTagDialogAsync<Project>(0)` (creates a Project). Delete not implemented. |
 | `ExchangeRatesPageVM` | `EntityBaseVM<ExchangeRateModel>` | none | Read-only list with From/To currency pickers. `RefreshExchangeRatesCommand` downloads rates via `Services/ExchangeRatesService` (Monobank / OpenExchangeRates / FreeCurrencyRates, chosen in settings). Add/Edit/Delete throw `NotImplementedException`. |
+| `RulesPageVM` | `EntityBaseVM<RuleModel>` | `RuleDialog` / `RuleDialogVM` / `RuleDto` | Import rules from `DbManual.Rules` (not the DB). Add/Edit/Delete save `rules.json` right away; `RefreshData` re-reads it and calls `RuleModel.UpdateTitles()`. Delete has no confirmation (as in Financier). |
 | `SettingsPageVM` | `BindableBase, IDataRefresh` | — | Edits a clone of `SettingsService.Current.Settings` (`SettingsDto`: General + ExchangeRates). Save, browse backup dir, check for updates (`UpdateService`, Onova + GitHub releases). The OpenExchangeRates app id is DPAPI-encrypted (`Helpers/SettingsProtection`). |
 
 ### BlotterPageVM details
 
 - **Filters** (bound from `BlotterPageView` to Common's filter controls): `PeriodType`, `From`/`To` (`DateTime?`), `Account`, `Category`, `Payee`, `Project`, `Location` (models from `DbManual`; the "all" entry has `Id == null`), and `Tags` (`ObservableCollection<TagModel>`, OR-matched with a substring `Contains`).
-- **RefreshData** builds an `Expression<Func<BlotterTransactions,bool>>` with `ExpressionExtensions.And/Or`, queries the `v_blotter` view through `FindManyAndProjectAsync` and projects into `BlotterModel` (currencies and projects resolved from `DbManual.CurrencyIds`/`ProjectIds`), ordered by date descending.
+- **RefreshData** builds an `Expression<Func<BlotterTransactions,bool>>` with `ExpressionExtensions.And/Or` and passes it to `internal static QueryAsync(db, predicate)`, which queries the `v_blotter` view through `FindManyAndProjectAsync` and projects into `BlotterModel` (currencies and projects resolved from `DbManual.CurrencyIds`/`ProjectIds`); the rows are ordered by date descending. The import also uses `QueryAsync` for the accounts' last transactions.
 - **Edit/Duplicate** dispatch on `BlotterModel.Type == "Transfer"`. Duplicate sets `Id = 0` on the parent and every split part.
 - **Save transaction:** `MapperHelper.MapTransaction` → split parts get `Parent`, `FromAccountId` and `ParentAccountId` from the parent. Sub-transfers use `MapperHelper.MapTransfer`; they are **dropped when the parent has a foreign original currency**. Then `InsertOrUpdateAsync(all)`, delete removed parts, `RebuildAccountBalanceAsync` for the from-account and every to-account, and `RefreshData`.
 - **Delete** removes the row and its split parts (`Id == id || ParentId == id`), then rebuilds the affected balances.
@@ -164,6 +172,7 @@ public interface IDialogWrapper
 {
     Task<object?> ShowDialogAsync<T>(DialogBaseVM context, double height, double width, string title = null)
         where T : UserControl, new();
+    Task<object?> ShowWizardAsync(WizardBaseVM context);                       // WizardWindow; output when finished, else null
     Task<string> OpenFileDialogAsync(string fileExtension);                    // "" when cancelled
     Task<string> SaveFileDialogAsync(string fileExtension, string defaultPath = "");
     Task<string> OpenFolderDialogAsync(string defaultPath = "");
@@ -215,8 +224,9 @@ All in `src/Financisto.Desktop/ViewModels/Dialogs/`. Views are in `Views/Dialogs
 | `LocationDialogVM : TagDialogVM` | `LocationDialog` | `LocationDto` | — |
 | `CurrencyDialogVM` | `CurrencyDialog` | `CurrencyDto` | — |
 | `NewCurrencyDialogVM` | `NewCurrencyDialog` | returns `CurrencyTemplateItem` | — |
+| `RuleDialogVM(RuleDto)` | `RuleDialog` (420×440) | `RuleDto` | condition valid (description set, or a real MCC title) && at least one action (category/location/project/payee) |
 
-`TransactionDialogVM` opens nested dialogs for split parts: `AddSubTransactionCommand` / `EditSubTransactionCommand` → `SubTransactionDialog`, and `AddSubTransferCommand` → `TransferDialog` with `IsSubTransaction = true`. It edits working copies and copies them back on save.
+`TransactionDialogVM` opens nested dialogs for split parts: `AddSubTransactionCommand` / `EditSubTransactionCommand` → `SubTransactionDialog`, and `AddSubTransferCommand` → `TransferDialog` with `IsSubTransaction = true`. It edits working copies and copies them back on save. `OpenRecipesDialogCommand` (receipt button in the split section) runs the recipes wizard and appends its `TransactionDto`s as split parts.
 
 **From-account balance:** right before opening `TransactionDialog`/`TransferDialog`, `BlotterPageVM` reads `db.GetLastRunningBalancesAsync()` (account id → last running balance) and passes it to the dialog VM; nothing is cached between dialogs. The VM exposes `FromAccountBalance` (`BlotterUtils.SetAmountText(FromAccountCurrency, balance, false)`, the accounts grid's `AmountTitle` format; `null` for the empty entry or when no balances were passed) and `IsFromAccountBalanceNegative`, re-raised when the DTO's `FromAccount` changes. The views show "Balance: …" under the From account combobox (row height `Auto`, combobox + balance in a StackPanel), DarkGreen / bold DarkRed via the shared `balanceAmount` / `StackPanel.accountBalance` styles in Common `Assets/Styles.axaml` (the accounts grid total uses `balanceAmount` too). Split-part transfers get no balances (small dialog, fixed parent account). When editing, the balance already includes the transaction being edited.
 
@@ -232,6 +242,7 @@ All in `src/Financisto.Desktop/Data/` (namespace `Financisto.Desktop.Data`), Pri
 - **TagDto:** Title, IsActive, and aliases support: `SupportsAliases` (the entity is `IHasAliases`), `Aliases` (one per line), `ApplyAliases(entity)`. **LocationDto : TagDto** adds Address.
 - **CurrencyDto:** Id, Title, Name, Symbol, IsDefault, UpdateExchangeRate, Decimals, DecimalSeparator, GroupSeparator, `SymbolFormat` (enum), NumberFormat.
 - **SettingsDto** (`SettingsDTO.cs`) holds `SettingsGeneralDto` (CheckForUpdatesOnStart, DefaultBackupDir, Language, CurrentAppTheme, ThemeVariant) and `SettingsExchangeRates` (Provider, OpenExchangeRatesProviderAppId, UpdateOnStart).
+- **RuleDto:** Condition, Description, MCCCategory, IsActive, Created, and the actions CategoryId/Category, LocationId, PayeeId, ProjectId (`int?`, null = leave unchanged). Built from `RuleModel`; page VMs copy it back into a new `RuleModel`.
 
 `MapperHelper.MapTransaction(dto, tr)` writes FromAmount/OriginalFromAmount with the sign from `IsAmountNegative`, nulls navigation properties, clears `ProjectId` for a split parent, and joins `SelectedTags` with `TagsDelimiter`. `MapperHelper.MapTransfer(dto, tr)` sets `FromAmount = -|x|`, `ToAmount` (own amount when the currencies differ), `OriginalCurrencyId`/`OriginalFromAmount` when the currencies differ, and `CategoryId = 0`.
 
@@ -241,6 +252,71 @@ All in `src/Financisto.Desktop/Data/` (namespace `Financisto.Desktop.Data`), Pri
 - `ExchangeRatesService` loads rates from Monobank, OpenExchangeRates (encrypted app id) or FreeCurrencyRates as `CurrencyExchangeRate` entities.
 - `UpdateService` wraps Onova `UpdateManager` + `GithubPackageResolver("vov4uk","Financisto.Desktop", "Financisto.Desktop.<rid>.zip")`.
 - `AccountsTotalService` + `LatestExchangeRates` compute dashboard totals per currency and in the home currency.
+
+## Bank statement import (`Wizards/`)
+
+Ported from Financier WPF (`Wizards/`, `Helpers/BankHelper/`, `Pages/RulesVM`, `Pages/Dialogs/RuleControl`). Financier's tests for this code (parsers against its `Assets` fixtures, wizard flows, rules) live in `src/Tests/Financisto.Desktop.Tests` (`Wizards/`, `Pages/Dialog/RuleDialogVMTest`).
+
+### Flow (`MainWindowVM.OpenImportWizardAsync(WizardTypes)`)
+
+1. The **Import** menu in `MainWindow.axaml` has one `MenuItem.bankImport` per `WizardTypes` value (`Tag` = the format shown on the right, since A-Bank has two). All bind `ImportCommand` with the enum as `CommandParameter`.
+2. `OpenFileDialogAsync(ext)` — the extension is the enum's `[Description]` (`csv`/`xlsx`/`pdf`).
+3. `IBankHelperFactory.CreateBankHelper(type).ParseReport(file)` runs on a worker thread. A parse error is logged and shows the `import_failed` warning toast (no crash).
+4. `GetLastTransactionsAsync()`: account id → its latest `v_blotter` row (from `Account.LastTransactionId`; a split part maps to its split parent), for the wizard's hint.
+5. `ShowWizardAsync(new MonoWizardVM(bankTitle, rows, lastTransactions, dialogWrapper))` returns `List<Transaction>` (`Id = 0`).
+6. `ImportTransactionsAsync` (worker thread): skips rows whose `(FromAccountId, DateTime, FromAmount)` already exists, `db.AddTransactionsAsync`, `RebuildAccountBalanceAsync` for every from/to account, `DbManual` Account cache reset + setup. Then the current page refreshes and the `import_result` / `import_result_with_duplicates` toast shows.
+
+### Parsers (`Helpers/BankHelper/`, `IBankHelper { BankTitle; ParseReport(path) }`)
+
+| `WizardTypes` | Class | Format / library |
+|---|---|---|
+| Monobank | `MonobankHelper` | CSV (CsvHelper) mapped straight onto `BankTransaction` (`[Name]` with English + Ukrainian headers) |
+| Revolut | `RevolutHelper` | CSV, `Model/RevolutRow` (English + Polish headers) |
+| ABankExcel / Privat | `AbankExcelHelper` / `PrivatHelper` | XLSX via MiniExcel → CSV → `AbankRow` / `PrivatRow` → `MapperHelper.ToBankTransaction` |
+| ABank / Pumb / Pireus | `ABankHelper` / `PumbHelper` / `PireusHelper` : `BankPdfHelperBase` | PDF tables via Tabula (+PdfPig) → CSV → row model |
+| Pko | `PkoHelper` | PDF text via Tabula, parsed with regexes (Polish markers such as `Saldo końcowe`) |
+
+`BankTransaction` (Monobank's row layout) is the common output. Amounts are `double` in currency units; the wizard converts to minor units.
+
+### Wizard framework
+
+- `WizardBaseVM` (Prism `BindableBase`): `Pages`, `CurrentPage`, `MoveNextCommand` (CanExecute = `CurrentPage.IsValid()`; on the last page it finishes), `MovePreviousCommand`, `CancelCommand`, `IsOnLastPage`, `Title` (= page title), `RequestClose(output, finished)`. Subclasses implement `CreatePages`, `Before/AfterCurrentPageUpdated` (hand data from one page to the next) and `OnRequestClose` (build the output). The base keeps `WizardPageBaseVM.IsCurrentPage` in sync.
+- `WizardWindow` maps page VMs to views in `Window.DataTemplates` (checked before the app-wide `ViewLocator`, which matches every `BindableBase`). **All page views stay alive** in an `ItemsControl` over `Pages`, each with `IsVisible="{Binding IsCurrentPage}"`: a view swapped out of a `ContentControl` has its DataContext cleared, its DataGrid's `ItemsSource` empties first, and the still-attached `SelectedItem` binding writes `null` into the page (the chosen start transaction was lost on Back/Next).
+
+### Import wizard (`MonoWizard/`, used for every bank)
+
+| Page | VM | Content |
+|---|---|---|
+| 1 | `Page1VM` | Pick the account (`DbManual.Account`); preselects an active account whose title contains the bank name. |
+| 2 | `Page2VM` | Statement rows; preselects the row whose balance equals the account balance. Only rows **after** the selected one are imported (none selected: after 2017-11-17). Shows the account balance and last transaction. Delete key removes a row. |
+| 3 | `Page3VM` | Editable grid of `FinancistoTransactionDto` rows: from/to account (transfers), category, location, project, payee, note. Rows are pre-filled from the description (location title/address, category title, `*1234` card number → account `Number`) and then by the active rules. Date cell: orange = transfer to an account in another currency (use **Transfer** to enter the other amount), pink = not exactly one of from account / to account / category. **New rule** adds a rule from the selected row and re-applies all rules. |
+
+`MonoWizardVM.OnRequestClose` turns rows into `Transaction`s: to-account set → transfer out of the imported account, from-account set → transfer into it, else an expense/income with the category.
+
+### Recipes wizard (`RecipesWizard/`)
+
+`RecipesVM(totalAmount)`: page 1 takes pasted receipt text (OCR); **Highlight** (`RecipiesHelper.FormatText`) puts each amount (`RecipesFormatter.Pattern`: a number followed by ` A`/`-A`/`Б`/`ГБ` …) at the end of its own line, and the preview (`RecipesFormatter` converter → TextBlock inlines; Avalonia has no RichTextBox) marks amounts yellow and other numbers green. Page 2 edits the parsed rows (category auto-detected from words of the line, amount, note, project). Output: `List<TransactionDto>` split parts. Lines split on any line ending.
+
+### Rules (`DbManual.Rules`, `RuleModel`)
+
+- Stored in `rules.json` (Newtonsoft, enums as numbers — the same file format as Financier, so a Financier `rules.json` can be copied next to `Settings.dat`).
+- Condition: `DescriptionContains` / `DescriptionMatches` (case-insensitive, on the row note) or `MCC` (the row's MCC code is in the `Mcc` category's `[MccCodes]`). Every matching active rule is applied in list order, so for each action field the last match wins.
+- Loaded on backup open and by the Rules page; saved by the Rules page and the import wizard's **New rule** after each change. Nothing is saved on a plain refresh (Financier did, which could overwrite the file with an empty list).
+
+## Tests (`src/Tests/`)
+
+Ported from the Financier WPF repo (xunit v3, AutoFixture, Moq). In `Financisto.Desktop.slnx` under `/Tests/`:
+
+- `Financisto.Tests.Common`: shared fixtures (`AutoMoqData`, `PredefinedData`, `JsonDeserializer` for backup-style JSON rows).
+- `Financisto.Adapter.Tests`, `Financisto.DataAccess.Tests` (in-memory SQLite through `FinancistoDatabase`), `Financisto.Common.Test` (assembly `Financisto.Converters.Tests`: converter tests; the visibility converters return `bool` for `IsVisible`).
+- `Financisto.Desktop.Tests`: VMs, wizards, bank parsers (`Assets/` statements copied to the output dir), `ExchangeRatesService`. It `ProjectReference`s the self-contained win-x64 `Financisto.Desktop` exe, so it has to be `SelfContained` + `win-x64` too (NETSDK1151).
+- `Financisto.Reports.Tests` is a leftover from Financier and is **not** in the solution: Financisto has no Reports project.
+
+**Running:** `dotnet test` doesn't work here (Microsoft.Testing.Platform reports "Zero tests ran", also in the WPF repo). Build, then run the xunit exe: `src/Tests/<project>/bin/Debug/net10.0[/win-x64]/<AssemblyName>.exe`, optionally `-class Financisto.Desktop.Tests.Pages.BlotterVMIntegrationTests`.
+
+**Test setup in `Financisto.Desktop.Tests/TestEnvironment.cs`** (module initializers): `FINANCISTO_SETTINGS_PATH` and `DbManual.RulesPath` point to a scratch dir (`SettingsService.Current` is a static singleton that saves to disk); a background thread owns and pumps `Dispatcher.UIThread`, because `MainWindowVM` navigates through it and would hang otherwise (no Avalonia.Headless needed).
+
+**Porting notes:** WPF's `MainWindowVM.Blotter/Locations/...` are gone; page VMs are built directly (`new BlotterPageVM(db, dialogMock.Object)`), and `MainWindowVM.ImportCommand`/`SaveBackup*` stay disabled until `OpenBackup` ran (`MainWindowVMTest.GetLoadedFinancistoVM`). `IDialogWrapper` is async (`ShowDialogAsync<TDialog>(vm, height, width, title)` with `ReturnsAsync`), `SaveCommand`/`CancelCommand` are toolkit `RelayCommand`s (`CanExecute(null)`), import results are toasts, not message boxes. Running-balance rows store the transaction time, so integration tests zero `Datetime` before comparing (the DTO fixtures carry a `+02:00` offset).
 
 ## Leftovers (unused scaffold)
 

@@ -1,0 +1,135 @@
+<UserControl
+    x:Class="Financisto.Desktop.Wizards.MonoWizard.View.Page2"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:conv="using:Financisto.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:Financisto.Desktop.Wizards.MonoWizard.ViewModel"
+    xmlns:wizards="using:Financisto.Desktop.Wizards"
+    d:DesignHeight="300"
+    d:DesignWidth="900"
+    x:DataType="vm:Page2VM"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <conv:AmountConverter x:Key="AmountConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <UserControl.Styles>
+        <Style Selector="TextBlock.number">
+            <Setter Property="Margin" Value="12,0" />
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </UserControl.Styles>
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
+        <TextBlock Grid.Row="0" FontWeight="Bold">
+            <TextBlock.Text>
+                <MultiBinding Converter="{StaticResource localizedFormatConverter}">
+                    <Binding Path="[selected_account_balance_format]" Source="{x:Static loc:LocalizationService.Instance}" />
+                    <Binding Path="MonoAccount?.Title" />
+                    <Binding
+                        Converter="{StaticResource AmountConverter}"
+                        ConverterParameter="false"
+                        Path="MonoAccount?.TotalAmount" />
+                    <Binding Path="MonoAccount?.CurrencyName" />
+                </MultiBinding>
+            </TextBlock.Text>
+        </TextBlock>
+        <!--  Hidden when the account has no transactions yet  -->
+        <TextBlock
+            Grid.Row="1"
+            FontWeight="Bold"
+            IsVisible="{Binding LastAccountTransaction, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <TextBlock.Text>
+                <MultiBinding Converter="{StaticResource localizedFormatConverter}">
+                    <Binding Path="[last_transaction_format]" Source="{x:Static loc:LocalizationService.Instance}" />
+                    <Binding Path="LastAccountTransaction?.TransactionTitle" />
+                    <Binding Path="LastAccountTransaction?.AmountTitle" />
+                </MultiBinding>
+            </TextBlock.Text>
+        </TextBlock>
+        <TextBlock
+            Grid.Row="2"
+            Margin="0,4"
+            FontSize="12"
+            Text="{loc:Translate Key=please_select_transaction}"
+            TextWrapping="Wrap" />
+        <DataGrid
+            x:Name="TransactionsGrid"
+            Grid.Row="3"
+            AutoGenerateColumns="False"
+            IsReadOnly="True"
+            ItemsSource="{Binding AllTransactions}"
+            SelectedItem="{Binding StartTransaction}"
+            SelectionMode="Single">
+            <DataGrid.KeyBindings>
+                <KeyBinding
+                    Command="{Binding DeleteCommand}"
+                    CommandParameter="{Binding #TransactionsGrid.SelectedItem}"
+                    Gesture="Delete" />
+            </DataGrid.KeyBindings>
+            <DataGrid.Columns>
+                <DataGridTextColumn Binding="{Binding Date, StringFormat='yyyy.MM.dd HH:mm:ss', Mode=OneWay}" Header="{loc:Translate Key=date}" />
+                <DataGridTemplateColumn Header="{loc:Translate Key=amount}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="wizards:BankTransaction">
+                            <TextBlock Classes="number" Text="{Binding CardCurrencyAmount, StringFormat=F2}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="{loc:Translate Key=operation_amount}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="wizards:BankTransaction">
+                            <TextBlock Classes="number">
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="{}{0:F2} {1}">
+                                        <Binding Path="OperationAmount" />
+                                        <Binding Path="OperationCurrency" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="{loc:Translate Key=exchange_rate}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="wizards:BankTransaction">
+                            <TextBlock Classes="number" Text="{Binding ExchangeRate, StringFormat=F2}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="{loc:Translate Key=commission}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="wizards:BankTransaction">
+                            <TextBlock Classes="number" Text="{Binding Commission, StringFormat=F2}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="{loc:Translate Key=cashback}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="wizards:BankTransaction">
+                            <TextBlock Classes="number" Text="{Binding Cashback, StringFormat=F2}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="{loc:Translate Key=balance}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="wizards:BankTransaction">
+                            <TextBlock Classes="number" Text="{Binding Balance, StringFormat=F2}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn
+                    Width="*"
+                    Binding="{Binding Description}"
+                    Header="{loc:Translate Key=description}" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

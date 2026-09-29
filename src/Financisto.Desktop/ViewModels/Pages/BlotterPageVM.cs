@@ -469,8 +469,6 @@ namespace Financisto.Desktop.ViewModels.Pages
 
         protected override async Task RefreshData()
         {
-            using var uow = db.CreateUnitOfWork();
-            var repo = uow.GetRepository<BlotterTransactions>();
             var fromUnix = UnixTimeConverter.ConvertBack(From ?? DateTime.MinValue.ToLocalTime());
             var toUnix = UnixTimeConverter.ConvertBack(To ?? DateTime.MaxValue.ToLocalTime());
 
@@ -514,7 +512,20 @@ namespace Financisto.Desktop.ViewModels.Pages
                 predicate = predicate.And(tagsPredicate);
             }
 
-            var items = await repo.FindManyAndProjectAsync(
+            var items = await QueryAsync(db, predicate);
+
+            if (items != null)
+            {
+                Entities = new System.Collections.ObjectModel.ObservableCollection<BlotterModel>(items.OrderByDescending(x => x.Datetime).ThenByDescending(x => x.Id));
+            }
+        }
+
+        /// <summary>Blotter rows (the <c>v_blotter</c> view) matching <paramref name="predicate"/>, unordered.</summary>
+        internal static async Task<List<BlotterModel>> QueryAsync(IFinancistoDatabase db, Expression<Func<BlotterTransactions, bool>> predicate)
+        {
+            using var uow = db.CreateUnitOfWork();
+            var repo = uow.GetRepository<BlotterTransactions>();
+            return await repo.FindManyAndProjectAsync(
                 predicate: predicate,
                 projection: x => new BlotterModel
                 {
@@ -543,11 +554,6 @@ namespace Financisto.Desktop.ViewModels.Pages
                     ToAccountCurrency = x.ToAccountCurrencyId == null ? default : DbManual.CurrencyIds.GetValueOrDefault(x.ToAccountCurrencyId.Value),
                     OriginalCurrency = x.OriginalCurrencyId == null ? default : DbManual.CurrencyIds.GetValueOrDefault(x.OriginalCurrencyId.Value)
                 });
-
-            if (items != null)
-            {
-                Entities = new System.Collections.ObjectModel.ObservableCollection<BlotterModel>(items.OrderByDescending(x => x.Datetime).ThenByDescending(x => x.Id));
-            }
         }
     }
 }

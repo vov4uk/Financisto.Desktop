@@ -516,6 +516,9 @@
   <data name="recipes_instructions_line1" xml:space="preserve">
     <value>Вставте текст рецепту. Зробіть фото рецепту та розберіть текст за допомогою Google Lens чи іншого OCR. Я шукатиму числа з символом товару.</value>
   </data>
+  <data name="recipe_wizard_total_format" xml:space="preserve">
+    <value>Разом: {0:F2}   Розраховано: {1:F2}   Різниця: {2:F2}</value>
+  </data>
   <data name="recipes_instructions_line2" xml:space="preserve">
     <value>Наприклад: "123.45 A", "-54,32-A", "100 Б", "123.01 a"</value>
   </data>
@@ -563,6 +566,9 @@
   </data>
   <data name="import_result" xml:space="preserve">
     <value>Імпортовано {0} операцій.</value>
+  </data>
+  <data name="import_failed" xml:space="preserve">
+    <value>Не вдалося прочитати файл виписки {0}.</value>
   </data>
   <data name="import_result_with_duplicates" xml:space="preserve">
     <value>Імпортовано {0} операцій. Пропущено {1} дублікатів.</value>

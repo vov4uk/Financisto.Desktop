@@ -1,0 +1,35 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Reflection;
+using Financisto.DataAccess.Data;
+using Newtonsoft.Json.Serialization;
+
+namespace Financisto.Tests.Common
+{
+    public class ColumnJsonPropertyResolver<T> : DefaultContractResolver
+        where T : Entity, new()
+    {
+        private Dictionary<string, string> PropertyMappings { get; set; }
+
+        public ColumnJsonPropertyResolver()
+        {
+            this.PropertyMappings = new Dictionary<string, string>();
+            foreach (PropertyInfo property in typeof(T).GetProperties())
+            {
+                ColumnAttribute column = (Attribute.GetCustomAttribute(property, typeof(ColumnAttribute)) as ColumnAttribute)!;
+                if (column != null)
+                {
+                    PropertyMappings.Add(property.Name, column.Name!);
+                }
+            }
+        }
+
+        protected override string ResolvePropertyName(string propertyName)
+        {
+            string resolvedName = null!;
+            var resolved = this.PropertyMappings.TryGetValue(propertyName, out resolvedName!);
+            return (resolved) ? resolvedName : base.ResolvePropertyName(propertyName);
+        }
+    }
+}

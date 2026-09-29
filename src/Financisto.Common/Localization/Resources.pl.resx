@@ -516,6 +516,9 @@
   <data name="recipes_instructions_line1" xml:space="preserve">
     <value>Wklej tekst przepisu. Zrób zdjęcie przepisu i przeanalizuj tekst za pomocą Google Lens lub innego OCR. Będę szukać liczb z symbolem artykułu.</value>
   </data>
+  <data name="recipe_wizard_total_format" xml:space="preserve">
+    <value>Suma: {0:F2}   Obliczono: {1:F2}   Różnica: {2:F2}</value>
+  </data>
   <data name="recipes_instructions_line2" xml:space="preserve">
     <value>Na przykład: "123.45 A", "-54,32-A", "100 Б", "123.01 a"</value>
   </data>
@@ -563,6 +566,9 @@
   </data>
   <data name="import_result" xml:space="preserve">
     <value>Zaimportowano {0} transakcji.</value>
+  </data>
+  <data name="import_failed" xml:space="preserve">
+    <value>Nie udało się odczytać pliku wyciągu {0}.</value>
   </data>
   <data name="import_result_with_duplicates" xml:space="preserve">
     <value>Zaimportowano {0} transakcji. Pominięto {1} duplikatów.</value>

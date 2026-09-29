@@ -8,12 +8,15 @@ using System.Threading.Tasks;
 using Financisto.Common.Attribute;
 using Financisto.Common.Model;
 using Financisto.DataAccess.Abstractions;
+using Newtonsoft.Json;
 
 namespace Financisto.Common.Entities
 {
     [ExcludeFromCodeCoverage]
     public static class DbManual
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         private static List<AccountFilterModel> _accounts;
         private static List<LocationModel> _location;
         private static List<CategoryModel> _category;
@@ -24,6 +27,7 @@ namespace Financisto.Common.Entities
         private static List<TagModel> _tag;
         private static List<YearMonths> _yearMonths;
         private static List<Years> _years;
+        private static List<RuleModel> _rules = new List<RuleModel>();
         private static Dictionary<Mcc, int[]> _mccEnums;
         private static Dictionary<string, Mcc> _mccTitles;
         private static Dictionary<int, Mcc> _mccCodes;
@@ -207,6 +211,12 @@ ORDER  BY 1 DESC ");
 
         public static List<LocationModel> Location => _location ?? new();
 
+        /// <summary>Import rules; not part of the backup, persisted in <see cref="RulesPath"/>.</summary>
+        public static List<RuleModel> Rules => _rules;
+
+        /// <summary>The rules.json file. The desktop app points it next to its settings file.</summary>
+        public static string RulesPath { get; set; } = Path.Combine(AppContext.BaseDirectory, "rules.json");
+
         public static Dictionary<Mcc, int[]> MCCEnums
         {
             get
@@ -327,6 +337,39 @@ ORDER  BY 1 DESC ");
             }
         }
 
+        public static async Task LoadRulesAsync()
+        {
+            try
+            {
+                if (File.Exists(RulesPath))
+                {
+                    string rulesJson = await File.ReadAllTextAsync(RulesPath);
+                    var rules = JsonConvert.DeserializeObject<List<RuleModel>>(rulesJson);
+                    if (rules?.Any() == true)
+                    {
+                        _rules = rules;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _rules = new List<RuleModel>();
+                Logger.Error(ex, "Error occurred while loading rules.");
+            }
+        }
+
+        public static async Task SaveRulesAsync()
+        {
+            string directory = Path.GetDirectoryName(RulesPath);
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            string rulesJson = JsonConvert.SerializeObject(_rules);
+            await File.WriteAllTextAsync(RulesPath, rulesJson);
+        }
+
         internal static void SetupTests(List<CategoryModel> categories)
         {
             _category = categories;
@@ -356,6 +399,11 @@ ORDER  BY 1 DESC ");
         internal static void SetupTests(List<ProjectModel> pj)
         {
             _project = pj;
+        }
+
+        internal static void SetupTests(List<RuleModel> rl)
+        {
+            _rules = rl;
         }
 
         private static void InitializaMccCodes()

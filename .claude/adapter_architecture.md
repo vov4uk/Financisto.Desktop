@@ -113,7 +113,7 @@ To customize a column, implement `IPropertyConverter { Type PropertyType; object
 
 ## Testing / verification
 
-There are no test projects in this repo. To check round-trip fidelity, use a scratch console app (outside the repo, in the scratchpad) that references Adapter + DataAccess:
+`src/Tests/Financisto.Adapter.Tests` covers the reader, writer and entity extensions; `BackupWriterTests` round-trips `Assets/min.backup` and compares the result with the golden text `Assets/min` (LF endings, accounts in `sort_order` order, no `sort_order` line except for accounts, so regenerate it from the writer's output when the format rules change on purpose). See `desktop_architecture.md` → "Tests" for how to run them. To check round-trip fidelity of the whole app flow, use a scratch console app (outside the repo, in the scratchpad) that references Adapter + DataAccess:
 1. Parse a backup, import it into `FinancistoDatabaseFactory().CreateDatabase()`.
 2. Replay `MainWindowVM.SaveBackup`'s collection.
 3. `GenerateBackupAsync`, gunzip both files and diff them.

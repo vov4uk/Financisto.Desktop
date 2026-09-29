@@ -4,6 +4,13 @@
     <File Path="Directory.Packages.props" />
     <File Path="README.md" />
   </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="src/Tests/Financisto.Adapter.Tests/Financisto.Adapter.Tests.csproj" />
+    <Project Path="src/Tests/Financisto.Common.Test/Financisto.Common.Test.csproj" />
+    <Project Path="src/Tests/Financisto.DataAccess.Tests/Financisto.DataAccess.Tests.csproj" />
+    <Project Path="src/Tests/Financisto.Desktop.Tests/Financisto.Desktop.Tests.csproj" />
+    <Project Path="src/Tests/Financisto.Tests.Common/Financisto.Tests.Common.csproj" />
+  </Folder>
   <Project Path="src/Financisto.Adapter/Financisto.Adapter.csproj" />
   <Project Path="src/Financisto.Common/Financisto.Common.csproj" />
   <Project Path="src/Financisto.DataAccess/Financisto.DataAccess.csproj" />

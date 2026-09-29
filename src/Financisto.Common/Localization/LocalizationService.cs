@@ -134,6 +134,7 @@ public sealed class LocalizationService : INotifyPropertyChanged
     public string delete => Get();
     public string transaction => Get();
     public string rule => Get();
+    public string rules => Get();
     public string location => Get();
     public string currency => Get();
     public string currencies => Get();
@@ -152,6 +153,7 @@ public sealed class LocalizationService : INotifyPropertyChanged
 
     public string import_result => Get();
     public string import_result_with_duplicates => Get();
+    public string import_failed => Get();
     public string saved_message => Get();
     public string latest_version => Get();
     public string update_available => Get();

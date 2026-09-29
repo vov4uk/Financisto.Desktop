@@ -54,9 +54,17 @@
         <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" />
         <PackageReference Include="MacBundle" />
         <PackageReference Include="Message.Avalonia" />
+        <PackageReference Include="MiniExcel" />
         <PackageReference Include="Onova" />
         <PackageReference Include="Optris.LoadingIndicators.Avalonia" />
         <PackageReference Include="System.Security.Cryptography.ProtectedData" />
+        <PackageReference Include="Tabula" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>Financisto.Desktop.Tests</_Parameter1>
+        </AssemblyAttribute>
     </ItemGroup>
 
     <ItemGroup>

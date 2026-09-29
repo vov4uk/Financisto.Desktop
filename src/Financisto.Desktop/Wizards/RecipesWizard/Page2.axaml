@@ -1,0 +1,141 @@
+<UserControl
+    x:Class="Financisto.Desktop.Wizards.RecipesWizard.View.Page2"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:conv="using:Financisto.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:entities="using:Financisto.Common.Entities"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:Financisto.Desktop.Wizards.RecipesWizard.ViewModel"
+    d:DesignHeight="300"
+    d:DesignWidth="900"
+    x:CompileBindings="False"
+    x:DataType="vm:Page2VM"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <conv:AmountConverter x:Key="AmountConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <UserControl.Styles>
+        <Style Selector="DataGridCell ComboBox">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="MinWidth" Value="160" />
+        </Style>
+    </UserControl.Styles>
+    <Grid RowDefinitions="Auto,Auto,*">
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto,Auto">
+            <TextBlock
+                Grid.Column="0"
+                VerticalAlignment="Center"
+                FontSize="12"
+                Text="{loc:Translate Key=please_select_category_project}" />
+            <Button
+                Grid.Column="1"
+                MinWidth="65"
+                Margin="2"
+                Command="{Binding TotalCommand}"
+                Content="{loc:Translate Key=total_label}"
+                ToolTip.Tip="{loc:Translate Key=calculate_totals}" />
+            <Button
+                Grid.Column="2"
+                MinWidth="65"
+                Margin="2"
+                Command="{Binding AddRowCommand}"
+                Content="{loc:Translate Key=add_row}"
+                ToolTip.Tip="{loc:Translate Key=add_new_transaction}" />
+            <Button
+                Grid.Column="3"
+                MinWidth="65"
+                Margin="2"
+                Command="{Binding DeleteRowCommand}"
+                CommandParameter="{Binding #MainGrid.SelectedItem}"
+                Content="{loc:Translate Key=delete_row}"
+                ToolTip.Tip="{loc:Translate Key=delete_row_tooltip}" />
+            <Button
+                Grid.Column="4"
+                MinWidth="65"
+                Margin="2"
+                Command="{Binding ClearAllNotesCommand}"
+                Content="{loc:Translate Key=clear_notes}"
+                ToolTip.Tip="{loc:Translate Key=clear_notes_tooltip}" />
+        </Grid>
+        <TextBlock
+            Grid.Row="1"
+            Margin="0,4"
+            HorizontalAlignment="Left"
+            Text="{Binding FormattedTotal}" />
+        <DataGrid
+            x:Name="MainGrid"
+            Grid.Row="2"
+            AutoGenerateColumns="False"
+            CanUserSortColumns="False"
+            ItemsSource="{Binding FinancistoTransactions}"
+            SelectionMode="Single">
+            <DataGrid.KeyBindings>
+                <KeyBinding
+                    Command="{Binding DeleteRowCommand}"
+                    CommandParameter="{Binding #MainGrid.SelectedItem}"
+                    Gesture="Delete" />
+            </DataGrid.KeyBindings>
+            <DataGrid.Columns>
+                <DataGridTextColumn
+                    Binding="{Binding Order}"
+                    Header="{loc:Translate Key=order}"
+                    IsReadOnly="True" />
+                <DataGridTemplateColumn Header="{loc:Translate Key=category}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ComboBox
+                                IsTextSearchEnabled="True"
+                                ItemTemplate="{StaticResource CategoryTemplate}"
+                                ItemsSource="{x:Static entities:DbManual.Category}"
+                                SelectedValue="{Binding CategoryId}"
+                                SelectedValueBinding="{Binding Id}"
+                                TextSearch.TextBinding="{Binding Title}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn MinWidth="120" Header="{loc:Translate Key=amount}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <NumericUpDown
+                                HorizontalContentAlignment="Right"
+                                FormatString="F2"
+                                Increment="0.01"
+                                ShowButtonSpinner="False"
+                                Value="{Binding FromAmount, Converter={StaticResource AmountConverter}, ConverterParameter=false}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn MinWidth="200" Header="{loc:Translate Key=note}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBox
+                                VerticalAlignment="Center"
+                                Classes="clearButton"
+                                Text="{Binding Note}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="{loc:Translate Key=project}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ComboBox
+                                IsTextSearchEnabled="True"
+                                ItemTemplate="{StaticResource IActive}"
+                                ItemsSource="{x:Static entities:DbManual.Project}"
+                                SelectedValue="{Binding ProjectId}"
+                                SelectedValueBinding="{Binding Id}"
+                                TextSearch.TextBinding="{Binding Title}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,255 @@
+<UserControl
+    x:Class="Financisto.Desktop.Wizards.MonoWizard.View.Page3"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:conv="using:Financisto.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:entities="using:Financisto.Common.Entities"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:Financisto.Desktop.Wizards.MonoWizard.ViewModel"
+    d:DesignHeight="300"
+    d:DesignWidth="1000"
+    x:CompileBindings="False"
+    x:DataType="vm:Page3VM"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <conv:AmountConverter x:Key="AmountConverter" />
+            <conv:UnixTimeConverter x:Key="DatetimeConverter" />
+            <conv:MccConverter x:Key="MccConverter" />
+            <conv:DifferentCurrencyConverter x:Key="DifferentCurrencyConverter" />
+            <conv:ImportRowBackgroundConverter x:Key="ImportRowBackgroundConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <UserControl.Styles>
+        <Style Selector="TextBlock.amount">
+            <Setter Property="Foreground" Value="YellowGreen" />
+        </Style>
+        <Style Selector="TextBlock.amount.negative">
+            <Setter Property="Foreground" Value="DarkRed" />
+        </Style>
+        <Style Selector="TextBlock.number">
+            <Setter Property="Margin" Value="12,0" />
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="DataGridCell ComboBox">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="MinWidth" Value="140" />
+        </Style>
+    </UserControl.Styles>
+    <Grid RowDefinitions="Auto,*">
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto,Auto">
+            <TextBlock
+                Grid.Column="0"
+                VerticalAlignment="Center"
+                FontSize="12"
+                Text="{loc:Translate Key=please_select_category_account}"
+                TextWrapping="Wrap" />
+            <Button
+                Grid.Column="1"
+                Margin="2"
+                Command="{Binding AddRuleCommand}"
+                CommandParameter="{Binding #MainGrid.SelectedItem}"
+                Content="{loc:Translate Key=new_rule}"
+                ToolTip.Tip="{loc:Translate Key=add_rule_tooltip}" />
+            <Button
+                Grid.Column="2"
+                Margin="2"
+                Command="{Binding DeleteCommand}"
+                CommandParameter="{Binding #MainGrid.SelectedItem}"
+                Content="{loc:Translate Key=delete_row}"
+                ToolTip.Tip="{loc:Translate Key=delete_row_tooltip}" />
+            <Button
+                Grid.Column="3"
+                Margin="2"
+                Command="{Binding ClearAllNotesCommand}"
+                Content="{loc:Translate Key=clear_notes}"
+                ToolTip.Tip="{loc:Translate Key=clear_notes_tooltip}" />
+            <!--  Enabled when the selected row is a transfer to/from an account in another currency  -->
+            <Button
+                Grid.Column="4"
+                Margin="2"
+                Command="{Binding TransferCommand}"
+                CommandParameter="{Binding #MainGrid.SelectedItem}"
+                Content="{loc:Translate Key=transfer}"
+                ToolTip.ShowOnDisabled="True"
+                ToolTip.Tip="{loc:Translate Key=transfer_tooltip}">
+                <Button.IsEnabled>
+                    <MultiBinding Converter="{StaticResource DifferentCurrencyConverter}">
+                        <Binding Path="#MainGrid.SelectedItem?.FromAccountId" />
+                        <Binding Path="#MainGrid.SelectedItem?.ToAccountId" />
+                        <Binding Path="#MainGrid.SelectedItem?.CategoryId" />
+                        <Binding Path="MonoAccount" />
+                    </MultiBinding>
+                </Button.IsEnabled>
+            </Button>
+        </Grid>
+        <DataGrid
+            x:Name="MainGrid"
+            Grid.Row="1"
+            Margin="0,4,0,0"
+            AutoGenerateColumns="False"
+            CanUserSortColumns="False"
+            ItemsSource="{Binding FinancistoTransactions}"
+            SelectionMode="Single">
+            <DataGrid.KeyBindings>
+                <KeyBinding
+                    Command="{Binding DeleteCommand}"
+                    CommandParameter="{Binding #MainGrid.SelectedItem}"
+                    Gesture="Delete" />
+            </DataGrid.KeyBindings>
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button
+                                Width="28"
+                                Height="28"
+                                Padding="0"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Command="{Binding $parent[DataGrid].DataContext.DeleteCommand}"
+                                CommandParameter="{Binding}"
+                                Content="x" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <!--  Orange: transfer in another currency; pink: not exactly one of From/To account and Category chosen  -->
+                <DataGridTemplateColumn Header="{loc:Translate Key=date}" IsReadOnly="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border>
+                                <Border.Background>
+                                    <MultiBinding Converter="{StaticResource ImportRowBackgroundConverter}">
+                                        <Binding Path="FromAccountId" />
+                                        <Binding Path="ToAccountId" />
+                                        <Binding Path="CategoryId" />
+                                        <Binding Path="$parent[DataGrid].DataContext.MonoAccount" />
+                                    </MultiBinding>
+                                </Border.Background>
+                                <TextBlock
+                                    Margin="6,0"
+                                    VerticalAlignment="Center"
+                                    Text="{Binding DateTime, Converter={StaticResource DatetimeConverter}}" />
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn
+                    Binding="{Binding MCC, Converter={StaticResource MccConverter}, Mode=OneWay}"
+                    Header="{loc:Translate Key=mcc}"
+                    IsReadOnly="True" />
+                <DataGridTemplateColumn Header="{loc:Translate Key=from_account}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ComboBox
+                                IsTextSearchEnabled="True"
+                                ItemTemplate="{StaticResource IActive}"
+                                ItemsSource="{Binding $parent[DataGrid].DataContext.Accounts}"
+                                SelectedValue="{Binding FromAccountId}"
+                                SelectedValueBinding="{Binding Id}"
+                                TextSearch.TextBinding="{Binding Title}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="{loc:Translate Key=category}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ComboBox
+                                IsTextSearchEnabled="True"
+                                ItemTemplate="{StaticResource CategoryTemplate}"
+                                ItemsSource="{x:Static entities:DbManual.Category}"
+                                SelectedValue="{Binding CategoryId}"
+                                SelectedValueBinding="{Binding Id}"
+                                TextSearch.TextBinding="{Binding Title}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="{loc:Translate Key=to_account}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ComboBox
+                                IsTextSearchEnabled="True"
+                                ItemTemplate="{StaticResource IActive}"
+                                ItemsSource="{Binding $parent[DataGrid].DataContext.Accounts}"
+                                SelectedValue="{Binding ToAccountId}"
+                                SelectedValueBinding="{Binding Id}"
+                                TextSearch.TextBinding="{Binding Title}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="{loc:Translate Key=amount}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock
+                                Classes="number amount"
+                                Classes.negative="{Binding IsAmountNegative}"
+                                Text="{Binding FromAmount, StringFormat=F2, Converter={StaticResource AmountConverter}, ConverterParameter=false}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="{loc:Translate Key=original}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Classes="number" Text="{Binding OriginalFromAmount, StringFormat=F2, Converter={StaticResource AmountConverter}, ConverterParameter=false}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="{loc:Translate Key=location}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ComboBox
+                                IsTextSearchEnabled="True"
+                                ItemTemplate="{StaticResource IActive}"
+                                ItemsSource="{x:Static entities:DbManual.Location}"
+                                SelectedValue="{Binding LocationId}"
+                                SelectedValueBinding="{Binding Id}"
+                                TextSearch.TextBinding="{Binding Title}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn MinWidth="200" Header="{loc:Translate Key=note}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBox
+                                VerticalAlignment="Center"
+                                Classes="clearButton"
+                                Text="{Binding Note}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="{loc:Translate Key=project}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ComboBox
+                                IsTextSearchEnabled="True"
+                                ItemTemplate="{StaticResource IActive}"
+                                ItemsSource="{x:Static entities:DbManual.Project}"
+                                SelectedValue="{Binding ProjectId}"
+                                SelectedValueBinding="{Binding Id}"
+                                TextSearch.TextBinding="{Binding Title}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="{loc:Translate Key=payee}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ComboBox
+                                IsTextSearchEnabled="True"
+                                ItemTemplate="{StaticResource IActive}"
+                                ItemsSource="{x:Static entities:DbManual.Payee}"
+                                SelectedValue="{Binding PayeeId}"
+                                SelectedValueBinding="{Binding Id}"
+                                TextSearch.TextBinding="{Binding Title}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

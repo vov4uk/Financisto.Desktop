@@ -516,6 +516,9 @@
   <data name="recipes_instructions_line1" xml:space="preserve">
     <value>Paste recipes text. Make recipes photo and parse text via Google Lens or other OCR. I'll look for numbers with article symbol.</value>
   </data>
+  <data name="recipe_wizard_total_format" xml:space="preserve">
+    <value>Total: {0:F2}   Current: {1:F2}   Diff: {2:F2}</value>
+  </data>
   <data name="recipes_instructions_line2" xml:space="preserve">
     <value>For example: "123.45 A", "-54,32-A", "100 Б", "123.01 a"</value>
   </data>
@@ -563,6 +566,9 @@
   </data>
   <data name="import_result" xml:space="preserve">
     <value>Imported {0} transactions.</value>
+  </data>
+  <data name="import_failed" xml:space="preserve">
+    <value>Could not read the {0} statement file.</value>
   </data>
   <data name="import_result_with_duplicates" xml:space="preserve">
     <value>Imported {0} transactions. Skipped {1} duplicates.</value>

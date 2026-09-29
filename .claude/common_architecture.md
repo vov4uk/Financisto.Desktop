@@ -65,6 +65,7 @@ All derive from `BaseModel` (an empty marker). Two ways they get filled:
 | `ProjectModel`, `TagModel : TagBaseModel` | `DbManual` SQL | `TagModel` + SortOrder |
 | `ExchangeRateModel` | `ExchangeRatesPageVM` | FromCurrencyId, ToCurrencyId, Date, `Rate` (double), From/To `CurrencyModel` |
 | `YearMonths`, `Years` | `DbManual` SQL over `v_report_transactions` | period pickers |
+| `RuleModel : IActive` (+ enum `RuleConditionType`: DescriptionContains, DescriptionMatches, MCC) | `rules.json` (Newtonsoft) | import rule: Id, Created, Condition, Description, `MCCCategory` (`Mcc`), IsActive, action ids `CategoryId`/`LocationId`/`PayeeId`/`ProjectId` (`int?`). `UpdateTitles()` fills the display-only `Title` (the actions, from `DbManual` lists) and `UserFirendlyDescription` (sic; the description or the MCC title). |
 | `TreeNode` (+ `[Header]`) | — | leftover from Financier's reports tree; currently unused |
 
 `IActive` (`int? Id`, `bool IsActive`, `string Title`) is what the shared `IActive` item template renders (inactive = different brush).
@@ -83,7 +84,8 @@ DbManual.ResetAllDatabaseManuals();         // null every DB-backed cache (on ba
 - **Index 0 of every list is an "empty/all" item** with `Id == null` (for Currencies, `Name = all_currencies`). Filters use it as "no filter", and real rows are usually `Where(x => x.Id > 0)`.
 - Static data: `MCCEnums`, `MCCTitles`, `MCCCodes` (from the `Mcc` enum attributes) and `AllCurrencies` (embedded `Assets/currencies.csv`, the currency template list).
 - XAML binds to the lists directly: `ItemsSource="{x:Static ent:DbManual.Account}"`.
-- There are no rules and no `rules.json` in this app (that was Financier).
+- **Import rules:** `Rules` (`List<RuleModel>`, never null) is file-backed, not DB-backed, so `ResetAllDatabaseManuals` keeps it. `LoadRulesAsync()` reads `RulesPath` (the desktop app sets it next to `Settings.dat`; default `AppContext.BaseDirectory/rules.json`) and replaces the list only when the file has rules (a missing file or `[]` keeps the current list; a corrupt file empties it and logs). `SaveRulesAsync()` writes the list (creating the folder). The JSON is Financier's format (Newtonsoft, enums as numbers).
+- `internal SetupTests(List<…>)` overloads (accounts, categories, currencies, locations, payees, projects, rules) let a test assembly named `Financisto.Desktop.Tests` seed the caches.
 
 ## Localization (`Localization/`)
 
@@ -122,13 +124,14 @@ Avalonia specifics: there is no `Visibility` enum, so "…ToVisibility" converte
 | `NullToBoolConverter` / `NullToVisibilityConverter` | object → `value != null` | MarkupExtensions |
 | `StringEmptyToVisibilityConverter` | string → `IsNullOrEmpty` | MarkupExtension |
 | `TransactionTypeBrushConverter` / `TransactionTypeIconConverter` | `BlotterModel.Type` → brush / `Icon*` resource | blotter rows |
-| `MccConverter` | MCC int → `Mcc` via `DbManual.MCCCodes` | |
+| `MccConverter` | MCC int → `Mcc` via `DbManual.MCCCodes`; for a `string` target, the localized MCC title | WPF showed the enum through its `TypeConverter`; Avalonia would show the enum name |
 | `EnumDescriptionConverter` | Enum → description text | |
 | `AccentColorBrushConverter` | account `accent_color` code → left-to-right `LinearGradientBrush` (color → transparent), `null` if empty/invalid | the highlight behind the account icon (Android `AccountRecyclerAdapter`); parses with `AndroidColor` |
 | `AccountTypeConverter` (multi) | (type, card_issuer) → `Bitmap` | `avares://Financisto.Common/Assets/AccountType/...png` |
 | `CategoryTitleConverter` (multi) | (title, level) → title padded with `-` per level | |
 | `LocalizedFormatConverter` (multi) | 2 values → `"Label (value)"`; 3+ → `string.Format` | |
-| `DifferentCurrencyConverter`, `OnlyOneSelectedConverter` (multi) | → bool | |
+| `DifferentCurrencyConverter`, `OnlyOneSelectedConverter` (multi) | (FromAccountId, ToAccountId, CategoryId[, imported account]) → bool | import wizard: a transfer to/from an account in another currency; exactly one of the three chosen |
+| `ImportRowBackgroundConverter` (multi) | same values → orange (different-currency transfer) / pink (not exactly one chosen) / transparent | import wizard date cell; replaces the WPF DataTriggers |
 
 `Assets/Generic.axaml` registers only `categoryTitleConvert`, `localizedFormatConverter` and `activeStatusBrush`, plus the `IActive` DataTemplate, theme brushes and all `Icon*` `DrawingImage`s. Other converters are instantiated locally in each view's resources.
 
@@ -164,4 +167,4 @@ Avalonia specifics: there is no `Visibility` enum, so "…ToVisibility" converte
 - `TextSearch.TextPath="X"` becomes `IsTextSearchEnabled="True"` + `TextSearch.TextBinding="{Binding X}"`. `DisplayMemberPath` becomes `DisplayMemberBinding`.
 - Date/time pickers use `DateTimeOffset?` / `TimeSpan?`.
 - Resources are loaded with `avares://Financisto.Common/...`. PNG assets must be listed as `AvaloniaResource` in the csproj (they are listed individually).
-- `InternalsVisibleTo` is granted to `Financisto.Desktop.Tests` and `Financisto.Reports.Tests`. No such projects exist in the repo; a scratch headless harness can use the `Financisto.Desktop.Tests` assembly name.
+- `InternalsVisibleTo` is granted to `Financisto.Desktop.Tests` and `Financisto.Reports.Tests` (the latter has no project to test yet). DataAccess and Desktop grant it to `Financisto.Desktop.Tests` too, DataAccess also to `Financisto.DataAccess.Tests`.

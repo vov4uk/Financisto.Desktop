@@ -1,0 +1,90 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using Financisto.Common.Localization;
+using Financisto.Common.Model;
+using Prism.Commands;
+
+namespace Financisto.Desktop.Wizards.MonoWizard.ViewModel
+{
+    public class Page2VM : WizardPageBaseVM
+    {
+        private DelegateCommand<BankTransaction> _deleteCommand;
+        private AccountFilterModel _monoAccount;
+
+        private BankTransaction _startTransaction;
+        private BlotterModel _lastAccountTransaction;
+
+        private ObservableCollection<BankTransaction> allTransactions;
+        private readonly Dictionary<int, BlotterModel> lastTransactions;
+        public Page2VM(List<BankTransaction> records, Dictionary<int, BlotterModel> lastTransactions)
+        {
+            AllTransactions = new ObservableCollection<BankTransaction>(records);
+            this.lastTransactions = lastTransactions;
+        }
+
+        public ObservableCollection<BankTransaction> AllTransactions
+        {
+            get => allTransactions;
+            private set
+            {
+                allTransactions = value;
+                RaisePropertyChanged(nameof(AllTransactions));
+            }
+        }
+
+        public DelegateCommand<BankTransaction> DeleteCommand
+        {
+            get
+            {
+                return _deleteCommand ??= new DelegateCommand<BankTransaction>(tr => { allTransactions.Remove(tr); });
+            }
+        }
+
+        public AccountFilterModel MonoAccount
+        {
+            get => _monoAccount;
+            set
+            {
+                _monoAccount = value;
+                RaisePropertyChanged(nameof(MonoAccount));
+                double balance = _monoAccount.TotalAmount / 100.0;
+                StartTransaction = allTransactions.FirstOrDefault(x => Math.Abs(x.Balance - balance) < 0.01);
+                LastAccountTransaction = (_monoAccount?.Id != null && lastTransactions.ContainsKey(_monoAccount.Id.Value)) ? lastTransactions[_monoAccount.Id.Value] : null;
+            }
+        }
+
+        public List<BankTransaction> GetMonoTransactions()
+        {
+            var startDate = _startTransaction?.Date ?? new DateTime(2017, 11, 17, 0, 0, 0, DateTimeKind.Local); // Monobank launched
+            return allTransactions.Where(x => x.Date > startDate).OrderByDescending(x => x.Date).ToList();
+        }
+
+        public BankTransaction StartTransaction
+        {
+            get => _startTransaction;
+            set
+            {
+                _startTransaction = value;
+                RaisePropertyChanged(nameof(StartTransaction));
+            }
+        }
+
+        public BlotterModel LastAccountTransaction
+        {
+            get => _lastAccountTransaction;
+            set
+            {
+                _lastAccountTransaction = value;
+                RaisePropertyChanged(nameof(LastAccountTransaction));
+            }
+        }
+
+        public override string Title => LocalizationService.Instance.please_select_transaction_title;
+        public override bool IsValid()
+        {
+            return true;
+        }
+    }
+}

@@ -1,0 +1,78 @@
+<UserControl
+    x:Class="Financisto.Desktop.Wizards.MonoWizard.View.Page1"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:conv="using:Financisto.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:entities="using:Financisto.Common.Entities"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:model="using:Financisto.Common.Model"
+    xmlns:vm="using:Financisto.Desktop.Wizards.MonoWizard.ViewModel"
+    d:DesignHeight="300"
+    d:DesignWidth="600"
+    x:DataType="vm:Page1VM"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <conv:AmountConverter x:Key="AmountConverter" />
+            <conv:AccountTypeConverter x:Key="AccountTypeConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid RowDefinitions="Auto,*">
+        <TextBlock
+            Grid.Row="0"
+            Margin="0,0,0,5"
+            HorizontalAlignment="Center"
+            FontWeight="Bold"
+            Text="{loc:Translate Key=select_account}" />
+        <DataGrid
+            Grid.Row="1"
+            Margin="5"
+            AutoGenerateColumns="False"
+            IsReadOnly="True"
+            ItemsSource="{x:Static entities:DbManual.Account}"
+            SelectedItem="{Binding MonoAccount}"
+            SelectionMode="Single">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn CellTemplate="{StaticResource IActiveCell}" Header="{loc:Translate Key=active}" />
+                <DataGridTemplateColumn Header="">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="model:AccountFilterModel">
+                            <Image Width="24" Height="24">
+                                <Image.Source>
+                                    <MultiBinding Converter="{StaticResource AccountTypeConverter}">
+                                        <Binding Path="Type" />
+                                        <Binding Path="CardIssuer" />
+                                    </MultiBinding>
+                                </Image.Source>
+                            </Image>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn
+                    x:DataType="model:AccountFilterModel"
+                    Binding="{Binding Title}"
+                    Header="{loc:Translate Key=title}" />
+                <DataGridTemplateColumn Header="{loc:Translate Key=total_amount}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="model:AccountFilterModel">
+                            <TextBlock
+                                Margin="12,0"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Text="{Binding TotalAmount, StringFormat=F2, Converter={StaticResource AmountConverter}, ConverterParameter=false}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn
+                    x:DataType="model:AccountFilterModel"
+                    Binding="{Binding CurrencyName}"
+                    Header="{loc:Translate Key=currency}" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>
