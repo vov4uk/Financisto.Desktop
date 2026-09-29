@@ -309,7 +309,7 @@ Ported from the Financier WPF repo (xunit v3, AutoFixture, Moq). In `Financisto.
 
 - `Financisto.Tests.Common`: shared fixtures (`AutoMoqData`, `PredefinedData`, `JsonDeserializer` for backup-style JSON rows).
 - `Financisto.Adapter.Tests`, `Financisto.DataAccess.Tests` (in-memory SQLite through `FinancistoDatabase`), `Financisto.Common.Test` (assembly `Financisto.Converters.Tests`: converter tests; the visibility converters return `bool` for `IsVisible`).
-- `Financisto.Desktop.Tests`: VMs, wizards, bank parsers (`Assets/` statements copied to the output dir), `ExchangeRatesService`. It `ProjectReference`s the self-contained win-x64 `Financisto.Desktop` exe, so it has to be `SelfContained` + `win-x64` too (NETSDK1151).
+- `Financisto.Desktop.Tests`: VMs, wizards, `Integration/MinBackupIntegrationTests` (imports `Assets/min.backup` into the real in-memory DB and checks that `RebuildAccountBalanceAsync` reproduces the backup's account totals and that open→save writes the same text back, modulo location `0`→`0.0` and exchange-rate row order), bank parsers (`Assets/` statements copied to the output dir), `ExchangeRatesService`. It `ProjectReference`s the self-contained win-x64 `Financisto.Desktop` exe, so it has to be `SelfContained` + `win-x64` too (NETSDK1151).
 - `Financisto.Reports.Tests` is a leftover from Financier and is **not** in the solution: Financisto has no Reports project.
 
 **Running:** `dotnet test` doesn't work here (Microsoft.Testing.Platform reports "Zero tests ran", also in the WPF repo). Build, then run the xunit exe: `src/Tests/<project>/bin/Debug/net10.0[/win-x64]/<AssemblyName>.exe`, optionally `-class Financisto.Desktop.Tests.Pages.BlotterVMIntegrationTests`.
