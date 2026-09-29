@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:conv="clr-namespace:Financisto.Converters;assembly=Financisto.Common"
     xmlns:controls="clr-namespace:Financisto.Common.Controls;assembly=Financisto.Common"
+    xmlns:ent="using:Financisto.Common.Entities"
     xmlns:local="using:Financisto.Reports"
     xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
     xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
@@ -61,10 +62,10 @@
                 <TextBlock Classes="toolbarCaption" Text="{loc:Translate Key=period}" />
                 <ComboBox
                     Width="150"
-                    ItemsSource="{Binding Source={loc:EnumBinding {x:Type local:ReportStructureSaldoRange}}}"
+                    ItemsSource="{Binding Source={loc:EnumBinding {x:Type ent:ReportStructureSaldoRange}}}"
                     SelectedItem="{Binding Range}">
                     <ComboBox.ItemTemplate>
-                        <DataTemplate x:DataType="local:ReportStructureSaldoRange">
+                        <DataTemplate x:DataType="ent:ReportStructureSaldoRange">
                             <TextBlock Text="{Binding Converter={StaticResource EnumDescriptionConverter}}" />
                         </DataTemplate>
                     </ComboBox.ItemTemplate>

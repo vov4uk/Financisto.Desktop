@@ -891,6 +891,9 @@
   <data name="reports_saldo_range_last_6_months" xml:space="preserve">
     <value>Ostatnie 6 miesięcy</value>
   </data>
+  <data name="reports_saldo_range_all_periods" xml:space="preserve">
+    <value>Cały okres</value>
+  </data>
   <data name="reports_saldo_range_last_24_months" xml:space="preserve">
     <value>Ostatnie 24 miesiące</value>
   </data>

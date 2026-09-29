@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Financisto.Common.Attribute;
 using Financisto.Common.Localization;
+using Financisto.Common.Utils;
 using Financisto.Converters;
 using Financisto.DataAccess.Abstractions;
 using Financisto.Reports.Structure;
@@ -87,6 +88,7 @@ ORDER  BY total ASC ";
         private static ReportChart GetBarChart(List<ByCategoryReportModel> list)
         {
             var groups = GroupByCategory(list);
+            var labels = groups.Select(x => ChartText.Label(x.First().Category)).ToArray();
 
             // one value per category and null where the category has no income (or expense), so no empty bar is drawn
             double?[] Totals(bool isExpense) => groups
@@ -107,6 +109,8 @@ ORDER  BY total ASC ";
                     DataLabelsPaint = ReportCharts.Fill(ReportCharts.Gray),
                     DataLabelsPosition = DataLabelsPosition.End,
                     DataLabelsFormatter = point => $"{point.Coordinate.PrimaryValue}",
+                    XToolTipLabelFormatter = point => labels[point.Index],
+                    YToolTipLabelFormatter = point => $"{point.Coordinate.PrimaryValue:N2}",
                 },
                 new RowSeries<double?>
                 {
@@ -116,6 +120,8 @@ ORDER  BY total ASC ";
                     DataLabelsPaint = ReportCharts.Fill(ReportCharts.Gray),
                     DataLabelsPosition = DataLabelsPosition.End,
                     DataLabelsFormatter = point => $"-{point.Coordinate.PrimaryValue}",
+                    XToolTipLabelFormatter = point => labels[point.Index],
+                    YToolTipLabelFormatter = point => $"-{point.Coordinate.PrimaryValue:N2}",
                 },
             ];
 
@@ -125,7 +131,7 @@ ORDER  BY total ASC ";
                 new Axis
                 {
                     Name = LocalizationService.Instance.category,
-                    Labels = groups.Select(x => x.First().Category).ToArray(),
+                    Labels = labels,
                     MinStep = 1,
                     ForceStepToMin = true,
                 },

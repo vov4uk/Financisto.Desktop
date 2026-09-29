@@ -10,6 +10,8 @@ namespace Financisto.Common.Entities
         [Description("openexchangerates.org")]
         OpenExchangeRates,
         [Description("freecurrencyrates.com")]
-        FreeCurrencyRates
+        FreeCurrencyRates,
+        [Description("floatrates.com")]
+        FloatRates
     }
 }

@@ -1,13 +1,14 @@
 namespace Financisto.Reports.Tests
 {
+    using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Financisto.Common.Entities;
     using Financisto.Common.Model;
     using Financisto.DataAccess.Abstractions;
+    using LiveChartsCore.Defaults;
+    using LiveChartsCore.SkiaSharpView;
     using Moq;
-    using OxyPlot.Axes;
-    using OxyPlot.Series;
     using Xunit;
 
     public class ReportDynamicRestVMTests
@@ -34,38 +35,39 @@ namespace Financisto.Reports.Tests
         }
 
         [Fact]
-        public void GetPlotModel_FirstAxisIsDateTimeAxis()
+        public void GetChart_XAxisIsDateTimeAxis()
         {
             var testVm = CreateTestableVM();
 
-            var model = testVm.TestGetPlotModel(new List<ReportDynamicRestModel>());
+            var chart = testVm.TestGetChart(new List<ReportDynamicRestModel>());
 
-            Assert.IsType<DateTimeAxis>(model.Axes[0]);
+            Assert.IsType<DateTimeAxis>(chart.XAxes[0]);
         }
 
         [Fact]
-        public void GetPlotModel_HasOneLineSeries()
+        public void GetChart_HasOneLineSeries()
         {
             var testVm = CreateTestableVM();
 
-            var model = testVm.TestGetPlotModel(new List<ReportDynamicRestModel>());
+            var chart = testVm.TestGetChart(new List<ReportDynamicRestModel>());
 
-            Assert.Single(model.Series);
-            Assert.IsType<LineSeries>(model.Series[0]);
+            Assert.Single(chart.Series);
+            Assert.IsType<LineSeries<DateTimePoint>>(chart.Series[0]);
         }
 
         [Fact]
-        public void GetPlotModel_HasTwoAxes()
+        public void GetChart_HasOneXAxisAndOneYAxis()
         {
             var testVm = CreateTestableVM();
 
-            var model = testVm.TestGetPlotModel(new List<ReportDynamicRestModel>());
+            var chart = testVm.TestGetChart(new List<ReportDynamicRestModel>());
 
-            Assert.Equal(2, model.Axes.Count);
+            Assert.Single(chart.XAxes);
+            Assert.Single(chart.YAxes);
         }
 
         [Fact]
-        public void GetPlotModel_NullTotal_TreatedAsZero()
+        public void GetChart_NullTotal_TreatedAsZero()
         {
             var testVm = CreateTestableVM();
             var items = new List<ReportDynamicRestModel>
@@ -73,14 +75,13 @@ namespace Financisto.Reports.Tests
                 new TestModel(year: 2024, month: 1, day: 1, total: null),
             };
 
-            var model = testVm.TestGetPlotModel(items);
-            var lineSeries = (LineSeries)model.Series[0];
+            var chart = testVm.TestGetChart(items);
 
-            Assert.Equal(0.0, lineSeries.Points[0].Y);
+            Assert.Equal(0.0, chart.Series[0].ValuesOf<DateTimePoint>()[0].Value);
         }
 
         [Fact]
-        public void GetPlotModel_OrdersPointsByDay_WhenSameYearAndMonth()
+        public void GetChart_OrdersPointsByDay_WhenSameYearAndMonth()
         {
             var testVm = CreateTestableVM();
             var items = new List<ReportDynamicRestModel>
@@ -90,16 +91,16 @@ namespace Financisto.Reports.Tests
                 new TestModel(year: 2024, month: 1, day: 15, total: 150.0),
             };
 
-            var model = testVm.TestGetPlotModel(items);
-            var lineSeries = (LineSeries)model.Series[0];
+            var chart = testVm.TestGetChart(items);
+            var points = chart.Series[0].ValuesOf<DateTimePoint>();
 
-            Assert.Equal(500.0, lineSeries.Points[0].Y);
-            Assert.Equal(150.0, lineSeries.Points[1].Y);
-            Assert.Equal(200.0, lineSeries.Points[2].Y);
+            Assert.Equal(500.0, points[0].Value);
+            Assert.Equal(150.0, points[1].Value);
+            Assert.Equal(200.0, points[2].Value);
         }
 
         [Fact]
-        public void GetPlotModel_OrdersPointsByYearThenMonthThenDay()
+        public void GetChart_OrdersPointsByYearThenMonthThenDay()
         {
             var testVm = CreateTestableVM();
             var items = new List<ReportDynamicRestModel>
@@ -109,26 +110,40 @@ namespace Financisto.Reports.Tests
                 new TestModel(year: 2024, month: 2, day: 5,  total: 200.0),
             };
 
-            var model = testVm.TestGetPlotModel(items);
-            var lineSeries = (LineSeries)model.Series[0];
+            var chart = testVm.TestGetChart(items);
+            var points = chart.Series[0].ValuesOf<DateTimePoint>();
 
-            Assert.Equal(100.0, lineSeries.Points[0].Y);
-            Assert.Equal(200.0, lineSeries.Points[1].Y);
-            Assert.Equal(300.0, lineSeries.Points[2].Y);
+            Assert.Equal(100.0, points[0].Value);
+            Assert.Equal(200.0, points[1].Value);
+            Assert.Equal(300.0, points[2].Value);
         }
 
         [Fact]
-        public void GetPlotModel_SecondAxisIsLinearAxis()
+        public void GetChart_PointsAreAtTheDateOfTheRow()
+        {
+            var testVm = CreateTestableVM();
+            var items = new List<ReportDynamicRestModel>
+            {
+                new TestModel(year: 2024, month: 2, day: 5, total: 200.0),
+            };
+
+            var chart = testVm.TestGetChart(items);
+
+            Assert.Equal(new DateTime(2024, 2, 5), chart.Series[0].ValuesOf<DateTimePoint>()[0].DateTime);
+        }
+
+        [Fact]
+        public void GetChart_YAxisIsPlainAxis()
         {
             var testVm = CreateTestableVM();
 
-            var model = testVm.TestGetPlotModel(new List<ReportDynamicRestModel>());
+            var chart = testVm.TestGetChart(new List<ReportDynamicRestModel>());
 
-            Assert.IsType<LinearAxis>(model.Axes[1]);
+            Assert.IsType<Axis>(chart.YAxes[0]);
         }
 
         [Fact]
-        public void GetPlotModel_WithData_LineSeriesHasExpectedPointCount()
+        public void GetChart_WithData_LineSeriesHasExpectedPointCount()
         {
             var testVm = CreateTestableVM();
             var items = new List<ReportDynamicRestModel>
@@ -138,10 +153,9 @@ namespace Financisto.Reports.Tests
                 new TestModel(year: 2024, month: 3, day: 5,  total: 900.0),
             };
 
-            var model = testVm.TestGetPlotModel(items);
-            var lineSeries = (LineSeries)model.Series[0];
+            var chart = testVm.TestGetChart(items);
 
-            Assert.Equal(3, lineSeries.Points.Count);
+            Assert.Equal(3, chart.Series[0].ValuesOf<DateTimePoint>().Length);
         }
 
         [Fact]
@@ -191,11 +205,14 @@ namespace Financisto.Reports.Tests
         }
 
         [Fact]
-        public async Task RefreshDataCommand_SetsPlotModel_AfterRefresh()
+        public async Task RefreshDataCommand_SetsChart_AfterRefresh()
         {
+            Assert.Same(ReportChart.Empty, this.vm.Chart);
+
             await this.vm.RefreshDataCommand.ExecuteAsync();
 
-            Assert.NotNull(this.vm.PlotModel);
+            Assert.NotSame(ReportChart.Empty, this.vm.Chart);
+            Assert.Single(this.vm.Chart.Series);
         }
 
         [Fact]
@@ -229,8 +246,8 @@ namespace Financisto.Reports.Tests
             {
             }
 
-            public SafePlotModel TestGetPlotModel(List<ReportDynamicRestModel> list) =>
-                GetPlotModel(list);
+            public ReportChart TestGetChart(List<ReportDynamicRestModel> list) =>
+                GetChart(list);
 
             public string TestGetSql() => GetSql();
         }

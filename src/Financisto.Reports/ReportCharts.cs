@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Financisto.Common.Utils;
 using LiveChartsCore;
 using LiveChartsCore.Measure;
 using LiveChartsCore.SkiaSharpView;
@@ -38,8 +39,9 @@ namespace Financisto.Reports
         public static SolidColorPaint Stroke(SKColor color, float thickness = 2) => new(color, thickness);
 
         /// <summary>
-        /// One pie chart series per slice, so each slice gets its own legend entry ("name: 12.34 %").
-        /// Slices are drawn by absolute value (expense totals are negative) and empty ones are skipped.
+        /// One pie chart series per slice, so each slice gets its own legend entry ("name: 12.34 %", the name as
+        /// <see cref="ChartText.Label"/>). Slices are drawn by absolute value (expense totals are negative) and empty
+        /// ones are skipped.
         /// </summary>
         public static ReportChart Pie(IEnumerable<(string Name, double Value)> slices)
         {
@@ -53,7 +55,7 @@ namespace Financisto.Reports
             ISeries[] series = items
                 .Select(x => new PieSeries<double>
                 {
-                    Name = $"{x.Name}: {x.Value / total:P2}",
+                    Name = $"{ChartText.Label(x.Name)}: {x.Value / total:P2}",
                     Values = [x.Value],
                     DataLabelsPaint = new SolidColorPaint(SKColors.White),
                     DataLabelsPosition = PolarLabelsPosition.Middle,

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Financisto.Common.Attribute;
 using Financisto.Common.Localization;
+using Financisto.Common.Utils;
 using Financisto.DataAccess.Abstractions;
 using LiveChartsCore;
 using LiveChartsCore.Measure;
@@ -91,16 +92,23 @@ ORDER  BY total ASC ";
             // largest category on top: a row chart draws its first item at the bottom
             var items = list.OrderBy(x => Math.Abs(x.Total ?? 0)).ToList();
             var sign = IsIncome ? string.Empty : "-";
+            var labels = items.Select(x => ChartText.Label(x.Name)).ToArray();
+
+            // a row chart's tooltip needs its texts spelled out: by default it shows just the series name.
+            // The "X" text is the tooltip's header (here the category), the "Y" one the series line's value.
 
             ISeries[] series =
             [
                 new RowSeries<double>
                 {
+                    Name = IsIncome ? LocalizationService.Instance.income : LocalizationService.Instance.expense,
                     Values = items.Select(x => Math.Abs(x.Total ?? 0)).ToArray(),
                     Fill = ReportCharts.Fill(IsIncome ? ReportCharts.Green : ReportCharts.Amber),
                     DataLabelsPaint = ReportCharts.Fill(ReportCharts.Gray),
                     DataLabelsPosition = DataLabelsPosition.End,
                     DataLabelsFormatter = point => $"{sign}{point.Coordinate.PrimaryValue}",
+                    XToolTipLabelFormatter = point => labels[point.Index],
+                    YToolTipLabelFormatter = point => $"{sign}{point.Coordinate.PrimaryValue:N2}",
                 },
             ];
 
@@ -110,7 +118,7 @@ ORDER  BY total ASC ";
                 new Axis
                 {
                     Name = LocalizationService.Instance.category,
-                    Labels = items.Select(x => x.Name).ToArray(),
+                    Labels = labels,
                     MinStep = 1,
                     ForceStepToMin = true,
                 },

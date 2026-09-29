@@ -5,7 +5,9 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Financisto.Common.Attribute;
+using Financisto.Common.Entities;
 using Financisto.Common.Localization;
+using Financisto.Common.Utils;
 using Financisto.Common.Converters;
 using Financisto.DataAccess.Abstractions;
 using LiveChartsCore;
@@ -15,24 +17,11 @@ using SkiaSharp;
 
 namespace Financisto.Reports
 {
-    [TypeConverter(typeof(EnumDescriptionTypeConverter))]
-    public enum ReportStructureSaldoRange
-    {
-        [LocalizedDescription("reports_saldo_range_current_year")]
-        CurrentYear,
-        [LocalizedDescription("reports_saldo_range_last_6_months")]
-        Last6Months,
-        [LocalizedDescription("reports_saldo_range_last_12_months")]
-        Last12Months,
-        [LocalizedDescription("reports_saldo_range_last_2_years")]
-        Last2Years,
-        [LocalizedDescription("reports_saldo_range_last_24_months")]
-        Last24Months
-    }
-
     [Header("reports_saldo")]
     public class ReportStructureSaldoVM : BaseReportVM<ReportStructureSaldoModel>
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         private ReportStructureSaldoRange _range;
         public ReportStructureSaldoRange Range
         {
@@ -59,7 +48,7 @@ namespace Financisto.Reports
             }
         }
 
-        private const string BaseSqlText = @" /* ReportStructureSaldoVM */
+        private static readonly string BaseSqlText = @" /* ReportStructureSaldoVM */
 SELECT account_title,
        account_id,
        account_is_active,
@@ -68,8 +57,8 @@ SELECT account_title,
        sort_order,
        balance,
        symbol,
-       balance_default_crr,
-       balance_usd,
+       " + ExchangeRateSql.Convert("balance", "currency_id", ExchangeRateSql.HomeCurrencyId, "{0}") + @" AS balance_default_crr,
+       " + ExchangeRateSql.Convert("balance", "currency_id", ExchangeRateSql.UsdCurrencyId, "{0}") + @" AS balance_usd,
        default_crr_symbol,
        date
 FROM   (SELECT a.title AS account_title,
@@ -79,26 +68,11 @@ FROM   (SELECT a.title AS account_title,
                a.type as account_type,
                a._id AS account_id,
                Row_number() OVER ( partition BY a._id
-                                   ORDER BY Date(t.datetime / 1000, 'unixepoch') DESC, t.datetime DESC
+                                   ORDER BY Date(t.datetime / 1000, 'unixepoch') DESC, t.datetime DESC, r.transaction_id DESC
                ) AS RowNum,
                r.balance / 100.0 AS balance,
+               c._id AS currency_id,
                c.symbol,
-               CASE( SELECT _id FROM currency WHERE is_default = 1)
-               WHEN c._id THEN r.balance / 100.0
-               ELSE Round((r.balance / 100.0 ) * (SELECT rate
-                                                  FROM v_currency_exchange_rate
-                                                  WHERE to_currency_id = (SELECT _id FROM currency WHERE is_default = 1)
-                                                        AND from_currency_id = c._id
-                                                        AND(({0} BETWEEN rate_date AND rate_date_end) OR rate_date_end = 253402293599000 )), 0)
-               END AS balance_default_crr,
-               CASE( SELECT _id FROM currency WHERE name = 'USD')
-               WHEN c._id THEN r.balance / 100.0
-               ELSE Round((r.balance / 100.0 ) * (SELECT rate
-                                                  FROM v_currency_exchange_rate
-                                                  WHERE to_currency_id = (SELECT _id FROM currency WHERE name = 'USD')
-                                                        AND from_currency_id = c._id
-                                                        AND(({0} BETWEEN rate_date AND rate_date_end) OR rate_date_end = 253402293599000 )), 0)
-               END AS balance_usd,
                (SELECT symbol FROM   currency WHERE  is_default = 1) AS default_crr_symbol,
                Date(t.datetime / 1000, 'unixepoch') AS date
         FROM running_balance r
@@ -121,7 +95,8 @@ ORDER BY account_is_active DESC, sort_order ASC
         protected override async Task RefreshData()
         {
             var currentList = new List<ReportStructureSaldoModel>();
-            var availableDates = GetDatesRange();
+            var unconverted = new SortedSet<string>();
+            var availableDates = await GetDatesRange();
             foreach (var date in availableDates)
             {
                 var unixDate = new DateTimeOffset(date.ToDateTime(new TimeOnly(00, 00, 00))).ToUnixTimeMilliseconds();
@@ -138,15 +113,22 @@ ORDER BY account_is_active DESC, sort_order ASC
 
                     foreach (var item in data.Where(x => x.AccountIsIncludeInTotals))
                     {
+                        // an account that can't be converted (no rate found, see ExchangeRateSql) counts as 0 instead of
+                        // making the whole total unknown
+                        if (item.DefaultCurrencyBalance == null || item.USDBalance == null)
+                        {
+                            unconverted.Add(item.Title ?? string.Empty);
+                        }
+
                         if (item.AccountType != "LIABILITY")
                         {
-                            assetsDefaultCurrencyBalance += item.DefaultCurrencyBalance;
-                            assetsUSDBalance += item.USDBalance;
+                            assetsDefaultCurrencyBalance += item.DefaultCurrencyBalance ?? 0;
+                            assetsUSDBalance += item.USDBalance ?? 0;
                         }
                         else
                         {
-                            liabilitiesDefaultCurrencyBalance += item.DefaultCurrencyBalance;
-                            liabilitiesUSDBalance += item.USDBalance;
+                            liabilitiesDefaultCurrencyBalance += item.DefaultCurrencyBalance ?? 0;
+                            liabilitiesUSDBalance += item.USDBalance ?? 0;
                         }
                     }
                     currentList.Add(new ReportStructureSaldoModel
@@ -161,6 +143,11 @@ ORDER BY account_is_active DESC, sort_order ASC
                         NetWorthDefaultCurrencyBalance = Math.Round((assetsDefaultCurrencyBalance ?? 0) + (liabilitiesDefaultCurrencyBalance ?? 0), 2),
                     });
                 }
+            }
+
+            if (unconverted.Count > 0)
+            {
+                Logger.Warn($"No exchange rate to convert the balance of: {string.Join(", ", unconverted)}");
             }
 
             Entities = new ObservableCollection<ReportStructureSaldoModel>(currentList);
@@ -178,7 +165,7 @@ ORDER BY account_is_active DESC, sort_order ASC
             return string.Format(BaseSqlText, GetStandartTrnFilter());
         }
 
-        private List<DateOnly> GetDatesRange()
+        private async Task<List<DateOnly>> GetDatesRange()
         {
             var result = new List<DateOnly>();
             var lastDayOfCurrentMonth = new DateOnly(DateTime.Today.Year, DateTime.Today.Month, 1).AddMonths(1).AddDays(-1);
@@ -221,6 +208,21 @@ ORDER BY account_is_active DESC, sort_order ASC
                 for (var i = 0; i<24; i++)
                 {
                     result.Add(lastDayOfCurrentMonth.AddMonths(-i));
+                }
+            }
+            else if (Range == ReportStructureSaldoRange.AllPeriods)
+            {
+                var rows = await base.db.ExecuteQuery<FirstTransactionRawModel>("SELECT MIN(datetime) AS first_datetime FROM transactions");
+                var first = rows?.FirstOrDefault()?.FirstDateTime;
+                var firstDay = first.HasValue
+                    ? DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(first.Value).LocalDateTime)
+                    : lastDayOfCurrentMonth;
+                var firstMonth = new DateOnly(firstDay.Year, firstDay.Month, 1);
+
+                // one entry per month-end from the current month back to the month of the first transaction
+                for (var month = new DateOnly(lastDayOfCurrentMonth.Year, lastDayOfCurrentMonth.Month, 1); month >= firstMonth; month = month.AddMonths(-1))
+                {
+                    result.Add(month.AddMonths(1).AddDays(-1));
                 }
             }
 

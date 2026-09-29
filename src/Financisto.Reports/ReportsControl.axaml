@@ -49,29 +49,21 @@
         </DataTemplate>
     </UserControl.DataTemplates>
 
-    <Grid ColumnDefinitions="Auto,*">
-        <Expander
-            Margin="5"
-            VerticalAlignment="Top"
-            Background="Transparent"
-            ExpandDirection="Right"
-            IsExpanded="True">
-            <TreeView Width="250" ItemsSource="{Binding ReportsInfo, Mode=OneWay}">
-                <TreeView.Styles>
-                    <Style Selector="TreeViewItem">
-                        <Setter Property="IsExpanded" Value="True" />
-                    </Style>
-                </TreeView.Styles>
-                <TreeView.ItemTemplate>
-                    <TreeDataTemplate DataType="model:TreeNode" ItemsSource="{Binding Child}">
-                        <TextBlock
-                            behaviors:CommandBehavior.DoubleTappedCommand="{Binding $parent[local:ReportsControl].((local:ReportsControlVM)DataContext).OpenReportCommand}"
-                            behaviors:CommandBehavior.DoubleTappedCommandParameter="{Binding Type}"
-                            Text="{Binding Name}" />
-                    </TreeDataTemplate>
-                </TreeView.ItemTemplate>
-            </TreeView>
-        </Expander>
+    <Grid ColumnDefinitions="270,*">
+
+        <TreeView ItemsSource="{Binding ReportsInfo, Mode=OneWay}" SelectedItem="{Binding SelectedTreeNode, Mode=TwoWay}">
+            <TreeView.Styles>
+                <Style Selector="TreeViewItem">
+                    <Setter Property="IsExpanded" Value="True" />
+                </Style>
+            </TreeView.Styles>
+            <TreeView.ItemTemplate>
+                <TreeDataTemplate DataType="model:TreeNode" ItemsSource="{Binding Child}">
+                    <TextBlock Text="{Binding Name}" />
+                </TreeDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
+
 
         <Grid Grid.Column="1" RowDefinitions="Auto,*">
             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
@@ -92,7 +84,7 @@
                                     ToolTip.Tip="{Binding Header}" />
                                 <Button
                                     Classes="closeTab"
-                                    Command="{Binding $parent[local:ReportsControl].((local:ReportsControlVM)DataContext).CloseReportCommand}"
+                                    Command="{Binding $parent[UserControl].DataContext.CloseReportCommand}"
                                     CommandParameter="{Binding}">
                                     <Image Source="{StaticResource IconXmark}" />
                                 </Button>

@@ -3,12 +3,11 @@ namespace Financisto.Reports.Tests
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Financisto.Common.Entities;
+    using Financisto.Common.Localization;
     using Financisto.Common.Model;
     using Financisto.DataAccess.Abstractions;
+    using LiveChartsCore.SkiaSharpView;
     using Moq;
-    using OxyPlot;
-    using OxyPlot.Axes;
-    using OxyPlot.Series;
     using Xunit;
 
     public class ReportStructureIncomeExpenseVMTests
@@ -41,65 +40,44 @@ namespace Financisto.Reports.Tests
         }
 
         [Fact]
-        public void GetBarChartModel_HasOneLegend()
-        {
-            var testVm = CreateTestableVM();
-
-            var model = testVm.TestGetBarChartModel(new List<ReportStructureIncomeExpenseModel>());
-
-            Assert.Single(model.Legends);
-        }
-
-        [Fact]
-        public void GetBarChartModel_IsIncome_FillColorIsGreen()
+        public void GetChart_IsIncome_FillColorIsGreen()
         {
             var testVm = CreateTestableVM();
             testVm.IsIncome = true;
 
-            var model = testVm.TestGetBarChartModel(new List<ReportStructureIncomeExpenseModel>());
-            var barSeries = (BarSeries)model.Series[0];
+            var chart = testVm.TestGetChart(new List<ReportStructureIncomeExpenseModel>());
+            var rowSeries = (RowSeries<double>)chart.Series[0];
 
-            Assert.Equal(OxyColors.Green, barSeries.FillColor);
+            Assert.Equal(ReportCharts.Green, ChartExtensions.ColorOf(rowSeries.Fill));
         }
 
         [Fact]
-        public void GetBarChartModel_IsIncome_LabelFormatStringIsPositive()
-        {
-            var testVm = CreateTestableVM();
-            testVm.IsIncome = true;
-
-            var model = testVm.TestGetBarChartModel(new List<ReportStructureIncomeExpenseModel>());
-            var barSeries = (BarSeries)model.Series[0];
-
-            Assert.Equal("{0}", barSeries.LabelFormatString);
-        }
-
-        [Fact]
-        public void GetBarChartModel_NotIncome_FillColorIsOrange()
+        public void GetChart_NotIncome_FillColorIsAmber()
         {
             var testVm = CreateTestableVM();
             testVm.IsIncome = false;
 
-            var model = testVm.TestGetBarChartModel(new List<ReportStructureIncomeExpenseModel>());
-            var barSeries = (BarSeries)model.Series[0];
+            var chart = testVm.TestGetChart(new List<ReportStructureIncomeExpenseModel>());
+            var rowSeries = (RowSeries<double>)chart.Series[0];
 
-            Assert.Equal(OxyColors.Orange, barSeries.FillColor);
+            Assert.Equal(ReportCharts.Amber, ChartExtensions.ColorOf(rowSeries.Fill));
         }
 
-        [Fact]
-        public void GetBarChartModel_NotIncome_LabelFormatStringHasNegativeSign()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void GetChart_SeriesIsNamedAfterTheType_SoItsTooltipHasAName(bool isIncome)
         {
             var testVm = CreateTestableVM();
-            testVm.IsIncome = false;
+            testVm.IsIncome = isIncome;
 
-            var model = testVm.TestGetBarChartModel(new List<ReportStructureIncomeExpenseModel>());
-            var barSeries = (BarSeries)model.Series[0];
+            var chart = testVm.TestGetChart(new List<ReportStructureIncomeExpenseModel>());
 
-            Assert.Equal("-{0}", barSeries.LabelFormatString);
+            Assert.Equal(isIncome ? LocalizationService.Instance.income : LocalizationService.Instance.expense, chart.Series[0].Name);
         }
 
         [Fact]
-        public void GetBarChartModel_OrdersItemsByAbsoluteTotalAscending()
+        public void GetChart_OrdersItemsByAbsoluteTotalAscending()
         {
             var testVm = CreateTestableVM();
             var items = new List<ReportStructureIncomeExpenseModel>
@@ -109,37 +87,74 @@ namespace Financisto.Reports.Tests
                 new TestModel("Medium", -150.0),
             };
 
-            var model = testVm.TestGetBarChartModel(items);
-            var barSeries = (BarSeries)model.Series[0];
+            var chart = testVm.TestGetChart(items);
 
-            Assert.Equal(50, barSeries.ActualItems[0].Value);
-            Assert.Equal(150, barSeries.ActualItems[1].Value);
-            Assert.Equal(300, barSeries.ActualItems[2].Value);
+            Assert.Equal(new[] { 50.0, 150.0, 300.0 }, chart.Series[0].ValuesOf<double>());
+            Assert.Equal(new[] { "Small", "Medium", "Big" }, chart.YAxes[0].LabelsOf());
         }
 
         [Fact]
-        public void GetBarChartModel_ReturnsModelWithOneBarSeries()
+        public void GetChart_ReturnsOneRowSeries()
         {
             var testVm = CreateTestableVM();
 
-            var model = testVm.TestGetBarChartModel(new List<ReportStructureIncomeExpenseModel>());
+            var chart = testVm.TestGetChart(new List<ReportStructureIncomeExpenseModel>());
 
-            Assert.Single(model.Series);
-            Assert.IsType<BarSeries>(model.Series[0]);
+            Assert.Single(chart.Series);
+            Assert.IsType<RowSeries<double>>(chart.Series[0]);
         }
 
         [Fact]
-        public void GetBarChartModel_ReturnsModelWithTwoAxes()
+        public void GetChart_HasOneXAxisAndOneYAxis()
         {
             var testVm = CreateTestableVM();
 
-            var model = testVm.TestGetBarChartModel(new List<ReportStructureIncomeExpenseModel>());
+            var chart = testVm.TestGetChart(new List<ReportStructureIncomeExpenseModel>());
 
-            Assert.Equal(2, model.Axes.Count);
+            Assert.Single(chart.XAxes);
+            Assert.Single(chart.YAxes);
         }
 
         [Fact]
-        public void GetBarChartModel_UsesAbsoluteValueForBarItems()
+        public void GetChart_ValueAxisStartsAtZeroAndLeavesRoomForTheLongestBarLabel()
+        {
+            var testVm = CreateTestableVM();
+            var items = new List<ReportStructureIncomeExpenseModel>
+            {
+                new TestModel("Big", -300.0),
+                new TestModel("Small", -50.0),
+            };
+
+            var chart = testVm.TestGetChart(items);
+
+            Assert.Equal(0, chart.XAxes[0].MinLimit);
+            Assert.True(chart.XAxes[0].MaxLimit > 300.0);
+        }
+
+        [Fact]
+        public void GetChart_NoItems_ValueAxisHasNoMaximum()
+        {
+            var testVm = CreateTestableVM();
+
+            var chart = testVm.TestGetChart(new List<ReportStructureIncomeExpenseModel>());
+
+            Assert.Null(chart.XAxes[0].MaxLimit);
+        }
+
+        [Fact]
+        public void GetChart_CategoryAxisIsTitledAndLabelsEveryCategory()
+        {
+            var testVm = CreateTestableVM();
+
+            var chart = testVm.TestGetChart(new List<ReportStructureIncomeExpenseModel>());
+
+            Assert.Equal(LocalizationService.Instance.category, chart.YAxes[0].Name);
+            Assert.Equal(1, chart.YAxes[0].MinStep);
+            Assert.True(chart.YAxes[0].ForceStepToMin);
+        }
+
+        [Fact]
+        public void GetChart_UsesAbsoluteValueForBars()
         {
             var testVm = CreateTestableVM();
             testVm.IsIncome = false;
@@ -148,14 +163,27 @@ namespace Financisto.Reports.Tests
                 new TestModel("Groceries", -200.0),
             };
 
-            var model = testVm.TestGetBarChartModel(items);
-            var barSeries = (BarSeries)model.Series[0];
+            var chart = testVm.TestGetChart(items);
 
-            Assert.Equal(200, barSeries.ActualItems[0].Value);
+            Assert.Equal(new[] { 200.0 }, chart.Series[0].ValuesOf<double>());
         }
 
         [Fact]
-        public void GetBarChartModel_WithData_AddsLabelsToAxisAndItemsToSeries()
+        public void GetChart_NullTotal_TreatedAsZero()
+        {
+            var testVm = CreateTestableVM();
+            var items = new List<ReportStructureIncomeExpenseModel>
+            {
+                new TestModel("Unknown", null),
+            };
+
+            var chart = testVm.TestGetChart(items);
+
+            Assert.Equal(new[] { 0.0 }, chart.Series[0].ValuesOf<double>());
+        }
+
+        [Fact]
+        public void GetChart_WithData_AddsLabelsToAxisAndValuesToSeries()
         {
             var testVm = CreateTestableVM();
             var items = new List<ReportStructureIncomeExpenseModel>
@@ -164,55 +192,70 @@ namespace Financisto.Reports.Tests
                 new TestModel("Transport", 50.0),
             };
 
-            var model = testVm.TestGetBarChartModel(items);
-            var barSeries = (BarSeries)model.Series[0];
-            var categoryAxis = (CategoryAxis)model.Axes[0];
+            var chart = testVm.TestGetChart(items);
 
-            Assert.Equal(2, barSeries.ActualItems.Count);
-            Assert.Equal(2, categoryAxis.ActualLabels.Count);
+            Assert.Equal(2, chart.Series[0].ValuesOf<double>().Length);
+            Assert.Equal(2, chart.YAxes[0].LabelsOf().Length);
         }
 
         [Fact]
-        public void GetPlotModel_RaisesBarChartModelPropertyChanged()
+        public void GetChart_CategoryAxisLabelsDropEmoji_SoLiveChartsCanDrawTheirCyrillic()
+        {
+            var testVm = CreateTestableVM();
+            var items = new List<ReportStructureIncomeExpenseModel>
+            {
+                new TestModel("Продукти🥗", -200.0),
+                new TestModel("Транспорт🐌", -100.0),
+            };
+
+            var chart = testVm.TestGetChart(items);
+
+            Assert.Equal(new[] { "Транспорт", "Продукти" }, chart.YAxes[0].LabelsOf());
+        }
+
+        [Fact]
+        public void GetChart_PieChartNamesDropEmoji()
+        {
+            var testVm = CreateTestableVM();
+            var items = new List<ReportStructureIncomeExpenseModel> { new TestModel("Продукти🥗", 200.0) };
+
+            testVm.TestGetChart(items);
+
+            Assert.DoesNotContain("🥗", testVm.PieChart.Series[0].Name);
+            Assert.StartsWith("Продукти (200", testVm.PieChart.Series[0].Name);
+        }
+
+        [Fact]
+        public void GetChart_RaisesPieChartPropertyChanged()
         {
             var testVm = CreateTestableVM();
             var raised = false;
             testVm.PropertyChanged += (_, e) =>
             {
-                if (e.PropertyName == nameof(ReportStructureIncomeExpenseVM.BarChartModel))
+                if (e.PropertyName == nameof(ReportStructureIncomeExpenseVM.PieChart))
                 {
                     raised = true;
                 }
             };
 
-            testVm.TestGetPlotModel(new List<ReportStructureIncomeExpenseModel>());
+            testVm.TestGetChart(new List<ReportStructureIncomeExpenseModel>());
 
             Assert.True(raised);
         }
 
         [Fact]
-        public void GetPlotModel_ReturnsPieChartWithOneSeries()
+        public void GetChart_SetsPieChart()
         {
             var testVm = CreateTestableVM();
+            Assert.Same(ReportChart.Empty, testVm.PieChart);
 
-            var model = testVm.TestGetPlotModel(new List<ReportStructureIncomeExpenseModel>());
+            testVm.TestGetChart(new List<ReportStructureIncomeExpenseModel>());
 
-            Assert.Single(model.Series);
-            Assert.IsType<PieSeries>(model.Series[0]);
+            Assert.NotSame(ReportChart.Empty, testVm.PieChart);
         }
 
         [Fact]
-        public void GetPlotModel_SetsBarChartModel()
-        {
-            var testVm = CreateTestableVM();
-
-            testVm.TestGetPlotModel(new List<ReportStructureIncomeExpenseModel>());
-
-            Assert.NotNull(testVm.BarChartModel);
-        }
-
-        [Fact]
-        public void GetPlotModel_WithData_PieSeriesContainsExpectedSliceCount()
+        public void GetChart_PieChartHasOnePieSeriesPerCategory()
         {
             var testVm = CreateTestableVM();
             var items = new List<ReportStructureIncomeExpenseModel>
@@ -222,10 +265,25 @@ namespace Financisto.Reports.Tests
                 new TestModel("Utilities", 120.0),
             };
 
-            var model = testVm.TestGetPlotModel(items);
-            var pieSeries = (PieSeries)model.Series[0];
+            testVm.TestGetChart(items);
 
-            Assert.Equal(3, pieSeries.Slices.Count);
+            Assert.Equal(3, testVm.PieChart.Series.Length);
+            Assert.All(testVm.PieChart.Series, x => Assert.IsType<PieSeries<double>>(x));
+            Assert.StartsWith(items[0].Label + ": ", testVm.PieChart.Series[0].Name);
+        }
+
+        [Fact]
+        public void GetChart_PieChart_ExpensesAreDrawnByAbsoluteValue()
+        {
+            var testVm = CreateTestableVM();
+            var items = new List<ReportStructureIncomeExpenseModel>
+            {
+                new TestModel("Food", -300.0),
+            };
+
+            testVm.TestGetChart(items);
+
+            Assert.Equal(new[] { 300.0 }, testVm.PieChart.Series[0].ValuesOf<double>());
         }
 
         [Fact]
@@ -341,19 +399,19 @@ namespace Financisto.Reports.Tests
         }
 
         [Fact]
-        public async Task RefreshDataCommand_SetsBarChartModel_AfterRefresh()
+        public async Task RefreshDataCommand_SetsPieChart_AfterRefresh()
         {
             await this.vm.RefreshDataCommand.ExecuteAsync();
 
-            Assert.NotNull(this.vm.BarChartModel);
+            Assert.NotSame(ReportChart.Empty, this.vm.PieChart);
         }
 
         [Fact]
-        public async Task RefreshDataCommand_SetsPlotModel_AfterRefresh()
+        public async Task RefreshDataCommand_SetsChart_AfterRefresh()
         {
             await this.vm.RefreshDataCommand.ExecuteAsync();
 
-            Assert.NotNull(this.vm.PlotModel);
+            Assert.NotSame(ReportChart.Empty, this.vm.Chart);
         }
 
         [Fact]
@@ -387,11 +445,9 @@ namespace Financisto.Reports.Tests
             {
             }
 
-            public SafePlotModel TestGetBarChartModel(List<ReportStructureIncomeExpenseModel> list) =>
-                GetBarChartModel(list);
-
-            public SafePlotModel TestGetPlotModel(List<ReportStructureIncomeExpenseModel> list) =>
-                GetPlotModel(list);
+            /// <summary>The bar chart; the pie is <see cref="ReportStructureIncomeExpenseVM.PieChart"/>.</summary>
+            public ReportChart TestGetChart(List<ReportStructureIncomeExpenseModel> list) =>
+                GetChart(list);
 
             public string TestGetSql() => GetSql();
         }

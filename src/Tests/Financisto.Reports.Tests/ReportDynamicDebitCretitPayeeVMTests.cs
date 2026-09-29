@@ -1,13 +1,14 @@
 namespace Financisto.Reports.Tests
 {
+    using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Financisto.Common.Entities;
     using Financisto.Common.Model;
     using Financisto.DataAccess.Abstractions;
+    using LiveChartsCore.Defaults;
+    using LiveChartsCore.SkiaSharpView;
     using Moq;
-    using OxyPlot.Axes;
-    using OxyPlot.Series;
     using Xunit;
 
     public class ReportDynamicDebitCretitPayeeVMTests
@@ -41,38 +42,39 @@ namespace Financisto.Reports.Tests
         }
 
         [Fact]
-        public void GetPlotModel_FirstAxisIsLinearAxis()
+        public void GetChart_XAxisIsDateTimeAxis()
         {
             var testVm = CreateTestableVM();
 
-            var model = testVm.TestGetPlotModel(new List<ReportDynamicDebitCretitPayeeModel>());
+            var chart = testVm.TestGetChart(new List<ReportDynamicDebitCretitPayeeModel>());
 
-            Assert.IsType<LinearAxis>(model.Axes[0]);
+            Assert.IsType<DateTimeAxis>(chart.XAxes[0]);
         }
 
         [Fact]
-        public void GetPlotModel_HasOneLineSeries()
+        public void GetChart_HasOneLineSeries()
         {
             var testVm = CreateTestableVM();
 
-            var model = testVm.TestGetPlotModel(new List<ReportDynamicDebitCretitPayeeModel>());
+            var chart = testVm.TestGetChart(new List<ReportDynamicDebitCretitPayeeModel>());
 
-            Assert.Single(model.Series);
-            Assert.IsType<LineSeries>(model.Series[0]);
+            Assert.Single(chart.Series);
+            Assert.IsType<LineSeries<DateTimePoint>>(chart.Series[0]);
         }
 
         [Fact]
-        public void GetPlotModel_HasTwoAxes()
+        public void GetChart_HasOneXAxisAndOneYAxis()
         {
             var testVm = CreateTestableVM();
 
-            var model = testVm.TestGetPlotModel(new List<ReportDynamicDebitCretitPayeeModel>());
+            var chart = testVm.TestGetChart(new List<ReportDynamicDebitCretitPayeeModel>());
 
-            Assert.Equal(2, model.Axes.Count);
+            Assert.Single(chart.XAxes);
+            Assert.Single(chart.YAxes);
         }
 
         [Fact]
-        public void GetPlotModel_NullTotal_TreatedAsZero()
+        public void GetChart_NullTotal_TreatedAsZero()
         {
             var testVm = CreateTestableVM();
             var items = new List<ReportDynamicDebitCretitPayeeModel>
@@ -80,14 +82,13 @@ namespace Financisto.Reports.Tests
                 new TestModel(year: 2024, month: 1, total: null),
             };
 
-            var model = testVm.TestGetPlotModel(items);
-            var lineSeries = (LineSeries)model.Series[0];
+            var chart = testVm.TestGetChart(items);
 
-            Assert.Equal(0.0, lineSeries.Points[0].Y);
+            Assert.Equal(0.0, chart.Series[0].ValuesOf<DateTimePoint>()[0].Value);
         }
 
         [Fact]
-        public void GetPlotModel_OrdersPointsByYearThenMonth()
+        public void GetChart_OrdersPointsByYearThenMonth()
         {
             var testVm = CreateTestableVM();
             var items = new List<ReportDynamicDebitCretitPayeeModel>
@@ -97,26 +98,40 @@ namespace Financisto.Reports.Tests
                 new TestModel(year: 2024, month: 2, total: -200.0),
             };
 
-            var model = testVm.TestGetPlotModel(items);
-            var lineSeries = (LineSeries)model.Series[0];
+            var chart = testVm.TestGetChart(items);
+            var points = chart.Series[0].ValuesOf<DateTimePoint>();
 
-            Assert.Equal(-100.0, lineSeries.Points[0].Y);
-            Assert.Equal(-200.0, lineSeries.Points[1].Y);
-            Assert.Equal(-300.0, lineSeries.Points[2].Y);
+            Assert.Equal(-100.0, points[0].Value);
+            Assert.Equal(-200.0, points[1].Value);
+            Assert.Equal(-300.0, points[2].Value);
         }
 
         [Fact]
-        public void GetPlotModel_SecondAxisIsDateTimeAxis()
+        public void GetChart_PointsAreAtTheFirstOfTheMonth()
+        {
+            var testVm = CreateTestableVM();
+            var items = new List<ReportDynamicDebitCretitPayeeModel>
+            {
+                new TestModel(year: 2024, month: 2, total: -200.0),
+            };
+
+            var chart = testVm.TestGetChart(items);
+
+            Assert.Equal(new DateTime(2024, 2, 1), chart.Series[0].ValuesOf<DateTimePoint>()[0].DateTime);
+        }
+
+        [Fact]
+        public void GetChart_YAxisIsPlainAxis()
         {
             var testVm = CreateTestableVM();
 
-            var model = testVm.TestGetPlotModel(new List<ReportDynamicDebitCretitPayeeModel>());
+            var chart = testVm.TestGetChart(new List<ReportDynamicDebitCretitPayeeModel>());
 
-            Assert.IsType<DateTimeAxis>(model.Axes[1]);
+            Assert.IsType<Axis>(chart.YAxes[0]);
         }
 
         [Fact]
-        public void GetPlotModel_WithData_LineSeriesHasExpectedPointCount()
+        public void GetChart_WithData_LineSeriesHasExpectedPointCount()
         {
             var testVm = CreateTestableVM();
             var items = new List<ReportDynamicDebitCretitPayeeModel>
@@ -126,10 +141,9 @@ namespace Financisto.Reports.Tests
                 new TestModel(year: 2024, month: 3, total: -100.0),
             };
 
-            var model = testVm.TestGetPlotModel(items);
-            var lineSeries = (LineSeries)model.Series[0];
+            var chart = testVm.TestGetChart(items);
 
-            Assert.Equal(3, lineSeries.Points.Count);
+            Assert.Equal(3, chart.Series[0].ValuesOf<DateTimePoint>().Length);
         }
 
         [Fact]
@@ -229,11 +243,26 @@ namespace Financisto.Reports.Tests
         }
 
         [Fact]
-        public async Task RefreshDataCommand_SetsPlotModel_AfterRefresh()
+        public async Task RefreshDataCommand_NeitherPayeeNorCategory_ShowsMessageAndKeepsTheChart()
         {
+            this.vm.Category = new CategoryModel();
+
             await this.vm.RefreshDataCommand.ExecuteAsync();
 
-            Assert.NotNull(this.vm.PlotModel);
+            this.dialogMock.Verify(x => x.ShowMessage(It.IsAny<string>()), Times.Once);
+            this.dbMock.Verify(x => x.ExecuteQuery<ReportDynamicDebitCretitPayeeModel>(It.IsAny<string>()), Times.Never);
+            Assert.Same(ReportChart.Empty, this.vm.Chart);
+        }
+
+        [Fact]
+        public async Task RefreshDataCommand_SetsChart_AfterRefresh()
+        {
+            Assert.Same(ReportChart.Empty, this.vm.Chart);
+
+            await this.vm.RefreshDataCommand.ExecuteAsync();
+
+            Assert.NotSame(ReportChart.Empty, this.vm.Chart);
+            Assert.Single(this.vm.Chart.Series);
         }
 
         [Fact]
@@ -268,8 +297,8 @@ namespace Financisto.Reports.Tests
             {
             }
 
-            public SafePlotModel TestGetPlotModel(List<ReportDynamicDebitCretitPayeeModel> list) =>
-                GetPlotModel(list);
+            public ReportChart TestGetChart(List<ReportDynamicDebitCretitPayeeModel> list) =>
+                GetChart(list);
 
             public string TestGetSql() => GetSql();
         }

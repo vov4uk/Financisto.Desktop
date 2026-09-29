@@ -891,6 +891,9 @@
   <data name="reports_saldo_range_last_6_months" xml:space="preserve">
     <value>Останні 6 місяців</value>
   </data>
+  <data name="reports_saldo_range_all_periods" xml:space="preserve">
+    <value>Весь період</value>
+  </data>
   <data name="reports_saldo_range_last_24_months" xml:space="preserve">
     <value>Останні 24 місяці</value>
   </data>

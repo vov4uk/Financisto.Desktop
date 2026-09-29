@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Financisto.Common.Attribute;
 using Financisto.Common.Localization;
+using Financisto.Common.Utils;
 using Financisto.DataAccess.Abstractions;
 
 namespace Financisto.Reports
@@ -10,7 +11,7 @@ namespace Financisto.Reports
     [Header("reports_assets_structure")]
     public class ReportStructureActivesVM : BaseReportVM<ReportStructureActivesModel>
     {
-        private const string BaseSqlText = @" /* ReportStructureActivesVM */
+        private static readonly string BaseSqlText = @" /* ReportStructureActivesVM */
 SELECT account_title,
        account_id,
        account_is_active,
@@ -18,8 +19,8 @@ SELECT account_title,
        sort_order,
        balance,
        symbol,
-       balance_default_crr,
-       balance_usd,
+       " + ExchangeRateSql.Convert("balance", "currency_id", ExchangeRateSql.HomeCurrencyId, "{0}") + @" AS balance_default_crr,
+       " + ExchangeRateSql.Convert("balance", "currency_id", ExchangeRateSql.UsdCurrencyId, "{0}") + @" AS balance_usd,
        default_crr_symbol,
        date
 FROM   (SELECT a.title AS account_title,
@@ -28,26 +29,11 @@ FROM   (SELECT a.title AS account_title,
                a.sort_order,
                a._id AS account_id,
                Row_number() OVER ( partition BY a._id
-                                   ORDER BY Date(t.datetime / 1000, 'unixepoch') DESC, t.datetime DESC
+                                   ORDER BY Date(t.datetime / 1000, 'unixepoch') DESC, t.datetime DESC, r.transaction_id DESC
                ) AS RowNum,
                r.balance / 100.0 AS balance,
+               c._id AS currency_id,
                c.symbol,
-               CASE( SELECT _id FROM currency WHERE is_default = 1)
-               WHEN c._id THEN r.balance / 100.0
-               ELSE Round((r.balance / 100.0 ) * (SELECT rate
-                                                  FROM v_currency_exchange_rate
-                                                  WHERE to_currency_id = (SELECT _id FROM currency WHERE is_default = 1)
-                                                        AND from_currency_id = c._id
-                                                        AND(({0} BETWEEN rate_date AND rate_date_end) OR rate_date_end = 253402293599000 )), 0)
-               END AS balance_default_crr,
-               CASE( SELECT _id FROM currency WHERE name = 'USD')
-               WHEN c._id THEN r.balance / 100.0
-               ELSE Round((r.balance / 100.0 ) * (SELECT rate
-                                                  FROM v_currency_exchange_rate
-                                                  WHERE to_currency_id = (SELECT _id FROM currency WHERE name = 'USD')
-                                                        AND from_currency_id = c._id
-                                                        AND(({0} BETWEEN rate_date AND rate_date_end) OR rate_date_end = 253402293599000 )), 0)
-               END AS balance_usd,
                (SELECT symbol FROM   currency WHERE  is_default = 1) AS default_crr_symbol,
                Date(t.datetime / 1000, 'unixepoch') AS date
         FROM running_balance r

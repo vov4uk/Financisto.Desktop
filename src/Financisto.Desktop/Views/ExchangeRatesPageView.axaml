@@ -5,6 +5,8 @@
     xmlns:behaviors="using:Financisto.Common.Behaviors"
     xmlns:conv="using:Financisto.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:ent="using:Financisto.Common.Entities"
+    xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
     xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:Financisto.Desktop.ViewModels.Pages"
@@ -20,6 +22,7 @@
             </ResourceDictionary.MergedDictionaries>
             <conv:UnixTimeConverter x:Key="UnixTimeConverter" />
             <conv:NullToBoolConverter x:Key="NullToBoolConverter" />
+            <conv:EnumDescriptionConverter x:Key="EnumDescriptionConverter" />
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid
@@ -78,16 +81,35 @@
                         Height="16"
                         Source="{StaticResource ResourceKey=IconRefresh}" />
                 </Button>
+                <GroupBox
+                    Width="170"
+                    BorderThickness="0"
+                    Header="{loc:Translate Key=period}">
+                    <ComboBox
+                        Width="150"
+                        Margin="2,0"
+                        ItemsSource="{Binding Source={loc:EnumBinding {x:Type ent:ReportStructureSaldoRange}}}"
+                        SelectedItem="{Binding Range}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="ent:ReportStructureSaldoRange">
+                                <TextBlock Text="{Binding Converter={StaticResource EnumDescriptionConverter}}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </GroupBox>
             </StackPanel>
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
-                    <!--<ColumnDefinition Width="8*"/>-->
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="8*"/>
+                    <ColumnDefinition Width="2*" />
                 </Grid.ColumnDefinitions>
-                <!--<oxy:PlotView Grid.Row="1"
-                          Model="{Binding PlotModel}"
-                      />-->
+                <lvc:CartesianChart
+                    Grid.Column="0"
+                    Series="{Binding Series}"
+                    XAxes="{Binding XAxes}"
+                    YAxes="{Binding YAxes}" />
                 <DataGrid
+                    Grid.Column="1"
                     Margin="2"
                     AutoGenerateColumns="False"
                     FontSize="14"
@@ -95,8 +117,8 @@
                     ItemsSource="{Binding Path=Entities}">
                     <DataGrid.Columns>
                         <DataGridTextColumn Binding="{Binding Path=Date, Converter={StaticResource UnixTimeConverter}}" Header="{loc:Translate Key=date}" />
-                        <DataGridTextColumn Binding="{Binding Path=FromCurrency.Name}" Header="{loc:Translate Key=from}" />
-                        <DataGridTextColumn Binding="{Binding Path=ToCurrency.Name}" Header="{loc:Translate Key=to}" />
+                        <!--<DataGridTextColumn Binding="{Binding Path=FromCurrency.Name}" Header="{loc:Translate Key=from}" />
+                        <DataGridTextColumn Binding="{Binding Path=ToCurrency.Name}" Header="{loc:Translate Key=to}" />-->
                         <DataGridTextColumn Binding="{Binding Path=Rate}" Header="{loc:Translate Key=rate}" />
                     </DataGrid.Columns>
                 </DataGrid>

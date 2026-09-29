@@ -44,6 +44,12 @@ namespace Financisto.Reports
         public DateOnly Date { get; set; }
     }
 
+    public class FirstTransactionRawModel
+    {
+        [Column("first_datetime")]
+        public long? FirstDateTime { get; protected set; }
+    }
+
     public class ReportStructureSaldoRawModel
     {
         [Column("account_title")]

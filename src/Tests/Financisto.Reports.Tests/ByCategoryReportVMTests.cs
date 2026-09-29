@@ -4,11 +4,12 @@ namespace Financisto.Reports.Tests
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Financisto.Common.Entities;
+    using Financisto.Common.Localization;
     using Financisto.Common.Model;
     using Financisto.DataAccess.Abstractions;
     using Financisto.Reports.Structure;
+    using LiveChartsCore.SkiaSharpView;
     using Moq;
-    using OxyPlot.Series;
     using Xunit;
 
     public class ByCategoryReportVMTests
@@ -33,7 +34,7 @@ namespace Financisto.Reports.Tests
         }
 
         [Fact]
-        public void GetPlotModel_ExpenseItems_AddedToSecondSeries()
+        public void GetChart_ExpenseItems_AddedToSecondSeries()
         {
             var testVm = new TestableVM(this.dbMock.Object);
             var items = new List<ByCategoryReportModel>
@@ -41,15 +42,14 @@ namespace Financisto.Reports.Tests
                 new TestModel("Groceries", isExpense: 1, parentId: 1, total: 200.0),
             };
 
-            var model = testVm.TestGetPlotModel(items);
-            var expenseSeries = (BarSeries)model.Series[1];
+            var chart = testVm.TestGetChart(items);
 
-            Assert.Single(expenseSeries.Items);
-            Assert.Equal(200.0, expenseSeries.Items[0].Value);
+            Assert.Equal(new double?[] { 200.0 }, chart.Series[1].ValuesOf<double?>());
+            Assert.Equal(new double?[] { null }, chart.Series[0].ValuesOf<double?>());
         }
 
         [Fact]
-        public void GetPlotModel_IncomeItems_AddedToFirstSeries()
+        public void GetChart_IncomeItems_AddedToFirstSeries()
         {
             var testVm = new TestableVM(this.dbMock.Object);
             var items = new List<ByCategoryReportModel>
@@ -57,15 +57,64 @@ namespace Financisto.Reports.Tests
                 new TestModel("Salary", isExpense: 0, parentId: 1, total: 500.0),
             };
 
-            var model = testVm.TestGetPlotModel(items);
-            var incomeSeries = (BarSeries)model.Series[0];
+            var chart = testVm.TestGetChart(items);
 
-            Assert.Single(incomeSeries.Items);
-            Assert.Equal(500.0, incomeSeries.Items[0].Value);
+            Assert.Equal(new double?[] { 500.0 }, chart.Series[0].ValuesOf<double?>());
+            Assert.Equal(new double?[] { null }, chart.Series[1].ValuesOf<double?>());
         }
 
         [Fact]
-        public void GetPlotModel_PieChart_GroupsByParentId()
+        public void GetChart_IncomeAndExpenseOfOneCategory_ShareARow()
+        {
+            var testVm = new TestableVM(this.dbMock.Object);
+            var items = new List<ByCategoryReportModel>
+            {
+                new TestModel("Freelance", isExpense: 0, parentId: 1, total: 500.0),
+                new TestModel("Freelance", isExpense: 1, parentId: 1, total: -120.0),
+            };
+
+            var chart = testVm.TestGetChart(items);
+
+            Assert.Equal(new double?[] { 500.0 }, chart.Series[0].ValuesOf<double?>());
+            Assert.Equal(new double?[] { 120.0 }, chart.Series[1].ValuesOf<double?>());
+            Assert.Equal(new[] { "Freelance" }, chart.YAxes[0].LabelsOf());
+        }
+
+        [Fact]
+        public void GetChart_OrdersCategoriesByTheirLargestAbsoluteTotalAscending()
+        {
+            var testVm = new TestableVM(this.dbMock.Object);
+            var items = new List<ByCategoryReportModel>
+            {
+                new TestModel("Big", isExpense: 1, parentId: 1, total: -900.0),
+                new TestModel("Small", isExpense: 1, parentId: 2, total: -10.0),
+                new TestModel("Medium", isExpense: 0, parentId: 3, total: 300.0),
+            };
+
+            var chart = testVm.TestGetChart(items);
+
+            Assert.Equal(new[] { "Small", "Medium", "Big" }, chart.YAxes[0].LabelsOf());
+            Assert.Equal(new double?[] { null, 300.0, null }, chart.Series[0].ValuesOf<double?>());
+            Assert.Equal(new double?[] { 10.0, null, 900.0 }, chart.Series[1].ValuesOf<double?>());
+        }
+
+        [Fact]
+        public void GetChart_CategoryAxisLabelsAndPieNamesDropEmoji_SoLiveChartsCanDrawTheirCyrillic()
+        {
+            var testVm = new TestableVM(this.dbMock.Object);
+            var items = new List<ByCategoryReportModel>
+            {
+                new TestModel("Продукти🥗", isExpense: 1, parentId: 1, total: -100.0),
+            };
+
+            var chart = testVm.TestGetChart(items);
+
+            Assert.Equal(new[] { "Продукти" }, chart.YAxes[0].LabelsOf());
+            Assert.StartsWith("Продукти: ", testVm.PieChart.Series[0].Name);
+        }
+
+        [Fact]
+        public void GetChart_PieChart_GroupsByParentId()
         {
             var testVm = new TestableVM(this.dbMock.Object);
             var items = new List<ByCategoryReportModel>
@@ -75,25 +124,31 @@ namespace Financisto.Reports.Tests
                 new TestModel("Transport", isExpense: 1, parentId: 2, total: 80.0),
             };
 
-            testVm.TestGetPlotModel(items);
-            var pieSeries = (PieSeries)testVm.PieChartModel.Series[0];
+            testVm.TestGetChart(items);
 
-            Assert.Equal(2, pieSeries.Slices.Count);
+            Assert.Equal(2, testVm.PieChart.Series.Length);
         }
 
         [Fact]
-        public void GetPlotModel_PieChart_HasOnePieSeries()
+        public void GetChart_PieChart_HasOnePieSeriesPerCategoryAndNoAxes()
         {
             var testVm = new TestableVM(this.dbMock.Object);
+            var items = new List<ByCategoryReportModel>
+            {
+                new TestModel("Food", isExpense: 1, parentId: 1, total: 100.0),
+            };
 
-            testVm.TestGetPlotModel(new List<ByCategoryReportModel>());
+            testVm.TestGetChart(items);
 
-            Assert.Single(testVm.PieChartModel.Series);
-            Assert.IsType<PieSeries>(testVm.PieChartModel.Series[0]);
+            Assert.Single(testVm.PieChart.Series);
+            Assert.IsType<PieSeries<double>>(testVm.PieChart.Series[0]);
+            Assert.StartsWith("Food: ", testVm.PieChart.Series[0].Name);
+            Assert.Empty(testVm.PieChart.XAxes);
+            Assert.Empty(testVm.PieChart.YAxes);
         }
 
         [Fact]
-        public void GetPlotModel_PieChart_SliceValueIsAbsoluteGroupTotal()
+        public void GetChart_PieChart_SliceValueIsAbsoluteGroupTotal()
         {
             var testVm = new TestableVM(this.dbMock.Object);
             var items = new List<ByCategoryReportModel>
@@ -102,56 +157,89 @@ namespace Financisto.Reports.Tests
                 new TestModel("Food", isExpense: 1, parentId: 1, total: -50.0),
             };
 
-            testVm.TestGetPlotModel(items);
-            var pieSeries = (PieSeries)testVm.PieChartModel.Series[0];
+            testVm.TestGetChart(items);
 
-            Assert.Equal(150.0, pieSeries.Slices[0].Value);
+            Assert.Equal(new[] { 150.0 }, testVm.PieChart.Series[0].ValuesOf<double>());
         }
 
         [Fact]
-        public void GetPlotModel_ReturnsBarChartWithOneLegend()
+        public void GetChart_PieChart_IncomeAndExpenseOfACategoryAreNetted()
+        {
+            var testVm = new TestableVM(this.dbMock.Object);
+            var items = new List<ByCategoryReportModel>
+            {
+                new TestModel("Freelance", isExpense: 0, parentId: 1, total: 500.0),
+                new TestModel("Freelance", isExpense: 1, parentId: 1, total: -120.0),
+            };
+
+            testVm.TestGetChart(items);
+
+            Assert.Equal(new[] { 380.0 }, testVm.PieChart.Series[0].ValuesOf<double>());
+        }
+
+        [Fact]
+        public void GetChart_ReturnsBarChartWithTwoRowSeries()
         {
             var testVm = new TestableVM(this.dbMock.Object);
 
-            var model = testVm.TestGetPlotModel(new List<ByCategoryReportModel>());
+            var chart = testVm.TestGetChart(new List<ByCategoryReportModel>());
 
-            Assert.Single(model.Legends);
+            Assert.Equal(2, chart.Series.Length);
+            Assert.IsType<RowSeries<double?>>(chart.Series[0]);
+            Assert.IsType<RowSeries<double?>>(chart.Series[1]);
         }
 
         [Fact]
-        public void GetPlotModel_ReturnsBarChartWithTwoAxes()
+        public void GetChart_SeriesAreNamedIncomeAndExpense()
         {
             var testVm = new TestableVM(this.dbMock.Object);
 
-            var model = testVm.TestGetPlotModel(new List<ByCategoryReportModel>());
+            var chart = testVm.TestGetChart(new List<ByCategoryReportModel>());
 
-            Assert.Equal(2, model.Axes.Count);
+            Assert.Equal(LocalizationService.Instance.income, chart.Series[0].Name);
+            Assert.Equal(LocalizationService.Instance.expense, chart.Series[1].Name);
         }
 
         [Fact]
-        public void GetPlotModel_ReturnsBarChartWithTwoSeries()
+        public void GetChart_ReturnsBarChartWithOneXAxisAndOneYAxis()
         {
             var testVm = new TestableVM(this.dbMock.Object);
 
-            var model = testVm.TestGetPlotModel(new List<ByCategoryReportModel>());
+            var chart = testVm.TestGetChart(new List<ByCategoryReportModel>());
 
-            Assert.Equal(2, model.Series.Count);
-            Assert.IsType<BarSeries>(model.Series[0]);
-            Assert.IsType<BarSeries>(model.Series[1]);
+            Assert.Single(chart.XAxes);
+            Assert.Single(chart.YAxes);
         }
 
         [Fact]
-        public void GetPlotModel_SetsPieChartModel()
+        public void GetChart_ValueAxisStartsAtZeroAndLeavesRoomForTheLongestBarLabel()
         {
             var testVm = new TestableVM(this.dbMock.Object);
+            var items = new List<ByCategoryReportModel>
+            {
+                new TestModel("Rent", isExpense: 1, parentId: 1, total: -300.0),
+                new TestModel("Salary", isExpense: 0, parentId: 2, total: 500.0),
+            };
 
-            testVm.TestGetPlotModel(new List<ByCategoryReportModel>());
+            var chart = testVm.TestGetChart(items);
 
-            Assert.NotNull(testVm.PieChartModel);
+            Assert.Equal(0, chart.XAxes[0].MinLimit);
+            Assert.True(chart.XAxes[0].MaxLimit > 500.0);
         }
 
         [Fact]
-        public void GetPlotModel_UsesAbsoluteValueForBarItems()
+        public void GetChart_SetsPieChart()
+        {
+            var testVm = new TestableVM(this.dbMock.Object);
+            Assert.Same(ReportChart.Empty, testVm.PieChart);
+
+            testVm.TestGetChart(new List<ByCategoryReportModel>());
+
+            Assert.NotSame(ReportChart.Empty, testVm.PieChart);
+        }
+
+        [Fact]
+        public void GetChart_UsesAbsoluteValueForBars()
         {
             var testVm = new TestableVM(this.dbMock.Object);
             var items = new List<ByCategoryReportModel>
@@ -159,10 +247,9 @@ namespace Financisto.Reports.Tests
                 new TestModel("Rent", isExpense: 1, parentId: 1, total: -300.0),
             };
 
-            var model = testVm.TestGetPlotModel(items);
-            var expenseSeries = (BarSeries)model.Series[1];
+            var chart = testVm.TestGetChart(items);
 
-            Assert.Equal(300.0, expenseSeries.Items[0].Value);
+            Assert.Equal(new double?[] { 300.0 }, chart.Series[1].ValuesOf<double?>());
         }
 
         [Fact]
@@ -196,6 +283,7 @@ namespace Financisto.Reports.Tests
 
             Assert.NotEmpty(sql);
             Assert.Contains("BETWEEN", sql);
+            Assert.Contains(new DateTimeOffset(fromDate).ToUnixTimeMilliseconds().ToString(), sql);
         }
 
         [Fact]
@@ -212,12 +300,12 @@ namespace Financisto.Reports.Tests
         }
 
         [Fact]
-        public async Task PieChartModel_RaisesPropertyChanged_AfterRefresh()
+        public async Task PieChart_RaisesPropertyChanged_AfterRefresh()
         {
             var raised = false;
             this.vm.PropertyChanged += (_, e) =>
             {
-                if (e.PropertyName == nameof(ByCategoryReportVM.PieChartModel))
+                if (e.PropertyName == nameof(ByCategoryReportVM.PieChart))
                 {
                     raised = true;
                 }
@@ -245,19 +333,19 @@ namespace Financisto.Reports.Tests
         }
 
         [Fact]
-        public async Task RefreshDataCommand_SetsPieChartModel_AfterRefresh()
+        public async Task RefreshDataCommand_SetsPieChart_AfterRefresh()
         {
             await this.vm.RefreshDataCommand.ExecuteAsync();
 
-            Assert.NotNull(this.vm.PieChartModel);
+            Assert.NotSame(ReportChart.Empty, this.vm.PieChart);
         }
 
         [Fact]
-        public async Task RefreshDataCommand_SetsPlotModel_AfterRefresh()
+        public async Task RefreshDataCommand_SetsChart_AfterRefresh()
         {
             await this.vm.RefreshDataCommand.ExecuteAsync();
 
-            Assert.NotNull(this.vm.PlotModel);
+            Assert.NotSame(ReportChart.Empty, this.vm.Chart);
         }
 
         [Fact]
@@ -267,8 +355,8 @@ namespace Financisto.Reports.Tests
                 .Setup(x => x.ExecuteQuery<ByCategoryReportModel>(It.IsAny<string>()))
                 .ReturnsAsync(new List<ByCategoryReportModel>
                 {
-                    new TestModel("Food",      isExpense: 1, parentId: 1, total: -100.0),
-                    new TestModel("Salary",    isExpense: 0, parentId: 2, total:  200.0),
+                    new TestModel("Food", isExpense: 1, parentId: 1, total: -100.0),
+                    new TestModel("Salary", isExpense: 0, parentId: 2, total: 200.0),
                 });
 
             await this.vm.RefreshDataCommand.ExecuteAsync();
@@ -283,8 +371,9 @@ namespace Financisto.Reports.Tests
             {
             }
 
-            public SafePlotModel TestGetPlotModel(List<ByCategoryReportModel> list) =>
-                GetPlotModel(list);
+            /// <summary>The bar chart; the pie is <see cref="ByCategoryReportVM.PieChart"/>.</summary>
+            public ReportChart TestGetChart(List<ByCategoryReportModel> list) =>
+                GetChart(list);
 
             public string TestGetSql() => GetSql();
         }

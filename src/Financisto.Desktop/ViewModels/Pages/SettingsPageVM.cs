@@ -35,6 +35,9 @@ namespace Financisto.Desktop.ViewModels.Pages
             this.notifier = notifier;
             this.dialogWrapper = dialogWrapper;
             this.updateService = updateService;
+
+            // Initialize Entity so bindings don't fail when the view first loads
+            Entity = new SettingsDto();
         }
 
         public bool IsOpenExchangeRatesProviderSelected

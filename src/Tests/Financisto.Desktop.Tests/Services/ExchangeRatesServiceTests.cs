@@ -2,6 +2,7 @@ namespace Financisto.Desktop.Tests.Services
 {
     using System;
     using System.IO;
+using System.Linq;
     using System.Net;
     using System.Net.Http;
     using System.Threading;
@@ -52,6 +53,35 @@ namespace Financisto.Desktop.Tests.Services
                 Assert.Equal(11.879519523202337, r.Rate);
                 Assert.Equal(1782999003L * 1000L, r.Date);
             });
+        }
+
+        [Fact]
+        public async Task LoadFloatRates_FailedResponse_ReturnsEmptyList()
+        {
+            var currencies = new[] { MakeCurrency(840, "USD"), MakeCurrency(980, "UAH") };
+            var service = new ExchangeRatesService(
+                CreateHttpClient("error", HttpStatusCode.ServiceUnavailable), () => currencies);
+
+            var result = await service.LoadFloatRates();
+
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public async Task LoadFloatRates_SuccessResponse_ComputesCrossRatesViaUsd()
+        {
+            var json = "{\"eur\":{\"rate\":0.5,\"inverseRate\":2.0,\"date\":\"Tue, 29 Sep 2026 15:55:12 GMT\"},\"uah\":{\"rate\":40.0,\"inverseRate\":0.025,\"date\":\"Tue, 29 Sep 2026 15:55:12 GMT\"}}";
+            var currencies = new[] { MakeCurrency(840, "USD"), MakeCurrency(978, "EUR"), MakeCurrency(980, "UAH"), MakeCurrency(1, "XYZ") };
+            var service = new ExchangeRatesService(CreateHttpClient(json), () => currencies);
+
+            var result = await service.LoadFloatRates();
+
+            // XYZ is missing from the feed, so only pairs among USD/EUR/UAH remain
+            Assert.Equal(6, result.Count);
+            Assert.Equal(40.0, (double)result.Single(r => r.FromCurrencyId == 840 && r.ToCurrencyId == 980).Rate, 6);
+            Assert.Equal(2.0 * 40.0, (double)result.Single(r => r.FromCurrencyId == 978 && r.ToCurrencyId == 980).Rate, 6);
+            Assert.Equal(0.025 * 0.5, (double)result.Single(r => r.FromCurrencyId == 980 && r.ToCurrencyId == 978).Rate, 6);
+            Assert.All(result, r => Assert.Equal(new DateTimeOffset(2026, 9, 29, 15, 55, 12, TimeSpan.Zero).ToUnixTimeMilliseconds(), r.Date));
         }
 
         [Fact]

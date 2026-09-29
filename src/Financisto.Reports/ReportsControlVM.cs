@@ -79,6 +79,7 @@ namespace Financisto.Reports
         private ObservableCollection<IReportVM> _reportsVM;
         private List<TreeNode> reportsInfo;
         private IReportVM _selectedReport;
+        private TreeNode _selectedTreeNode;
 
         public ICommand CloseReportCommand => _closeReportCommand ??= new DelegateCommand<IReportVM>(CloseReport);
 
@@ -89,6 +90,22 @@ namespace Financisto.Reports
             get
             {
                 return reportsInfo;
+            }
+        }
+
+        public TreeNode SelectedTreeNode
+        {
+            get => _selectedTreeNode;
+            set
+            {
+                if (_selectedTreeNode == value)
+                    return;
+                _selectedTreeNode = value;
+                if (_selectedTreeNode?.Type != null)
+                {
+                    OpenReport(_selectedTreeNode.Type);
+                }
+                RaisePropertyChanged(nameof(SelectedTreeNode));
             }
         }
 

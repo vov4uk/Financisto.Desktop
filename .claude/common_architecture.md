@@ -152,6 +152,8 @@ Avalonia specifics: there is no `Visibility` enum, so "…ToVisibility" converte
 - **TransactionTitleUtils:** `GenerateTransactionTitle(payee, note, location, categoryId, category, toAccount)` handles split (`-1`), regular and transfer transactions.
 - **AndroidColor:** port of Android `Color.parseColor` (`#RRGGBB`, `#AARRGGBB`, Android's 23 color names; Android `green` = `#00FF00`, `gray` = `#888888`, no `#RGB`) → `TryParse(text, out Color)`; `ToHex(color)` writes `#rrggbb` (or `#aarrggbb` when not opaque) like Android's palette. Used for `account.accent_color`.
 - **DoubleUtils:** `GetDouble(text)` (flexible separator), `DoubleEqual`/`DoubleNotEqual`.
+- **ChartText:** `Label(text)` makes a user's text (category or account name) fit for a chart: LiveCharts draws a text with one typeface, so a name with an emoji (`Продукти🥗`) is drawn in the emoji font and its Cyrillic turns into boxes; `Label` drops emoji and other pictographs (and the double spaces they leave), and returns a text of only emoji as it is. Used for axis labels and pie slice names in the reports and the dashboard; details in `reports_architecture.md`, "Charts".
+- **ExchangeRateSql:** builds the SQL that converts an amount between currencies with the stored rates as of a date: `Convert(amount, fromCurrencyId, toCurrencyId, atMs)`, `Rate(...)`, and the `HomeCurrencyId` / `UsdCurrencyId` subqueries. It picks the stored rate in force at the date and falls back to the inverse pair and to a conversion through the home currency, else `NULL`. Used by the Assets and Saldo reports and the dashboard's net worth chart; details in `reports_architecture.md`, "Exchange rates".
 
 ## Attributes (`Attribute/`)
 
@@ -169,4 +171,4 @@ Avalonia specifics: there is no `Visibility` enum, so "…ToVisibility" converte
 - `TextSearch.TextPath="X"` becomes `IsTextSearchEnabled="True"` + `TextSearch.TextBinding="{Binding X}"`. `DisplayMemberPath` becomes `DisplayMemberBinding`.
 - Date/time pickers use `DateTimeOffset?` / `TimeSpan?`.
 - Resources are loaded with `avares://Financisto.Common/...`. PNG assets must be listed as `AvaloniaResource` in the csproj (they are listed individually).
-- `InternalsVisibleTo` is granted to `Financisto.Desktop.Tests` and `Financisto.Reports.Tests` (the latter is not in the solution yet, see `reports_architecture.md`). DataAccess and Desktop grant it to `Financisto.Desktop.Tests` too, DataAccess also to `Financisto.DataAccess.Tests`.
+- `InternalsVisibleTo` is granted to `Financisto.Desktop.Tests` and `Financisto.Reports.Tests` (`DbManual.SetupTests` is used by the reports' tests). DataAccess and Desktop grant it to `Financisto.Desktop.Tests` too, DataAccess also to `Financisto.DataAccess.Tests`.
