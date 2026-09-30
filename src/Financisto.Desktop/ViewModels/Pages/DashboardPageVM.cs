@@ -25,7 +25,6 @@ namespace Financisto.Desktop.ViewModels.Pages
     public class DashboardPageVM : BindableBase, IDataRefresh
     {
         private readonly IFinancistoDatabase db;
-        private readonly IToastNotifierWrapper notifier;
         private readonly AccountsTotalService accountsTotalService;
 
         private IAsyncCommand _refreshDataCommand;
@@ -106,10 +105,9 @@ ORDER BY account_is_active DESC, sort_order ASC
             private set => SetProperty(ref _homeCurrencyTotal, value);
         }
 
-        public DashboardPageVM(IFinancistoDatabase db, IToastNotifierWrapper notifier)
+        public DashboardPageVM(IFinancistoDatabase db)
         {
             this.db = db ?? throw new ArgumentNullException(nameof(db));
-            this.notifier = notifier ?? throw new ArgumentNullException(nameof(notifier));
             accountsTotalService = new AccountsTotalService(db);
         }
 

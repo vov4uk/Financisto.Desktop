@@ -1,16 +1,16 @@
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Financisto.Common.Entities;
+using Financisto.Common.Localization;
+using Financisto.Common.Model;
+using Financisto.DataAccess.Abstractions;
+using LiveChartsCore.SkiaSharpView;
+using Moq;
+using Xunit;
+
 namespace Financisto.Reports.Tests
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
-    using Financisto.Common.Entities;
-    using Financisto.Common.Localization;
-    using Financisto.Common.Model;
-    using Financisto.DataAccess.Abstractions;
-    using LiveChartsCore.SkiaSharpView;
-    using Moq;
-    using Xunit;
-
     public class ReportStructureActivesVMTests
     {
         private readonly Mock<IFinancistoDatabase> dbMock;
@@ -32,10 +32,12 @@ namespace Financisto.Reports.Tests
 
             this.dialogMock = new Mock<IDialogService>();
 
-            this.vm = new ReportStructureActivesVM(this.dbMock.Object);
-            this.vm.DialogService = this.dialogMock.Object;
-            this.vm.StartYearMonths = new YearMonths();
-            this.vm.EndYearMonths = new YearMonths();
+            this.vm = new ReportStructureActivesVM(this.dbMock.Object)
+            {
+                DialogService = this.dialogMock.Object,
+                StartYearMonths = new YearMonths(),
+                EndYearMonths = new YearMonths()
+            };
         }
 
         [Fact]

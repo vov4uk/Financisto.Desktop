@@ -85,7 +85,7 @@ namespace Financisto.Desktop.ViewModels.Pages
 
         public AccountFilterModel Account
         {
-            get => _account ??= DbManual.Account.Find(p => !p.Id.HasValue);
+            get => _account ??= DbManual.Account.Find(p => !p.Id.HasValue)!;
             set
             {
                 _account = value;
@@ -95,7 +95,7 @@ namespace Financisto.Desktop.ViewModels.Pages
 
         public CategoryModel Category
         {
-            get => _category ??= DbManual.Category.Find(p => !p.Id.HasValue);
+            get => _category ??= DbManual.Category.Find(p => !p.Id.HasValue)!;
             set
             {
                 _category = value;
@@ -105,7 +105,7 @@ namespace Financisto.Desktop.ViewModels.Pages
 
         public PayeeModel Payee
         {
-            get => _payee ??= DbManual.Payee.Find(p => !p.Id.HasValue);
+            get => _payee ??= DbManual.Payee.Find(p => !p.Id.HasValue)!;
             set
             {
                 _payee = value;
@@ -115,7 +115,7 @@ namespace Financisto.Desktop.ViewModels.Pages
 
         public ProjectModel Project
         {
-            get => _project ??= DbManual.Project.Find(p => !p.Id.HasValue);
+            get => _project ??= DbManual.Project.Find(p => !p.Id.HasValue)!;
             set
             {
                 _project = value;
@@ -125,7 +125,7 @@ namespace Financisto.Desktop.ViewModels.Pages
 
         public LocationModel Location
         {
-            get => _location ??= DbManual.Location.Find(p => !p.Id.HasValue);
+            get => _location ??= DbManual.Location.Find(p => !p.Id.HasValue)!;
             set
             {
                 _location = value;
@@ -191,11 +191,11 @@ namespace Financisto.Desktop.ViewModels.Pages
             // through the properties, so the period filter's date pickers clear too, also when the type was already AllTime
             From = null;
             To = null;
-            Account = default;
-            Category = default;
-            Payee = default;
-            Project = default;
-            Location = default;
+            Account = default!;
+            Category = default!;
+            Payee = default!;
+            Project = default!;
+            Location = default!;
             Tags = new ObservableCollection<TagModel>();
             await RefreshDataCommand.ExecuteAsync();
         }
@@ -517,7 +517,7 @@ namespace Financisto.Desktop.ViewModels.Pages
 
             if (items != null)
             {
-                Entities = new System.Collections.ObjectModel.ObservableCollection<BlotterModel>(items.OrderByDescending(x => x.Datetime).ThenByDescending(x => x.Id));
+                Entities = new ObservableCollection<BlotterModel>(items.OrderByDescending(x => x.Datetime).ThenByDescending(x => x.Id));
             }
         }
 

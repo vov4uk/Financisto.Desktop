@@ -22,6 +22,7 @@ namespace Financisto.Desktop.Wizards.MonoWizard.ViewModel
         private readonly IDialogWrapper _dialogWrapper;
         private DelegateCommand _clearAllNotesCommand;
         private DelegateCommand<FinancistoTransactionDto> _deleteCommand;
+        private DelegateCommand<FinancistoTransactionDto> _clearNoteCommand;
         private AsyncCommand<FinancistoTransactionDto> _addRuleCommand;
         private AsyncCommand<FinancistoTransactionDto> _transferCommand;
         List<AccountFilterModel> accounts;
@@ -46,11 +47,25 @@ namespace Financisto.Desktop.Wizards.MonoWizard.ViewModel
             }
         }
 
+        public DelegateCommand<FinancistoTransactionDto> ClearNoteCommand
+        {
+            get
+            {
+                return _clearNoteCommand ??= new DelegateCommand<FinancistoTransactionDto>(tr =>
+                {
+                    if (tr != null)
+                    {
+                        tr.Note = null;
+                    }
+                });
+            }
+        }
+
         public AsyncCommand<FinancistoTransactionDto> AddRuleCommand
         {
             get
             {
-                return _addRuleCommand ??= new AsyncCommand<FinancistoTransactionDto>(tr => OpenRulesDialogAsync(tr?.Note, tr?.MCC ?? 0));
+                return _addRuleCommand ??= new AsyncCommand<FinancistoTransactionDto>(tr => OpenRulesDialogAsync(tr?.Note!, tr?.MCC ?? 0));
             }
         }
 
@@ -77,8 +92,11 @@ namespace Financisto.Desktop.Wizards.MonoWizard.ViewModel
             {
                 financistoTransactions = value;
                 RaisePropertyChanged(nameof(FinancistoTransactions));
+                RaisePropertyChanged(nameof(HasMcc));
             }
         }
+
+        public bool HasMcc => FinancistoTransactions?.Any(x => x.MCC > 0) == true;
 
         public List<AccountFilterModel> Accounts
         {
@@ -231,7 +249,7 @@ namespace Financisto.Desktop.Wizards.MonoWizard.ViewModel
             var location = DbManual.Location
                 .Where(x => x.Id > 0 && x.IsActive)
                 .FirstOrDefault(l => ContainsString(l.Title, desc) || ContainsString(l.Address, desc));
-            if (location != null)
+            if (location?.Id != null)
             {
                 locationId = location.Id.Value;
             }
@@ -243,7 +261,7 @@ namespace Financisto.Desktop.Wizards.MonoWizard.ViewModel
             var category = DbManual.Category
                     .Where(x => x.Id > 0)
                     .FirstOrDefault(l => ContainsString(l.Title, desc));
-            if (category != null)
+            if (category?.Id != null)
             {
                 categoryId = category.Id.Value;
             }

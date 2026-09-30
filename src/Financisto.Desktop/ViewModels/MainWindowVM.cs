@@ -309,7 +309,7 @@ namespace Financisto.Desktop.ViewModels
                 case nameof(SettingsPageVM):
                     return _pages.GetOrAdd(type, _ => new SettingsPageVM(db, dialogWrapper, notifier, updateService));
                 case nameof(DashboardPageVM):
-                    return _pages.GetOrAdd(type, _ => new DashboardPageVM(db, notifier));
+                    return _pages.GetOrAdd(type, _ => new DashboardPageVM(db));
 
                 default: throw new NotSupportedException($"{type.FullName} not supported");
             }

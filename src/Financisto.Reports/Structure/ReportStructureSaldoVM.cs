@@ -241,13 +241,13 @@ ORDER BY account_is_active DESC, sort_order ASC
 
             ISeries[] series =
             [
-                new ColumnSeries<double>
+                new StackedColumnSeries<double>
                 {
                     Name = LocalizationService.Instance.assets,
                     Values = source.Select(Assets).ToArray(),
                     Fill = ReportCharts.Fill(ReportCharts.Green),
                 },
-                new ColumnSeries<double>
+                new StackedColumnSeries<double>
                 {
                     Name = LocalizationService.Instance.liabilities,
                     Values = source.Select(Liabilities).ToArray(),

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="System.Reactive" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="Avalonia.Metadata.XmlnsDefinitionAttribute">
+      <_Parameter1>https://searchable-combobox.com</_Parameter1>
+      <_Parameter2>AvaloniaSearchableComboBox</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+</Project>

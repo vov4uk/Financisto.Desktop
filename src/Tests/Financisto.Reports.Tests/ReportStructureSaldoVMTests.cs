@@ -164,8 +164,8 @@ namespace Financisto.Reports.Tests
 
             var chart = testVm.TestGetChart(new List<ReportStructureSaldoModel>());
 
-            Assert.IsType<ColumnSeries<double>>(chart.Series[0]);
-            Assert.IsType<ColumnSeries<double>>(chart.Series[1]);
+            Assert.IsType<StackedColumnSeries<double>>(chart.Series[0]);
+            Assert.IsType<StackedColumnSeries<double>>(chart.Series[1]);
             Assert.IsType<LineSeries<double>>(chart.Series[2]);
             Assert.Equal(LocalizationService.Instance.assets, chart.Series[0].Name);
             Assert.Equal(LocalizationService.Instance.liabilities, chart.Series[1].Name);

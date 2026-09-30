@@ -1,16 +1,14 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Financisto.DataAccess;
+using Financisto.DataAccess.Data;
+using Financisto.Desktop.ViewModels.Pages;
+using Xunit;
+
 namespace Financisto.Desktop.Tests.Pages
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Threading.Tasks;
-    using Financisto.DataAccess;
-    using Financisto.DataAccess.Data;
-    using Financisto.Desktop.Helpers;
-    using Financisto.Desktop.ViewModels.Pages;
-    using Moq;
-    using Xunit;
-
     /// <summary>The net worth chart of the dashboard against a real in-memory database, with only some exchange rates stored.</summary>
     public class DashboardPageVMTests : IDisposable
     {
@@ -31,7 +29,7 @@ namespace Financisto.Desktop.Tests.Pages
         public async Task NetWorth_ConvertsEveryMonthWithTheRateInForceAtItsEnd()
         {
             var raisedRateMonth = await this.Setup();
-            var vm = new DashboardPageVM(this.db, new Mock<IToastNotifierWrapper>().Object);
+            var vm = new DashboardPageVM(this.db);
 
             await vm.RefreshDataCommand.ExecuteAsync();
 
@@ -52,7 +50,7 @@ namespace Financisto.Desktop.Tests.Pages
         public async Task NetWorth_AccountWithoutRate_IsLeftOutInsteadOfBreakingTheChart()
         {
             await this.Setup();
-            var vm = new DashboardPageVM(this.db, new Mock<IToastNotifierWrapper>().Object);
+            var vm = new DashboardPageVM(this.db);
 
             await vm.RefreshDataCommand.ExecuteAsync();
 
