@@ -1,9 +1,8 @@
-﻿using Avalonia;
+﻿using System.Reactive.Linq;
+using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Automation.Peers;
 using Avalonia.Controls;
-using System;
-using System.Reactive.Linq;
 
 namespace AvaloniaSearchableComboBox
 {

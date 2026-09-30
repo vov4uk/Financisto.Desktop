@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/CustomControls/">
+    <Project Path="src/CustomControls/AvaloniaSearchableComboBox/AvaloniaSearchableComboBox.csproj" />
+    <Project Path="src/CustomControls/Message.Avalonia/Message.Avalonia.csproj" />
+  </Folder>
   <Folder Name="/SolutionItems/">
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />
@@ -12,8 +16,6 @@
     <Project Path="src/Tests/Financisto.Reports.Tests/Financisto.Reports.Tests.csproj" />
     <Project Path="src/Tests/Financisto.Tests.Common/Financisto.Tests.Common.csproj" />
   </Folder>
-  <Project Path="src/AvaloniaSearchableComboBox/AvaloniaSearchableComboBox.csproj" />
-  <Project Path="src/Message.Avalonia/Message.Avalonia.csproj" />
   <Project Path="src/Financisto.Adapter/Financisto.Adapter.csproj" />
   <Project Path="src/Financisto.Common/Financisto.Common.csproj" />
   <Project Path="src/Financisto.DataAccess/Financisto.DataAccess.csproj" />
