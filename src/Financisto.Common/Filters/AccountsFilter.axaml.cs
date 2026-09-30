@@ -8,63 +8,63 @@ using Avalonia.Interactivity;
 using Financisto.Common.Entities;
 using Financisto.Common.Model;
 
-namespace Financisto.Common.Controls
+namespace Financisto.Common.Filters
 {
     // Avalonia's ComboBox has no built-in multi-select, so this opens a flyout of checkboxes instead.
     [ExcludeFromCodeCoverage]
-    public partial class TagSelector : UserControl
+    public partial class AccountsFilter : UserControl
     {
-        public static readonly StyledProperty<ObservableCollection<TagModel>> SelectedTagsProperty =
-            AvaloniaProperty.Register<TagSelector, ObservableCollection<TagModel>>(
-                nameof(SelectedTags),
+        public static readonly StyledProperty<ObservableCollection<AccountFilterModel>> SelectedAccountsProperty =
+            AvaloniaProperty.Register<AccountsFilter, ObservableCollection<AccountFilterModel>>(
+                nameof(SelectedAccounts),
                 defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
 
-        private readonly ObservableCollection<TagSelectionItem> _items = new();
+        private readonly ObservableCollection<AccountSelectionItem> _items = new();
         private bool _isSyncingFromExternal;
         private bool _isSyncingFromItems;
 
-        public TagSelector()
+        public AccountsFilter()
         {
             InitializeComponent();
 
-            foreach (var tag in DbManual.Tag.Where(t => t.Id.HasValue))
+            foreach (var account in DbManual.SelectableAccounts)
             {
-                var item = new TagSelectionItem(tag);
+                var item = new AccountSelectionItem(account);
                 item.PropertyChanged += OnItemPropertyChanged;
                 _items.Add(item);
             }
 
-            TagsItemsControl.ItemsSource = _items;
+            AccountsItemsControl.ItemsSource = _items;
             UpdateHeaderText();
         }
 
-        public ObservableCollection<TagModel> SelectedTags
+        public ObservableCollection<AccountFilterModel> SelectedAccounts
         {
-            get => GetValue(SelectedTagsProperty);
-            set => SetValue(SelectedTagsProperty, value);
+            get => GetValue(SelectedAccountsProperty);
+            set => SetValue(SelectedAccountsProperty, value);
         }
 
         protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
         {
             base.OnPropertyChanged(change);
 
-            if (change.Property == SelectedTagsProperty && !_isSyncingFromItems)
+            if (change.Property == SelectedAccountsProperty && !_isSyncingFromItems)
             {
-                SyncItemsFromSelectedTags(change.NewValue as ObservableCollection<TagModel>);
+                SyncItemsFromSelectedAccounts(change.NewValue as ObservableCollection<AccountFilterModel>);
             }
         }
 
-        private void SyncItemsFromSelectedTags(ObservableCollection<TagModel> selectedTags)
+        private void SyncItemsFromSelectedAccounts(ObservableCollection<AccountFilterModel> selectedAccounts)
         {
-            var selectedIds = (selectedTags ?? new ObservableCollection<TagModel>())
-                .Where(t => t?.Id != null)
-                .Select(t => t.Id)
+            var selectedIds = (selectedAccounts ?? new ObservableCollection<AccountFilterModel>())
+                .Where(a => a?.Id != null)
+                .Select(a => a.Id)
                 .ToHashSet();
 
             _isSyncingFromExternal = true;
             foreach (var item in _items)
             {
-                item.IsSelected = selectedIds.Contains(item.Tag.Id);
+                item.IsSelected = selectedIds.Contains(item.Account.Id);
             }
             _isSyncingFromExternal = false;
 
@@ -73,13 +73,13 @@ namespace Financisto.Common.Controls
 
         private void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (_isSyncingFromExternal || e.PropertyName != nameof(TagSelectionItem.IsSelected))
+            if (_isSyncingFromExternal || e.PropertyName != nameof(AccountSelectionItem.IsSelected))
             {
                 return;
             }
 
             _isSyncingFromItems = true;
-            SelectedTags = new ObservableCollection<TagModel>(_items.Where(i => i.IsSelected).Select(i => i.Tag));
+            SelectedAccounts = new ObservableCollection<AccountFilterModel>(_items.Where(i => i.IsSelected).Select(i => i.Account));
             _isSyncingFromItems = false;
 
             UpdateHeaderText();
@@ -87,7 +87,7 @@ namespace Financisto.Common.Controls
 
         private void UpdateHeaderText()
         {
-            var text = string.Join(" | ", _items.Where(i => i.IsSelected).Select(i => i.Tag.Title));
+            var text = string.Join(" | ", _items.Where(i => i.IsSelected).Select(i => i.Account.Title));
             HeaderText.Text = text;
             ToolTip.SetTip(HeaderButton, string.IsNullOrEmpty(text) ? null : text);
         }
@@ -100,13 +100,13 @@ namespace Financisto.Common.Controls
             }
         }
 
-        private sealed class TagSelectionItem : INotifyPropertyChanged
+        private sealed class AccountSelectionItem : INotifyPropertyChanged
         {
             private bool _isSelected;
 
-            public TagSelectionItem(TagModel tag) => Tag = tag;
+            public AccountSelectionItem(AccountFilterModel account) => Account = account;
 
-            public TagModel Tag { get; }
+            public AccountFilterModel Account { get; }
 
             public bool IsSelected
             {

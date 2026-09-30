@@ -71,8 +71,8 @@
         <ProjectReference Include="..\Financisto.DataAccess\Financisto.DataAccess.csproj" />
         <ProjectReference Include="..\Financisto.Adapter\Financisto.Adapter.csproj" />
         <ProjectReference Include="..\Financisto.Reports\Financisto.Reports.csproj" />
-        <ProjectReference Include="..\AvaloniaSearchableComboBox\AvaloniaSearchableComboBox.csproj" />
-        <ProjectReference Include="..\Message.Avalonia\Message.Avalonia.csproj" />
+        <ProjectReference Include="..\CustomControls\AvaloniaSearchableComboBox\AvaloniaSearchableComboBox.csproj" />
+        <ProjectReference Include="..\CustomControls\Message.Avalonia\Message.Avalonia.csproj" />
     </ItemGroup>
 
 </Project>

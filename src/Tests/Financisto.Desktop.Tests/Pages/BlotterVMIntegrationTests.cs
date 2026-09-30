@@ -436,7 +436,7 @@
             Assert.Equal(5, vm.Entities.Count);
 
             await vm.ClearFiltersCommand.ExecuteAsync();
-            vm.Account = DbManual.Account.FirstOrDefault(x => x.Id == 1);
+            vm.SelectedAccounts = new ObservableCollection<AccountFilterModel> { DbManual.Account.FirstOrDefault(x => x.Id == 1) };
             await vm.RefreshDataCommand.ExecuteAsync();
             Assert.Equal(5, vm.Entities.Count);
 
@@ -464,7 +464,7 @@
             vm.Payee = DbManual.Payee.FirstOrDefault(x => x.Id == 2);
             vm.Location = DbManual.Location.FirstOrDefault(x => x.Id == 1);
             vm.Project = DbManual.Project.FirstOrDefault(x => x.Id == 1);
-            vm.Account = DbManual.Account.FirstOrDefault(x => x.Id == 2);
+            vm.SelectedAccounts = new ObservableCollection<AccountFilterModel> { DbManual.Account.FirstOrDefault(x => x.Id == 2) };
             vm.Category = DbManual.Category.FirstOrDefault(x => x.Id == 37);
             vm.From = UnixTimeConverter.Convert(1644825372000);
             await vm.RefreshDataCommand.ExecuteAsync();
@@ -478,14 +478,33 @@
 
             var vm = new BlotterPageVM(db, dialogMock.Object);
 
-            vm.Account = DbManual.Account.FirstOrDefault(x => x.Id == 1);
+            vm.SelectedAccounts = new ObservableCollection<AccountFilterModel> { DbManual.Account.FirstOrDefault(x => x.Id == 1) };
             await vm.RefreshDataCommand.ExecuteAsync();
 
             Assert.Equal(5, vm.Entities.Count);
             Assert.All(vm.Entities, e => Assert.True(e.FromAccountId == 1 || e.ToAccountId == 1));
 
             await vm.ClearFiltersCommand.ExecuteAsync();
-            Assert.Null(vm.Account?.Id);
+            Assert.Empty(vm.SelectedAccounts);
+        }
+
+        [Fact]
+        public async Task Filter_MultipleAccountsSelected_ReturnTransactionsOfAny()
+        {
+            await SetupDb(FilterTransactions());
+
+            var vm = new BlotterPageVM(db, dialogMock.Object);
+
+            vm.SelectedAccounts = new ObservableCollection<AccountFilterModel>
+            {
+                DbManual.Account.First(x => x.Id == 1),
+                DbManual.Account.First(x => x.Id == 2),
+            };
+            await vm.RefreshDataCommand.ExecuteAsync();
+
+            Assert.NotEmpty(vm.Entities);
+            Assert.All(vm.Entities, e => Assert.True(
+                e.FromAccountId == 1 || e.FromAccountId == 2 || e.ToAccountId == 1 || e.ToAccountId == 2));
         }
 
         [Fact]
@@ -513,7 +532,7 @@
         }
 
         [Fact]
-        public void PropertySetters_Account_RaisesPropertyChanged()
+        public void PropertySetters_SelectedAccounts_RaisesPropertyChanged()
         {
             var db = new FinancistoDatabase();
             var dialogMock = new Mock<IDialogWrapper>();
@@ -524,9 +543,9 @@
             inpc.PropertyChanged += (s, e) => changedProperties.Add(e.PropertyName);
 
             var mockAccount = new AccountFilterModel { Id = 1, Title = "Test" };
-            vm.Account = mockAccount;
+            vm.SelectedAccounts = new ObservableCollection<AccountFilterModel> { mockAccount };
 
-            Assert.Contains("Account", changedProperties);
+            Assert.Contains("SelectedAccounts", changedProperties);
         }
 
         [Fact]

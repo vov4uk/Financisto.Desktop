@@ -35,7 +35,7 @@ namespace Financisto.Desktop.ViewModels.Pages
         private DateTime? _from;
         private DateTime? _to;
         private PeriodType _periodType;
-        private AccountFilterModel _account;
+        private ObservableCollection<AccountFilterModel> _selectedAccounts = new ObservableCollection<AccountFilterModel>();
         private CategoryModel _category;
         private PayeeModel _payee;
         private ProjectModel _project;
@@ -83,15 +83,18 @@ namespace Financisto.Desktop.ViewModels.Pages
             }
         }
 
-        public AccountFilterModel Account
+        public ObservableCollection<AccountFilterModel> SelectedAccounts
         {
-            get => _account ??= DbManual.Account.Find(p => !p.Id.HasValue)!;
+            get => _selectedAccounts;
             set
             {
-                _account = value;
-                RaisePropertyChanged(nameof(Account));
+                _selectedAccounts = value ?? new ObservableCollection<AccountFilterModel>();
+                RaisePropertyChanged(nameof(SelectedAccounts));
             }
         }
+
+        // the account new transactions default to: only when exactly one account is filtered
+        private int? SingleAccountId => SelectedAccounts.Count == 1 ? SelectedAccounts[0]?.Id : null;
 
         public CategoryModel Category
         {
@@ -191,7 +194,7 @@ namespace Financisto.Desktop.ViewModels.Pages
             // through the properties, so the period filter's date pickers clear too, also when the type was already AllTime
             From = null;
             To = null;
-            Account = default!;
+            SelectedAccounts = new ObservableCollection<AccountFilterModel>();
             Category = default!;
             Payee = default!;
             Project = default!;
@@ -256,9 +259,9 @@ namespace Financisto.Desktop.ViewModels.Pages
         private async Task AddTransfer()
         {
             Transaction transfer = await db.GetOrCreateTransactionAsync(0);
-            if (Account?.Id != null)
+            if (SingleAccountId != null)
             {
-                transfer.FromAccountId = (int)Account.Id;
+                transfer.FromAccountId = SingleAccountId.Value;
             }
             await OpenTransferDialogAsync(transfer);
         }
@@ -288,9 +291,9 @@ namespace Financisto.Desktop.ViewModels.Pages
             Transaction transaction = await db.GetOrCreateTransactionAsync(0);
             IEnumerable<Transaction> subTransactions = await db.GetSubTransactionsAsync(0);
 
-            if (Account?.Id != null)
+            if (SingleAccountId != null)
             {
-                transaction.FromAccountId = (int)Account.Id;
+                transaction.FromAccountId = SingleAccountId.Value;
             }
 
             await OpenTransactionDialogAsync(transaction, subTransactions);
@@ -475,9 +478,10 @@ namespace Financisto.Desktop.ViewModels.Pages
 
             Expression<Func<BlotterTransactions, bool>> predicate = x => x.DateTime >= fromUnix && x.DateTime <= toUnix;
 
-            if (Account?.Id != null)
+            var accountIds = SelectedAccounts.Where(a => a?.Id != null).Select(a => a.Id.Value).ToList();
+            if (accountIds.Count > 0)
             {
-                predicate = predicate.And(x => x.FromAccountId == _account.Id || x.ToAccountId == _account.Id);
+                predicate = predicate.And(x => accountIds.Contains(x.FromAccountId) || (x.ToAccountId != null && accountIds.Contains(x.ToAccountId.Value)));
             }
 
             if (Category?.Id != null)

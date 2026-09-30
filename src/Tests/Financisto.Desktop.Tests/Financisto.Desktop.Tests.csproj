@@ -1,10 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
       <TargetFramework>net10.0</TargetFramework>
-      <!-- Financisto.Desktop is a self-contained win-x64 exe; a referencing project must be too (NETSDK1151) -->
-      <SelfContained>true</SelfContained>
+      <!-- Financisto.Desktop is a self-contained win-x64 exe. Keep the tests framework-dependent (so "dotnet test" can host them) and skip the NETSDK1151 self-contained match check -->
       <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+      <SelfContained>false</SelfContained>
+      <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
       <IsPackable>false</IsPackable>
       <DebugType>full</DebugType>
       <AssemblyName>Financisto.Desktop.Tests</AssemblyName>
