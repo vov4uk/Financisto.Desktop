@@ -15,8 +15,7 @@
         x:Name="HeaderButton"
         Height="32"
         HorizontalAlignment="Stretch"
-        HorizontalContentAlignment="Left"
-        MaxWidth="220">
+        HorizontalContentAlignment="Left">
         <TextBlock x:Name="HeaderText" TextTrimming="CharacterEllipsis" />
         <Button.Flyout>
             <Flyout Placement="BottomEdgeAlignedLeft">
