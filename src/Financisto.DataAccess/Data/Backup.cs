@@ -29,6 +29,8 @@ namespace Financisto.DataAccess.Data
         public const string CCARD_CLOSING_DATE_TABLE = "ccard_closing_date";
         public const string EXCHANGE_RATES_TABLE = "currency_exchange_rate";
         public const string DATABASE_VERSION = "DATABASE_VERSION";
+        /// <summary>Android DB schema version (Database.DATABASE_VERSION) this schema is in sync with.</summary>
+        public const int CURRENT_DATABASE_VERSION = 252;
         public const string VERSION_NAME = "VERSION_NAME";
         public const string VERSION_CODE = "VERSION_CODE";
         public const string PACKAGE = "PACKAGE";

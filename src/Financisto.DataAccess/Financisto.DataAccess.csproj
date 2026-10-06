@@ -83,6 +83,8 @@
     <EmbeddedResource Include="DataBase\Scripts\alter\20260905_0241_add_payee_locations_alias.sql" />
     <EmbeddedResource Include="DataBase\Scripts\alter\20260910_1200_add_tags_to_transactions.sql" />
     <EmbeddedResource Include="DataBase\Scripts\alter\20260910_1300_create_tag_table.sql" />
+    <EmbeddedResource Include="DataBase\Scripts\alter\20261005_1200_add_location_id_to_sms_template.sql" />
+    <EmbeddedResource Include="DataBase\Scripts\alter\20261006_0452_add_match_group_summary_to_sms_template.sql" />
     <EmbeddedResource Include="DataBase\Scripts\create\account.sql" />
     <EmbeddedResource Include="DataBase\Scripts\create\attributes.sql" />
     <EmbeddedResource Include="DataBase\Scripts\create\budget.sql" />
