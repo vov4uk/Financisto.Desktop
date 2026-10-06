@@ -1023,4 +1023,106 @@
   <data name="app_theme_dark" xml:space="preserve">
     <value>Темна</value>
   </data>
+  <data name="sms_templates" xml:space="preserve">
+    <value>Шаблони SMS</value>
+  </data>
+  <data name="sms_template" xml:space="preserve">
+    <value>Шаблон SMS</value>
+  </data>
+  <data name="sms_template_details" xml:space="preserve">
+    <value>Деталі шаблону SMS</value>
+  </data>
+  <data name="add_sms_template" xml:space="preserve">
+    <value>Додати шаблон</value>
+  </data>
+  <data name="add_rule" xml:space="preserve">
+    <value>Додати правило</value>
+  </data>
+  <data name="sms_kind_rule" xml:space="preserve">
+    <value>Правило</value>
+  </data>
+  <data name="sms_kind_template" xml:space="preserve">
+    <value>Шаблон</value>
+  </data>
+  <data name="sms_sender_column" xml:space="preserve">
+    <value>Відправник</value>
+  </data>
+  <data name="sms_template_column" xml:space="preserve">
+    <value>Шаблон</value>
+  </data>
+  <data name="sms_description" xml:space="preserve">
+    <value>Опис</value>
+  </data>
+  <data name="sms_description_hint" xml:space="preserve">
+    <value>Показується у списку для ідентифікації; необов'язково</value>
+  </data>
+  <data name="sms_sender" xml:space="preserve">
+    <value>Відправник сповіщення / Номер SMS</value>
+  </data>
+  <data name="sms_number_hint" xml:space="preserve">
+    <value>Назва програми відправника сповіщень або номер відправника SMS, використовуйте %, щоб вказати відповідність символу підстановки</value>
+  </data>
+  <data name="sms_tpl_title" xml:space="preserve">
+    <value>Шаблон (натисніть, щоб побачити заповнювачі)</value>
+  </data>
+  <data name="sms_tpl_desc" xml:space="preserve">
+    <value>Заповнювачі:
+{{p}} - ціна
+{{a}} - останні цифри рахунку
+{{c}} - ім'я рахунку
+{{x}} - переказ на ім'я рахунку
+{{f}} - код валюти ISO 4217
+{{e}} - назва одержувача
+{{r}} - назва проекту (не може містити пробіл)
+{{t}} - текст примітки (нежадібний вираз)
+{{u}} - текст примітки (жадібний вираз)
+{{g}} - Unix-час у мілісекундах
+{{*}} - будь-які символи/слова</value>
+  </data>
+  <data name="sms_tpl_hint" xml:space="preserve">
+    <value>Тут вказано шаблон із заповнювачами</value>
+  </data>
+  <data name="sms_tpl_match_normal" xml:space="preserve">
+    <value>Відповідати звичайним сповіщенням</value>
+  </data>
+  <data name="sms_tpl_match_group_summary" xml:space="preserve">
+    <value>Відповідати груповим сповіщенням</value>
+  </data>
+  <data name="sms_note_title" xml:space="preserve">
+    <value>Примітка (натисніть, щоб побачити заповнювачі)</value>
+  </data>
+  <data name="sms_note_desc" xml:space="preserve">
+    <value>Заповнювачі:
+{{t}} - текст примітки, витягнутий за шаблоном</value>
+  </data>
+  <data name="sms_note_hint" xml:space="preserve">
+    <value>Вкажіть примітку для застосування до згенерованої транзакції</value>
+  </data>
+  <data name="sms_tpl_check" xml:space="preserve">
+    <value>Спробуйте приклад сповіщення тут</value>
+  </data>
+  <data name="choose_sms_template_type_and_account" xml:space="preserve">
+    <value>Виберіть тип і рахунок (необов'язково)</value>
+  </data>
+  <data name="choose_sms_template_transfer_to_account" xml:space="preserve">
+    <value>Виберіть переказ на рахунок (необов'язково)</value>
+  </data>
+  <data name="tpl_not_transfer" xml:space="preserve">
+    <value>Не переказ</value>
+  </data>
+  <data name="tpl_parse_result" xml:space="preserve">
+    <value>Приклад результату обробки сповіщення</value>
+  </data>
+  <data name="tpl_parse_not_found" xml:space="preserve">
+    <value>(Не знайдено)</value>
+  </data>
+  <data name="tpl_failed_to_parse" xml:space="preserve">
+    <value>(Неможливо розпізнати '{0}' як десяткове)</value>
+  </data>
+  <data name="no_account" xml:space="preserve">
+    <value>Рахунок не вказаний</value>
+  </data>
+  <data name="sms_sender_required" xml:space="preserve">
+    <value>Відправник і шаблон обов'язкові</value>
+  </data>
 </root>

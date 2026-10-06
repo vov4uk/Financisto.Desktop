@@ -207,4 +207,36 @@ public sealed class LocalizationService : INotifyPropertyChanged
     public string confirm_delete_account => Get();
     public string icon_text => Get();
     public string accent_color => Get();
+
+    // SMS templates
+    public string sms_templates => Get();
+    public string sms_template => Get();
+    public string sms_template_details => Get();
+    public string add_sms_template => Get();
+    public string add_rule => Get();
+    public string sms_kind_rule => Get();
+    public string sms_kind_template => Get();
+    public string sms_sender_column => Get();
+    public string sms_template_column => Get();
+    public string sms_description => Get();
+    public string sms_description_hint => Get();
+    public string sms_sender => Get();
+    public string sms_number_hint => Get();
+    public string sms_tpl_title => Get();
+    public string sms_tpl_desc => Get();
+    public string sms_tpl_hint => Get();
+    public string sms_tpl_match_normal => Get();
+    public string sms_tpl_match_group_summary => Get();
+    public string sms_note_title => Get();
+    public string sms_note_desc => Get();
+    public string sms_note_hint => Get();
+    public string sms_tpl_check => Get();
+    public string choose_sms_template_type_and_account => Get();
+    public string choose_sms_template_transfer_to_account => Get();
+    public string tpl_not_transfer => Get();
+    public string tpl_parse_result => Get();
+    public string tpl_parse_not_found => Get();
+    public string tpl_failed_to_parse => Get();
+    public string no_account => Get();
+    public string sms_sender_required => Get();
 }

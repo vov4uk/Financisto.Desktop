@@ -31,7 +31,7 @@ public class ViewLocator : IDataTemplate
         [typeof(TagsPageVM)] = typeof(TagPageView),
         [typeof(ProjectsPageVM)] = typeof(TagPageView),
         [typeof(BlotterPageVM)] = typeof(BlotterPageView),
-        [typeof(RulesPageVM)] = typeof(RulesPageView),
+        [typeof(SmsTemplatesPageVM)] = typeof(SmsTemplatesPageView),
         [typeof(SettingsPageVM)] = typeof(SettingsPageView),
         [typeof(DashboardPageVM)] = typeof(DashboardPageView),
         [typeof(ReportsControlVM)] = typeof(ReportsControl),

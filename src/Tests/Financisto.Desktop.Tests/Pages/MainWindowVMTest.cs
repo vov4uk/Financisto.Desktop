@@ -707,12 +707,17 @@
         }
 
         [Fact]
-        public async Task MenuNavigateCommand_RuleModel_SetsCurrentPage()
+        public async Task MenuNavigateCommand_SmsTemplateModel_SetsCurrentPage()
         {
+            var smsRepo = new Mock<IBaseRepository<SmsTemplate>>();
+            smsRepo.Setup(x => x.GetAllAsync()).ReturnsAsync(new List<SmsTemplate>());
+            this.dbMock.Setup(x => x.CreateUnitOfWork()).Returns(this.uowMock.Object);
+            this.uowMock.Setup(x => x.GetRepository<SmsTemplate>()).Returns(smsRepo.Object);
+            this.uowMock.Setup(x => x.Dispose());
             var vm = this.GetFinancistoVM();
-            await vm.MenuNavigateCommand.ExecuteAsync(typeof(RuleModel));
+            await vm.MenuNavigateCommand.ExecuteAsync(typeof(SmsTemplateModel));
 
-            Assert.True(vm.CurrentPage is RulesPageVM);
+            Assert.True(vm.CurrentPage is SmsTemplatesPageVM);
         }
 
         private BlotterPageVM GetBlotterVM()

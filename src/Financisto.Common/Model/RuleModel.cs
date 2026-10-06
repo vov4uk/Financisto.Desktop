@@ -24,7 +24,7 @@ namespace Financisto.Common.Model
 
     /// <summary>
     /// An import rule: when a bank transaction matches <see cref="Condition"/>, the import wizard fills
-    /// the category/location/payee/project. Rules live in rules.json (<see cref="DbManual.RulesPath"/>), not in the backup.
+    /// the category/location/payee/project. Rules are stored in the backup's sms_template table (see <see cref="RuleSmsTemplateMapper"/>).
     /// </summary>
     [ExcludeFromCodeCoverage]
     public class RuleModel : BaseModel, IActive

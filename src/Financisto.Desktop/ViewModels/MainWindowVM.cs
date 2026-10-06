@@ -105,15 +105,15 @@ namespace Financisto.Desktop.ViewModels
         {
             new(typeof(DashboardPageVM), () => LocalizationService.Instance.dashboard, "IconGlance"),
             new(typeof(AccountModel), () => LocalizationService.Instance.accounts, "IconWallet"),
+            new(typeof(CurrencyModel), () => LocalizationService.Instance.currencies, "IconDollarSign"),
             new(typeof(CategoryTreeModel), () => LocalizationService.Instance.categories, "IconFolderTree"),
+            new(typeof(TagModel), () => LocalizationService.Instance.tags, "IconTags"),
+            new(typeof(SmsTemplateModel), () => LocalizationService.Instance.sms_templates, "IconNotification"),
             new(typeof(ProjectModel), () => LocalizationService.Instance.projects, "IconListCheck"),
             new(typeof(PayeeModel), () => LocalizationService.Instance.payees, "IconAddressBook"),
             new(typeof(LocationModel), () => LocalizationService.Instance.locations, "IconMap"),
-            new(typeof(TagModel), () => LocalizationService.Instance.tags, "IconTags"),
-            new(typeof(CurrencyModel), () => LocalizationService.Instance.currencies, "IconDollarSign"),
             new(typeof(ExchangeRateModel), () => LocalizationService.Instance.exchange_rates, "IconArrowTrendUp"),
             new(typeof(BlotterModel), () => LocalizationService.Instance.blotter, "IconReceipt"),
-            new(typeof(RuleModel), () => LocalizationService.Instance.rules, "IconBoltLightning"),
             new(typeof(ReportsControlVM), () => LocalizationService.Instance.reports, "IconChartBar"),
         };
 
@@ -300,8 +300,8 @@ namespace Financisto.Desktop.ViewModels
                     return GetOrCreatePage<BlotterModel, BlotterPageVM>();
                 case nameof(CategoryTreeModel):
                     return GetOrCreatePage<CategoryTreeModel, CategoriesPageVM>();
-                case nameof(RuleModel):
-                    return GetOrCreatePage<RuleModel, RulesPageVM>();
+                case nameof(SmsTemplateModel):
+                    return GetOrCreatePage<SmsTemplateModel, SmsTemplatesPageVM>();
                 case nameof(ExchangeRateModel):
                     return _pages.GetOrAdd(type, _ => new ExchangeRatesPageVM(db, dialogWrapper, notifier));
                 case nameof(ReportsControlVM):
