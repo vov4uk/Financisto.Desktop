@@ -20,6 +20,8 @@ namespace Financisto.Desktop.Wizards
         [Description("pdf")]
         Pko,
         [Description("csv")]
-        Revolut
+        Revolut,
+        [Description("csv")]
+        Erste
     }
 }

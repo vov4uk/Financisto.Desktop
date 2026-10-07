@@ -274,6 +274,7 @@ Ported from Financier WPF (`Wizards/`, `Helpers/BankHelper/`, `Pages/RulesVM`, `
 |---|---|---|
 | Monobank | `MonobankHelper` | CSV (CsvHelper) mapped straight onto `BankTransaction` (`[Name]` with English + Ukrainian headers) |
 | Revolut | `RevolutHelper` | CSV, `Model/RevolutRow` (English + Polish headers) |
+| Erste | `ErsteHelper` | CSV without a header row (first line is a statement summary: account currency in column 5). Dates only, so `Date` = booking date (not transaction date: card payments book 1-3 days late) + minutes by the file's order (rows are newest first; the oldest row of a day is 00:00, hours roll over after 59). Within a day the file's order doesn't always match the balance column (rows are sorted by transaction date). Card titles are shortened to `<card> 44.37 PLN` + `\r\n` + `<merchant>` (`PŁATNOŚĆ KARTĄ` dropped, other wording like `PRZELEW KARTĄ` kept); a transfer's counterparty is appended unless the title already names it. Foreign-currency card titles (`KARTĄ 25.00 EUR`) fill `OperationAmount/Currency` |
 | ABankExcel / Privat | `AbankExcelHelper` / `PrivatHelper` | XLSX via MiniExcel → CSV → `AbankRow` / `PrivatRow` → `MapperHelper.ToBankTransaction` |
 | ABank / Pumb / Pireus | `ABankHelper` / `PumbHelper` / `PireusHelper` : `BankPdfHelperBase` | PDF tables via Tabula (+PdfPig) → CSV → row model |
 | Pko | `PkoHelper` | PDF text via Tabula, parsed with regexes (Polish markers such as `Saldo końcowe`) |

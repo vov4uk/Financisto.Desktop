@@ -118,6 +118,16 @@
                                 <Image Source="/Assets/bank/revolut.png" />
                             </MenuItem.Icon>
                         </MenuItem>
+                        <MenuItem
+                            Classes="bankImport"
+                            Command="{Binding ImportCommand}"
+                            CommandParameter="{x:Static Wizard:WizardTypes.Erste}"
+                            Header="{loc:Translate Key=erste}"
+                            Tag="{loc:Translate Key=csv}">
+                            <MenuItem.Icon>
+                                <Image Source="/Assets/bank/erste.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
                         <Separator />
 
                         <MenuItem

@@ -128,6 +128,7 @@ public sealed class LocalizationService : INotifyPropertyChanged
     public string pireus => Get();
     public string monobank => Get();
     public string revolut => Get();
+    public string erste => Get();
     public string a_bank => Get();
     public string import => Get();
     public string settings => Get();

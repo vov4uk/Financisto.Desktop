@@ -51,6 +51,9 @@
       <None Update="Assets\abank_3_pages.pdf">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+      <None Update="Assets\erste.csv">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
       <None Update="Assets\FreeCurrency.htm">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>

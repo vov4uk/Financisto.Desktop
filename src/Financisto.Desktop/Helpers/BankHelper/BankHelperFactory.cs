@@ -18,6 +18,7 @@ namespace Financisto.Desktop.Helpers.BankHelper
                 case WizardTypes.Privat: return new PrivatHelper();
                 case WizardTypes.Pko: return new PkoHelper();
                 case WizardTypes.Revolut: return new RevolutHelper();
+                case WizardTypes.Erste: return new ErsteHelper();
                 default:
                     throw new NotSupportedException("Bank not found");
             }

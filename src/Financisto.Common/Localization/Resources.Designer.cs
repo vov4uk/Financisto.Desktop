@@ -869,7 +869,16 @@ namespace Financisto.Common.Localization {
                 return ResourceManager.GetString("entities_loaded", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Erste.
+        /// </summary>
+        public static string erste {
+            get {
+                return ResourceManager.GetString("erste", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Exchange Rate.
         /// </summary>

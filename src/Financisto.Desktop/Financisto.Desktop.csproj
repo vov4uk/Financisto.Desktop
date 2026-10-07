@@ -45,7 +45,6 @@
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
         <PackageReference Include="AvaloniaWASM.Storage" />
-        <PackageReference Include="ClosedXML" />
         <PackageReference Include="Cogwheel" />
         <PackageReference Include="CommunityToolkit.Mvvm" />
         <PackageReference Include="CsvHelper" />

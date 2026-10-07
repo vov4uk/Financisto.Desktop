@@ -207,6 +207,9 @@
   <data name="pko" xml:space="preserve">
     <value>PKO</value>
   </data>
+  <data name="erste" xml:space="preserve">
+    <value>Erste</value>
+  </data>
   <data name="revolut" xml:space="preserve">
     <value>Revolut</value>
   </data>
