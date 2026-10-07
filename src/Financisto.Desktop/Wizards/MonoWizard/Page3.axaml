@@ -20,7 +20,7 @@
                 <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
             </ResourceDictionary.MergedDictionaries>
             <conv:AmountConverter x:Key="AmountConverter" />
-            <conv:UnixTimeConverter x:Key="DatetimeConverter" />
+            <conv:UnixTimeConverter x:Key="DatetimeConverter" Format="yyyy'-'MM'-'dd' 'HH':'mm" />
             <conv:MccConverter x:Key="MccConverter" />
             <conv:DifferentCurrencyConverter x:Key="DifferentCurrencyConverter" />
             <conv:ImportRowBackgroundConverter x:Key="ImportRowBackgroundConverter" />
@@ -105,6 +105,11 @@
                     CommandParameter="{Binding #MainGrid.SelectedItem}"
                     Gesture="Delete" />
             </DataGrid.KeyBindings>
+            <!--
+                Fixed widths (no star column, which would squash the others in a narrow window): a DataGrid builds the cells
+                of every row but the first only for columns that are on screen according to the widths known at that moment,
+                so auto-sized columns could leave Project/Payee empty.
+            -->
             <DataGrid.Columns>
                 <DataGridTemplateColumn
                     MinWidth="28"
@@ -130,7 +135,10 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <!--  Orange: transfer in another currency; pink: not exactly one of From/To account and Category chosen  -->
-                <DataGridTemplateColumn Header="{loc:Translate Key=date}" IsReadOnly="True">
+                <DataGridTemplateColumn
+                    Width="150"
+                    Header="{loc:Translate Key=date}"
+                    IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border>
@@ -155,7 +163,7 @@
                     Header="{loc:Translate Key=mcc}"
                     IsReadOnly="True"
                     IsVisible="{Binding #MainGrid.DataContext.HasMcc}" />
-                <DataGridTemplateColumn Header="{loc:Translate Key=from_account}">
+                <DataGridTemplateColumn Width="150" Header="{loc:Translate Key=from_account}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <sc:SearchableComboBox
@@ -168,7 +176,7 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="{loc:Translate Key=category}">
+                <DataGridTemplateColumn Width="190" Header="{loc:Translate Key=category}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <sc:SearchableComboBox
@@ -181,7 +189,7 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="{loc:Translate Key=to_account}">
+                <DataGridTemplateColumn Width="150" Header="{loc:Translate Key=to_account}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <sc:SearchableComboBox
@@ -194,7 +202,7 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="{loc:Translate Key=amount}">
+                <DataGridTemplateColumn Width="95" Header="{loc:Translate Key=amount}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock
@@ -204,14 +212,14 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="{loc:Translate Key=original}">
+                <DataGridTemplateColumn Width="95" Header="{loc:Translate Key=original}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Classes="number" Text="{Binding OriginalFromAmount, StringFormat=F2, Converter={StaticResource AmountConverter}, ConverterParameter=false}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="{loc:Translate Key=location}">
+                <DataGridTemplateColumn Width="190" Header="{loc:Translate Key=location}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <sc:SearchableComboBox
@@ -225,7 +233,10 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn MinWidth="200" Header="{loc:Translate Key=note}">
+                <DataGridTemplateColumn
+                    MinWidth="200"
+                    Width="420"
+                    Header="{loc:Translate Key=note}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Grid VerticalAlignment="Center" ColumnDefinitions="*,Auto">
@@ -251,7 +262,7 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="{loc:Translate Key=project}">
+                <DataGridTemplateColumn Width="160" Header="{loc:Translate Key=project}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <sc:SearchableComboBox
@@ -264,7 +275,7 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="{loc:Translate Key=payee}">
+                <DataGridTemplateColumn Width="160" Header="{loc:Translate Key=payee}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <sc:SearchableComboBox

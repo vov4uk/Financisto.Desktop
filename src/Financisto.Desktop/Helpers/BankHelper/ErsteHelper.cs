@@ -61,9 +61,14 @@ namespace Financisto.Desktop.Helpers.BankHelper
                     continue;
                 }
 
+                // The second column is when the operation happened; the booking date (first column) only backs it up.
+                var date = DateTime.TryParseExact(csv.GetField(1), DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var transactionDate)
+                    ? transactionDate
+                    : bookingDate;
+
                 rows.Add(new ErsteRow
                 {
-                    BookingDate = bookingDate,
+                    Date = date,
                     Title = csv.GetField(2)?.Trim() ?? string.Empty,
                     Counterparty = csv.GetField(3)?.Trim() ?? string.Empty,
                     Amount = DoubleUtils.GetDouble(csv.GetField(5)),
@@ -76,9 +81,9 @@ namespace Financisto.Desktop.Helpers.BankHelper
 
         private static IEnumerable<BankTransaction> ToTransactions(List<ErsteRow> rows, string accountCurrency)
         {
-            foreach (var day in rows.GroupBy(r => r.BookingDate).OrderBy(g => g.Key))
+            foreach (var day in rows.GroupBy(r => r.Date).OrderBy(g => g.Key))
             {
-                // The statement has no times but lists rows newest first, so the oldest row of a booking day gets 00:00
+                // The statement has no times but lists rows newest first, so the oldest row of a day gets 00:00
                 // and every newer one a minute more (the hour rolls over after 59 rows). That keeps the statement's order,
                 // stops the importer's (account, time, amount) duplicate check from collapsing same-day rows, and gives
                 // the wizard's "newer than the selected transaction" filter something to compare within a day.
@@ -88,7 +93,7 @@ namespace Financisto.Desktop.Helpers.BankHelper
                     var (operationAmount, operationCurrency) = GetOperationAmount(row, accountCurrency);
                     yield return new BankTransaction
                     {
-                        Date = row.BookingDate.AddMinutes(minutes++),
+                        Date = row.Date.AddMinutes(minutes++),
                         Description = GetDescription(row),
                         CardCurrencyAmount = row.Amount,
                         OperationAmount = operationAmount,
@@ -128,7 +133,7 @@ namespace Financisto.Desktop.Helpers.BankHelper
 
         private sealed class ErsteRow
         {
-            public DateTime BookingDate { get; init; }
+            public DateTime Date { get; init; }
             public string Title { get; init; }
             public string Counterparty { get; init; }
             public double Amount { get; init; }

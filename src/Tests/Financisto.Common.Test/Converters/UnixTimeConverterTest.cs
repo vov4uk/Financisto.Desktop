@@ -29,6 +29,30 @@
             Assert.Equal(exp, actual);
         }
 
+        [Fact]
+        public void Convert_CustomFormat_UsedForTimeOfDay()
+        {
+            var custom = new UnixTimeConverter { Format = "yyyy'-'MM'-'dd' 'HH':'mm" };
+            var local = new DateTime(2022, 1, 14, 11, 29, 23, DateTimeKind.Local);
+            long value = new DateTimeOffset(local).ToUnixTimeMilliseconds();
+
+            var actual = custom.Convert(value, null, null, CultureInfo.InvariantCulture);
+
+            Assert.Equal("2022-01-14 11:29", actual);
+        }
+
+        [Fact]
+        public void Convert_CustomFormat_MidnightStillShownAsDay()
+        {
+            var custom = new UnixTimeConverter { Format = "yyyy'-'MM'-'dd' 'HH':'mm" };
+            var local = new DateTime(2022, 1, 14, 0, 0, 0, DateTimeKind.Local);
+            long value = new DateTimeOffset(local).ToUnixTimeMilliseconds();
+
+            var actual = custom.Convert(value, null, null, CultureInfo.InvariantCulture);
+
+            Assert.Equal("2022-01-14", actual);
+        }
+
         [InlineAutoData("2022-01-14 11:29:23")]
         [InlineAutoData("2022-01-14")]
         [Theory]

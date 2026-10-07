@@ -44,7 +44,7 @@ namespace Financisto.Desktop.Tests.Wizards.Mono.Erste
         {
             var first = ParseSample()[0];
 
-            Assert.Equal(new DateTime(2026, 10, 7), first.Date);
+            Assert.Equal(new DateTime(2026, 10, 5), first.Date);
             Assert.Equal("VISA PLAT 421352******8814 PRZELEW KARTĄ 50.00 PLN\r\nRevolut**3169* Dublin", first.Description);
             Assert.Equal(-50.00, first.CardCurrencyAmount);
             Assert.Equal(-50.00, first.OperationAmount);
@@ -83,30 +83,40 @@ namespace Financisto.Desktop.Tests.Wizards.Mono.Erste
         }
 
         [Fact]
-        public void ParseReport_ValidCsv_UsesBookingDateNotTransactionDate()
+        public void ParseReport_ValidCsv_UsesSecondColumnDateNotBookingDate()
         {
             var hotel = ParseSample().Single(r => r.Description.Contains("HOTELLIBERTE33"));
 
-            // Booked 05-10-2026, paid 03-10-2026.
-            Assert.Equal(new DateTime(2026, 10, 5), hotel.Date.Date);
+            // Booked 05-10-2026 (first column), paid 03-10-2026 (second column).
+            Assert.Equal(new DateTime(2026, 10, 3), hotel.Date.Date);
+        }
+
+        [Fact]
+        public void ParseReport_SecondColumnDateMissing_FallsBackToBookingDate()
+        {
+            var result = ParseLines(
+                StatementLine,
+                "07-10-2026,,VISA PLAT 421352******8814 PŁATNOŚĆ KARTĄ 9.00 PLN Coffee,,,\"-9,00\",\"91,00\",1,");
+
+            Assert.Equal(new DateTime(2026, 10, 7), Assert.Single(result).Date);
         }
 
         [Fact]
         public void ParseReport_SameDayRows_KeepFileOrderWithMinutes()
         {
-            var booked05 = ParseSample().Where(r => r.Date.Date == new DateTime(2026, 10, 5)).ToList();
+            var paid03 = ParseSample().Where(r => r.Date.Date == new DateTime(2026, 10, 3)).ToList();
 
             // The file lists these newest first (balances 6649.08, 6355.08, 6626.08, 6400.08), so the last one is the oldest.
-            Assert.Equal(new[] { 6649.08, 6355.08, 6626.08, 6400.08 }, booked05.Select(r => r.Balance));
+            Assert.Equal(new[] { 6649.08, 6355.08, 6626.08, 6400.08 }, paid03.Select(r => r.Balance));
             Assert.Equal(
                 new[]
                 {
-                    new DateTime(2026, 10, 5, 0, 3, 0),
-                    new DateTime(2026, 10, 5, 0, 2, 0),
-                    new DateTime(2026, 10, 5, 0, 1, 0),
-                    new DateTime(2026, 10, 5, 0, 0, 0),
+                    new DateTime(2026, 10, 3, 0, 3, 0),
+                    new DateTime(2026, 10, 3, 0, 2, 0),
+                    new DateTime(2026, 10, 3, 0, 1, 0),
+                    new DateTime(2026, 10, 3, 0, 0, 0),
                 },
-                booked05.Select(r => r.Date));
+                paid03.Select(r => r.Date));
         }
 
         [Fact]
@@ -120,9 +130,9 @@ namespace Financisto.Desktop.Tests.Wizards.Mono.Erste
 
             Assert.Equal(61, result.Count);
             Assert.Equal("Row 0", result[0].Description);
-            Assert.Equal(new DateTime(2026, 10, 7, 1, 0, 0), result[0].Date);
+            Assert.Equal(new DateTime(2026, 10, 6, 1, 0, 0), result[0].Date);
             Assert.Equal("Row 60", result[^1].Description);
-            Assert.Equal(new DateTime(2026, 10, 7, 0, 0, 0), result[^1].Date);
+            Assert.Equal(new DateTime(2026, 10, 6, 0, 0, 0), result[^1].Date);
         }
 
         [Fact]
