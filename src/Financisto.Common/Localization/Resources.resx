@@ -516,6 +516,9 @@
   <data name="recipes_instructions_line1" xml:space="preserve">
     <value>Paste recipes text. Make recipes photo and parse text via Google Lens or other OCR. I'll look for numbers with article symbol.</value>
   </data>
+  <data name="recipe_wizard_total_format" xml:space="preserve">
+    <value>Total: {0:F2}   Current: {1:F2}   Diff: {2:F2}</value>
+  </data>
   <data name="recipes_instructions_line2" xml:space="preserve">
     <value>For example: "123.45 A", "-54,32-A", "100 Б", "123.01 a"</value>
   </data>
@@ -540,6 +543,9 @@
   <data name="please_select_categories" xml:space="preserve">
     <value>Please select categories</value>
   </data>
+  <data name="please_select_date" xml:space="preserve">
+    <value>Please select date</value>
+  </data>
   <data name="please_select_account" xml:space="preserve">
     <value>Please select account</value>
   </data>
@@ -563,6 +569,9 @@
   </data>
   <data name="import_result" xml:space="preserve">
     <value>Imported {0} transactions.</value>
+  </data>
+  <data name="import_failed" xml:space="preserve">
+    <value>Could not read the {0} statement file.</value>
   </data>
   <data name="import_result_with_duplicates" xml:space="preserve">
     <value>Imported {0} transactions. Skipped {1} duplicates.</value>
@@ -882,6 +891,9 @@
   <data name="reports_saldo_range_last_6_months" xml:space="preserve">
     <value>Last 6 Months</value>
   </data>
+  <data name="reports_saldo_range_all_periods" xml:space="preserve">
+    <value>All periods</value>
+  </data>
   <data name="reports_saldo_range_last_24_months" xml:space="preserve">
     <value>Last 24 Months</value>
   </data>
@@ -1010,5 +1022,107 @@
   </data>
   <data name="app_theme_dark" xml:space="preserve">
     <value>Dark</value>
+  </data>
+  <data name="sms_templates" xml:space="preserve">
+    <value>SMS templates</value>
+  </data>
+  <data name="sms_template" xml:space="preserve">
+    <value>SMS template</value>
+  </data>
+  <data name="sms_template_details" xml:space="preserve">
+    <value>SMS template details</value>
+  </data>
+  <data name="add_sms_template" xml:space="preserve">
+    <value>Add template</value>
+  </data>
+  <data name="add_rule" xml:space="preserve">
+    <value>Add rule</value>
+  </data>
+  <data name="sms_kind_rule" xml:space="preserve">
+    <value>Rule</value>
+  </data>
+  <data name="sms_kind_template" xml:space="preserve">
+    <value>Template</value>
+  </data>
+  <data name="sms_sender_column" xml:space="preserve">
+    <value>Sender</value>
+  </data>
+  <data name="sms_template_column" xml:space="preserve">
+    <value>Template</value>
+  </data>
+  <data name="sms_description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="sms_description_hint" xml:space="preserve">
+    <value>Shown in the list to help identify; not required</value>
+  </data>
+  <data name="sms_sender" xml:space="preserve">
+    <value>Notification Sender Package / Title / SMS Number</value>
+  </data>
+  <data name="sms_number_hint" xml:space="preserve">
+    <value>Notification sender package name, notification title or SMS sender number, use % to indicate wildcard match</value>
+  </data>
+  <data name="sms_tpl_title" xml:space="preserve">
+    <value>Template (click for placeholders)</value>
+  </data>
+  <data name="sms_tpl_desc" xml:space="preserve">
+    <value>Placeholders:
+{{p}} - price
+{{a}} - account last digits
+{{c}} - account name
+{{x}} - transfer to account name
+{{f}} - ISO 4217 currency code
+{{e}} - payee title
+{{r}} - project title (can't contain space)
+{{t}} - note text (non-greedy)
+{{u}} - note text (greedy)
+{{g}} - Unix timestamp in milliseconds
+{{*}} - any symbols/words</value>
+  </data>
+  <data name="sms_tpl_hint" xml:space="preserve">
+    <value>Specify template with placeholders here</value>
+  </data>
+  <data name="sms_tpl_match_normal" xml:space="preserve">
+    <value>Match normal notifications</value>
+  </data>
+  <data name="sms_tpl_match_group_summary" xml:space="preserve">
+    <value>Match group summary notifications</value>
+  </data>
+  <data name="sms_note_title" xml:space="preserve">
+    <value>Note (click for placeholders)</value>
+  </data>
+  <data name="sms_note_desc" xml:space="preserve">
+    <value>Placeholders:
+{{t}} - note text extracted by template</value>
+  </data>
+  <data name="sms_note_hint" xml:space="preserve">
+    <value>Specify note to apply to generated transaction</value>
+  </data>
+  <data name="sms_tpl_check" xml:space="preserve">
+    <value>Try with notification example here</value>
+  </data>
+  <data name="choose_sms_template_type_and_account" xml:space="preserve">
+    <value>Choose type and account (optional)</value>
+  </data>
+  <data name="choose_sms_template_transfer_to_account" xml:space="preserve">
+    <value>Choose transfer-to account (optional)</value>
+  </data>
+  <data name="tpl_not_transfer" xml:space="preserve">
+    <value>Not transfer</value>
+  </data>
+  <data name="tpl_parse_result" xml:space="preserve">
+    <value>Example notification process result</value>
+  </data>
+  <data name="tpl_parse_not_found" xml:space="preserve">
+    <value>(Not found)</value>
+  </data>
+  <data name="tpl_failed_to_parse" xml:space="preserve">
+    <value>(Failed to parse '{0}' as decimal)</value>
+  </data>
+  <data name="no_account" xml:space="preserve">
+    <value>No account</value>
+  </data>
+  <data name="sms_sender_required" xml:space="preserve">
+    <value>Sender and template are required</value>
   </data>
 </root>

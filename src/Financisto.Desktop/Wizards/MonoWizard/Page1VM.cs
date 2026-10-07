@@ -1,0 +1,34 @@
+using System.Linq;
+using Financisto.Common.Entities;
+using Financisto.Common.Localization;
+using Financisto.Common.Model;
+
+namespace Financisto.Desktop.Wizards.MonoWizard.ViewModel
+{
+    public class Page1VM : WizardPageBaseVM
+    {
+        private AccountFilterModel _monoAccount;
+
+        public Page1VM(string bank)
+        {
+            MonoAccount = DbManual.Account.FirstOrDefault(x => x.IsActive && x.Title.Contains(bank, System.StringComparison.OrdinalIgnoreCase)) ?? DbManual.Account.FirstOrDefault(x => x.Id != null);
+        }
+
+        public AccountFilterModel MonoAccount
+        {
+            get => _monoAccount;
+            set
+            {
+                _monoAccount = value;
+                RaisePropertyChanged(nameof(MonoAccount));
+            }
+        }
+
+        public override string Title => LocalizationService.Instance.please_select_account;
+
+        public override bool IsValid()
+        {
+            return MonoAccount != null;
+        }
+    }
+}

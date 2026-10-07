@@ -120,7 +120,13 @@
                             Width="200"
                             HorizontalAlignment="Left"
                             ItemsSource="{loc:EnumBinding {x:Type ent:ExchangeRatesProviders}}"
-                            SelectedItem="{Binding SelectedProvider, Mode=TwoWay}" />
+                            SelectedItem="{Binding SelectedProvider, Mode=TwoWay}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={StaticResource EnumDescriptionConverter}}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
                     </GroupBox>
                     <GroupBox
                         Grid.Row="1"

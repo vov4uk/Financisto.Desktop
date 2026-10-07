@@ -15,6 +15,7 @@ namespace Financisto.Desktop.Services
     public class ExchangeRatesService
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        private const string FloatRatesDailyFeed = "https://www.floatrates.com/daily/usd.json";
         private readonly HttpClient _httpClient;
         private readonly Func<IEnumerable<CurrencyModel>> _currenciesProvider;
 
@@ -122,6 +123,70 @@ namespace Financisto.Desktop.Services
             }
 
             return result;
+        }
+
+        public async Task<List<CurrencyExchangeRate>> LoadFloatRates()
+        {
+            var result = new List<CurrencyExchangeRate>();
+            try
+            {
+                var response = await _httpClient.GetAsync(FloatRatesDailyFeed);
+                if (!response.IsSuccessStatusCode)
+                {
+                    Logger.Warn($"FloatRates API returned {response.StatusCode}");
+                    return result;
+                }
+
+                var content = await response.Content.ReadAsStringAsync();
+                var rates = ParseFloatRates(content);
+                var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+                foreach (var pair in GetRatesPairs())
+                {
+                    var fromCurrency = pair.Key;
+                    var toCurrency = pair.Value;
+
+                    double fromToUsd;
+                    FloatRate fromRate = null;
+                    if (fromCurrency.Name == "USD")
+                        fromToUsd = 1.0;
+                    else if (rates.TryGetValue(fromCurrency.Name.ToLowerInvariant(), out fromRate))
+                        fromToUsd = fromRate.InverseRate;
+                    else
+                        continue;
+
+                    double usdTo;
+                    FloatRate toRate = null;
+                    if (toCurrency.Name == "USD")
+                        usdTo = 1.0;
+                    else if (rates.TryGetValue(toCurrency.Name.ToLowerInvariant(), out toRate))
+                        usdTo = toRate.Rate;
+                    else
+                        continue;
+
+                    var date = (toRate ?? fromRate)?.DateMilliseconds ?? now;
+
+                    result.Add(new CurrencyExchangeRate
+                    {
+                        FromCurrencyId = fromCurrency.Id ?? 0,
+                        ToCurrencyId = toCurrency.Id ?? 0,
+                        Rate = fromToUsd * usdTo,
+                        Date = date,
+                        UpdatedOn = now
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, $"Error fetching FloatRates exchange rates: {ex.Message}");
+            }
+
+            return result;
+        }
+
+        public static Dictionary<string, FloatRate> ParseFloatRates(string json)
+        {
+            return JsonConvert.DeserializeObject<Dictionary<string, FloatRate>>(json) ?? new Dictionary<string, FloatRate>();
         }
 
         private List<KeyValuePair<CurrencyModel, CurrencyModel>> GetRatesPairs()
@@ -405,6 +470,25 @@ namespace Financisto.Desktop.Services
             public long timestamp { get; set; }
             public string @base { get; set; }
             public Dictionary<string, double> rates { get; set; }
+        }
+
+        public sealed class FloatRate
+        {
+            [JsonProperty("rate")]
+            public double Rate { get; set; }
+
+            [JsonProperty("inverseRate")]
+            public double InverseRate { get; set; }
+
+            [JsonProperty("date")]
+            public string Date { get; set; }
+
+            /// <summary>Feed date (RFC 1123, e.g. "Tue, 29 Sep 2026 15:55:12 GMT") as Unix milliseconds, or null if absent/unparsable.</summary>
+            [JsonIgnore]
+            public long? DateMilliseconds =>
+                DateTimeOffset.TryParse(Date, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal, out var d)
+                    ? d.ToUnixTimeMilliseconds()
+                    : null;
         }
 
         private sealed class MonobankRate

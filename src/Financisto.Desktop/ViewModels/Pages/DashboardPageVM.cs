@@ -25,20 +25,19 @@ namespace Financisto.Desktop.ViewModels.Pages
     public class DashboardPageVM : BindableBase, IDataRefresh
     {
         private readonly IFinancistoDatabase db;
-        private readonly IToastNotifierWrapper notifier;
         private readonly AccountsTotalService accountsTotalService;
 
         private IAsyncCommand _refreshDataCommand;
 
         // balance of every account at the end of the day {0} (unix ms), converted to the home currency
-        private const string AccountBalancesSqlText = @" /* DashboardPageVM */
+        private static readonly string AccountBalancesSqlText = @" /* DashboardPageVM */
 SELECT account_title,
        account_id,
        account_is_active,
        is_include_into_totals,
        account_type,
        sort_order,
-       balance_default_crr,
+       " + ExchangeRateSql.Convert("balance", "currency_id", ExchangeRateSql.HomeCurrencyId, "{0}") + @" AS balance_default_crr,
        default_crr_symbol
 FROM   (SELECT a.title AS account_title,
                a._id AS account_id,
@@ -49,14 +48,8 @@ FROM   (SELECT a.title AS account_title,
                Row_number() OVER ( partition BY a._id
                                    ORDER BY Date(t.datetime / 1000, 'unixepoch') DESC, t.datetime DESC, r.transaction_id DESC
                ) AS RowNum,
-               CASE( SELECT _id FROM currency WHERE is_default = 1)
-               WHEN c._id THEN r.balance / 100.0
-               ELSE Round((r.balance / 100.0 ) * (SELECT rate
-                                                  FROM v_currency_exchange_rate
-                                                  WHERE to_currency_id = (SELECT _id FROM currency WHERE is_default = 1)
-                                                        AND from_currency_id = c._id
-                                                        AND(({0} BETWEEN rate_date AND rate_date_end) OR rate_date_end = 253402293599000 )), 0)
-               END AS balance_default_crr,
+               r.balance / 100.0 AS balance,
+               c._id AS currency_id,
                (SELECT symbol FROM currency WHERE is_default = 1) AS default_crr_symbol
         FROM running_balance r
              INNER JOIN account a ON a._id = r.account_id
@@ -112,10 +105,9 @@ ORDER BY account_is_active DESC, sort_order ASC
             private set => SetProperty(ref _homeCurrencyTotal, value);
         }
 
-        public DashboardPageVM(IFinancistoDatabase db, IToastNotifierWrapper notifier)
+        public DashboardPageVM(IFinancistoDatabase db)
         {
             this.db = db ?? throw new ArgumentNullException(nameof(db));
-            this.notifier = notifier ?? throw new ArgumentNullException(nameof(notifier));
             accountsTotalService = new AccountsTotalService(db);
         }
 
@@ -230,7 +222,7 @@ ORDER BY account_is_active DESC, sort_order ASC
                 .Select(x => new PieSeries<double>
                 {
                     // outer labels with long account titles shrink the pie to nothing, so the title goes to the legend
-                    Name = $"{x.Title}: {x.Balance / total:P2}",
+                    Name = $"{ChartText.Label(x.Title)}: {x.Balance / total:P2}",
                     Values = [x.Balance],
                     DataLabelsPaint = new SolidColorPaint(SKColors.White),
                     DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Middle,

@@ -1,0 +1,154 @@
+<UserControl
+    x:Class="Financisto.Desktop.Views.Dialogs.RuleDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:conv="using:Financisto.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:entities="using:Financisto.Common.Entities"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:model="using:Financisto.Common.Model"
+    xmlns:vm="using:Financisto.Desktop.ViewModels.Dialogs"
+    d:DesignHeight="420"
+    d:DesignWidth="440"
+    x:DataType="vm:RuleDialogVM"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <conv:EnumDescriptionConverter x:Key="EnumDescriptionConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <UserControl.Styles>
+        <Style Selector="ComboBox">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+    </UserControl.Styles>
+    <GroupBox
+        Margin="5"
+        FontSize="14"
+        Header="{loc:Translate Key=rule_details}">
+        <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
+            <GroupBox
+                Grid.Row="0"
+                Margin="0,0,0,5"
+                Header="{loc:Translate Key=conditions}">
+                <Grid ColumnDefinitions="*,*">
+                    <ComboBox
+                        Grid.Column="0"
+                        Margin="2"
+                        ItemsSource="{Binding Source={loc:EnumBinding {x:Type model:RuleConditionType}}}"
+                        SelectedItem="{Binding SelectedConditionType}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock VerticalAlignment="Center" Text="{Binding Converter={StaticResource EnumDescriptionConverter}}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <TextBox
+                        Grid.Column="1"
+                        Margin="2"
+                        VerticalAlignment="Center"
+                        IsVisible="{Binding !IsMCCSelected}"
+                        Text="{Binding Entity.Description}" />
+                    <ComboBox
+                        Grid.Column="1"
+                        Margin="2"
+                        IsEditable="True"
+                        IsTextSearchEnabled="True"
+                        IsVisible="{Binding IsMCCSelected}"
+                        ItemsSource="{Binding MccTitles}"
+                        SelectedItem="{Binding SelectedMccTitle}" />
+                </Grid>
+            </GroupBox>
+            <GroupBox
+                Grid.Row="1"
+                Margin="0,0,0,5"
+                Header="{loc:Translate Key=actions}">
+                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto">
+                    <TextBlock
+                        Grid.Row="0"
+                        Grid.ColumnSpan="2"
+                        Margin="2,0,2,4"
+                        Text="{loc:Translate Key=what_should_happen}"
+                        TextWrapping="Wrap" />
+                    <StackPanel
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Margin="2">
+                        <TextBlock FontSize="12" Text="{loc:Translate Key=categories}" />
+                        <ComboBox
+                            IsTextSearchEnabled="True"
+                            ItemTemplate="{StaticResource CategoryTemplate}"
+                            ItemsSource="{x:Static entities:DbManual.Category}"
+                            SelectedItem="{Binding Entity.Category}"
+                            SelectedValue="{Binding Entity.CategoryId}"
+                            SelectedValueBinding="{Binding Id, DataType=model:CategoryModel}"
+                            TextSearch.TextBinding="{Binding Title, DataType=model:CategoryModel}" />
+                    </StackPanel>
+                    <StackPanel
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Margin="2">
+                        <TextBlock FontSize="12" Text="{loc:Translate Key=locations}" />
+                        <ComboBox
+                            IsTextSearchEnabled="True"
+                            ItemTemplate="{StaticResource IActive}"
+                            ItemsSource="{x:Static entities:DbManual.Location}"
+                            SelectedValue="{Binding Entity.LocationId}"
+                            SelectedValueBinding="{Binding Id, DataType=model:LocationModel}"
+                            TextSearch.TextBinding="{Binding Title, DataType=model:LocationModel}" />
+                    </StackPanel>
+                    <StackPanel
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        Margin="2">
+                        <TextBlock FontSize="12" Text="{loc:Translate Key=projects}" />
+                        <ComboBox
+                            IsTextSearchEnabled="True"
+                            ItemTemplate="{StaticResource IActive}"
+                            ItemsSource="{x:Static entities:DbManual.Project}"
+                            SelectedValue="{Binding Entity.ProjectId}"
+                            SelectedValueBinding="{Binding Id, DataType=model:ProjectModel}"
+                            TextSearch.TextBinding="{Binding Title, DataType=model:ProjectModel}" />
+                    </StackPanel>
+                    <StackPanel
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        Margin="2">
+                        <TextBlock FontSize="12" Text="{loc:Translate Key=payees}" />
+                        <ComboBox
+                            IsTextSearchEnabled="True"
+                            ItemTemplate="{StaticResource IActive}"
+                            ItemsSource="{x:Static entities:DbManual.Payee}"
+                            SelectedValue="{Binding Entity.PayeeId}"
+                            SelectedValueBinding="{Binding Id, DataType=model:PayeeModel}"
+                            TextSearch.TextBinding="{Binding Title, DataType=model:PayeeModel}" />
+                    </StackPanel>
+                </Grid>
+            </GroupBox>
+            <CheckBox
+                Grid.Row="2"
+                Content="{loc:Translate Key=is_active}"
+                IsChecked="{Binding Entity.IsActive}" />
+            <Grid Grid.Row="4" ColumnDefinitions="*,*">
+                <Button
+                    Grid.Column="0"
+                    Margin="2"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding SaveCommand}"
+                    Content="{loc:Translate Key=save}" />
+                <Button
+                    Grid.Column="1"
+                    Margin="2"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding CancelCommand}"
+                    Content="{loc:Translate Key=cancel}" />
+            </Grid>
+        </Grid>
+    </GroupBox>
+</UserControl>

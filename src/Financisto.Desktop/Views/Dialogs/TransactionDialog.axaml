@@ -268,14 +268,26 @@
                             <TextBlock
                                 Grid.Row="0"
                                 Grid.Column="0"
-                                Grid.ColumnSpan="2"
                                 Text="{loc:Translate Key=unsplit_amount}" />
                             <TextBlock
                                 Grid.Row="1"
                                 Grid.Column="0"
-                                Grid.ColumnSpan="2"
                                 Text="{Binding Transaction.UnsplitAmount, Converter={StaticResource AmountConverter}, ConverterParameter=false, StringFormat=F2, Mode=OneWay}" />
 
+                            <Button
+                                Grid.Row="0"
+                                Grid.RowSpan="2"
+                                Grid.Column="1"
+                                Height="32"
+                                Margin="0,3,0,0"
+                                VerticalAlignment="Top"
+                                Command="{Binding OpenRecipesDialogCommand}"
+                                ToolTip.Tip="{loc:Translate Key=open_recipes_wizard}">
+                                <Image
+                                    Width="16"
+                                    Height="16"
+                                    Source="{StaticResource ResourceKey=IconReceiptBlack}" />
+                            </Button>
                             <Button
                                 Grid.Row="0"
                                 Grid.RowSpan="2"

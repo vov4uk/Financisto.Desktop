@@ -1,0 +1,93 @@
+<UserControl
+    x:Class="Financisto.Reports.ReportStructureSaldo"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:conv="clr-namespace:Financisto.Converters;assembly=Financisto.Common"
+    xmlns:controls="clr-namespace:Financisto.Common.Controls;assembly=Financisto.Common"
+    xmlns:ent="using:Financisto.Common.Entities"
+    xmlns:local="using:Financisto.Reports"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+    x:DataType="local:ReportStructureSaldoVM">
+    <UserControl.Styles>
+        <StyleInclude Source="avares://Financisto.Reports/ReportStyles.axaml" />
+    </UserControl.Styles>
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <conv:EnumDescriptionConverter x:Key="EnumDescriptionConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid RowDefinitions="Auto,*">
+        <WrapPanel Grid.Row="0" Orientation="Horizontal">
+            <StackPanel Margin="4,2">
+                <TextBlock Classes="toolbarCaption" Text="{loc:Translate Key=view}" />
+                <StackPanel Orientation="Horizontal">
+                    <RadioButton
+                        x:Name="GraphicsBtn"
+                        Classes="iconRadio"
+                        IsChecked="True"
+                        ToolTip.Tip="{loc:Translate Key=graphics}">
+                        <Image Source="{StaticResource IconChartBar}" />
+                    </RadioButton>
+                    <RadioButton
+                        x:Name="GridBtn"
+                        Classes="iconRadio"
+                        ToolTip.Tip="{loc:Translate Key=grid}">
+                        <Image Source="{StaticResource IconTableGray}" />
+                    </RadioButton>
+                </StackPanel>
+            </StackPanel>
+            <StackPanel Margin="4,2">
+                <TextBlock Classes="toolbarCaption" Text="{loc:Translate Key=currency}" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <RadioButton
+                        x:Name="DefaultBtn"
+                        GroupName="SaldoCurrency"
+                        ToolTip.Tip="{loc:Translate Key=default_currency}">
+                        <TextBlock Text="{loc:Translate Key=default}" />
+                    </RadioButton>
+                    <RadioButton
+                        x:Name="UsdBtn"
+                        GroupName="SaldoCurrency"
+                        IsChecked="{Binding IsUsdCurrencySelected, Mode=TwoWay}"
+                        ToolTip.Tip="{loc:Translate Key=usd}">
+                        <TextBlock Text="{loc:Translate Key=usd}" />
+                    </RadioButton>
+                </StackPanel>
+            </StackPanel>
+            <StackPanel Margin="4,2">
+                <TextBlock Classes="toolbarCaption" Text="{loc:Translate Key=period}" />
+                <ComboBox
+                    Width="150"
+                    ItemsSource="{Binding Source={loc:EnumBinding {x:Type ent:ReportStructureSaldoRange}}}"
+                    SelectedItem="{Binding Range}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="ent:ReportStructureSaldoRange">
+                            <TextBlock Text="{Binding Converter={StaticResource EnumDescriptionConverter}}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <Button
+                Classes="refresh"
+                Command="{Binding RefreshDataCommand}"
+                ToolTip.Tip="{loc:Translate Key=refresh}">
+                <Image Source="{StaticResource IconRefresh}" />
+            </Button>
+        </WrapPanel>
+        <lvc:CartesianChart
+            Grid.Row="1"
+            IsVisible="{Binding #GraphicsBtn.IsChecked}"
+            LegendPosition="Top"
+            Series="{Binding Chart.Series}"
+            XAxes="{Binding Chart.XAxes}"
+            YAxes="{Binding Chart.YAxes}" />
+        <controls:DataGridAutoHeaders
+            Grid.Row="1"
+            IsVisible="{Binding #GridBtn.IsChecked}"
+            ItemsSource="{Binding Entities}" />
+    </Grid>
+</UserControl>

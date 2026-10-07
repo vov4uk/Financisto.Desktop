@@ -18,8 +18,9 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # Financisto.Desktop.Tests targets win-x64 (it references the win-x64 Financisto.Desktop), so the tests have to run on Windows
+    runs-on: windows-latest
+    timeout-minutes: 20
 
     permissions:
       contents: read
@@ -35,6 +36,13 @@ jobs:
         run: >
           dotnet build
           --configuration Release
+
+      # global.json opts in to the Microsoft.Testing.Platform runner used by xunit v3
+      - name: Test
+        run: >
+          dotnet test
+          --configuration Release
+          --no-build
 
   pack:
     if: ${{ github.ref_type == 'tag' }}

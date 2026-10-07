@@ -35,7 +35,7 @@ namespace Financisto.Desktop.ViewModels.Pages
         private DateTime? _from;
         private DateTime? _to;
         private PeriodType _periodType;
-        private AccountFilterModel _account;
+        private ObservableCollection<AccountFilterModel> _selectedAccounts = new ObservableCollection<AccountFilterModel>();
         private CategoryModel _category;
         private PayeeModel _payee;
         private ProjectModel _project;
@@ -83,19 +83,22 @@ namespace Financisto.Desktop.ViewModels.Pages
             }
         }
 
-        public AccountFilterModel Account
+        public ObservableCollection<AccountFilterModel> SelectedAccounts
         {
-            get => _account ??= DbManual.Account.Find(p => !p.Id.HasValue);
+            get => _selectedAccounts;
             set
             {
-                _account = value;
-                RaisePropertyChanged(nameof(Account));
+                _selectedAccounts = value ?? new ObservableCollection<AccountFilterModel>();
+                RaisePropertyChanged(nameof(SelectedAccounts));
             }
         }
 
+        // the account new transactions default to: only when exactly one account is filtered
+        private int? SingleAccountId => SelectedAccounts.Count == 1 ? SelectedAccounts[0]?.Id : null;
+
         public CategoryModel Category
         {
-            get => _category ??= DbManual.Category.Find(p => !p.Id.HasValue);
+            get => _category ??= DbManual.Category.Find(p => !p.Id.HasValue)!;
             set
             {
                 _category = value;
@@ -105,7 +108,7 @@ namespace Financisto.Desktop.ViewModels.Pages
 
         public PayeeModel Payee
         {
-            get => _payee ??= DbManual.Payee.Find(p => !p.Id.HasValue);
+            get => _payee ??= DbManual.Payee.Find(p => !p.Id.HasValue)!;
             set
             {
                 _payee = value;
@@ -115,7 +118,7 @@ namespace Financisto.Desktop.ViewModels.Pages
 
         public ProjectModel Project
         {
-            get => _project ??= DbManual.Project.Find(p => !p.Id.HasValue);
+            get => _project ??= DbManual.Project.Find(p => !p.Id.HasValue)!;
             set
             {
                 _project = value;
@@ -125,7 +128,7 @@ namespace Financisto.Desktop.ViewModels.Pages
 
         public LocationModel Location
         {
-            get => _location ??= DbManual.Location.Find(p => !p.Id.HasValue);
+            get => _location ??= DbManual.Location.Find(p => !p.Id.HasValue)!;
             set
             {
                 _location = value;
@@ -188,13 +191,14 @@ namespace Financisto.Desktop.ViewModels.Pages
         private async Task ClearFilters()
         {
             PeriodType = PeriodType.AllTime;
-            _from = null;
-            _to = null;
-            Account = default;
-            Category = default;
-            Payee = default;
-            Project = default;
-            Location = default;
+            // through the properties, so the period filter's date pickers clear too, also when the type was already AllTime
+            From = null;
+            To = null;
+            SelectedAccounts = new ObservableCollection<AccountFilterModel>();
+            Category = default!;
+            Payee = default!;
+            Project = default!;
+            Location = default!;
             Tags = new ObservableCollection<TagModel>();
             await RefreshDataCommand.ExecuteAsync();
         }
@@ -255,9 +259,9 @@ namespace Financisto.Desktop.ViewModels.Pages
         private async Task AddTransfer()
         {
             Transaction transfer = await db.GetOrCreateTransactionAsync(0);
-            if (Account?.Id != null)
+            if (SingleAccountId != null)
             {
-                transfer.FromAccountId = (int)Account.Id;
+                transfer.FromAccountId = SingleAccountId.Value;
             }
             await OpenTransferDialogAsync(transfer);
         }
@@ -287,9 +291,9 @@ namespace Financisto.Desktop.ViewModels.Pages
             Transaction transaction = await db.GetOrCreateTransactionAsync(0);
             IEnumerable<Transaction> subTransactions = await db.GetSubTransactionsAsync(0);
 
-            if (Account?.Id != null)
+            if (SingleAccountId != null)
             {
-                transaction.FromAccountId = (int)Account.Id;
+                transaction.FromAccountId = SingleAccountId.Value;
             }
 
             await OpenTransactionDialogAsync(transaction, subTransactions);
@@ -469,16 +473,15 @@ namespace Financisto.Desktop.ViewModels.Pages
 
         protected override async Task RefreshData()
         {
-            using var uow = db.CreateUnitOfWork();
-            var repo = uow.GetRepository<BlotterTransactions>();
             var fromUnix = UnixTimeConverter.ConvertBack(From ?? DateTime.MinValue.ToLocalTime());
             var toUnix = UnixTimeConverter.ConvertBack(To ?? DateTime.MaxValue.ToLocalTime());
 
             Expression<Func<BlotterTransactions, bool>> predicate = x => x.DateTime >= fromUnix && x.DateTime <= toUnix;
 
-            if (Account?.Id != null)
+            var accountIds = SelectedAccounts.Where(a => a?.Id != null).Select(a => a.Id.Value).ToList();
+            if (accountIds.Count > 0)
             {
-                predicate = predicate.And(x => x.FromAccountId == _account.Id || x.ToAccountId == _account.Id);
+                predicate = predicate.And(x => accountIds.Contains(x.FromAccountId) || (x.ToAccountId != null && accountIds.Contains(x.ToAccountId.Value)));
             }
 
             if (Category?.Id != null)
@@ -514,7 +517,20 @@ namespace Financisto.Desktop.ViewModels.Pages
                 predicate = predicate.And(tagsPredicate);
             }
 
-            var items = await repo.FindManyAndProjectAsync(
+            var items = await QueryAsync(db, predicate);
+
+            if (items != null)
+            {
+                Entities = new ObservableCollection<BlotterModel>(items.OrderByDescending(x => x.Datetime).ThenByDescending(x => x.Id));
+            }
+        }
+
+        /// <summary>Blotter rows (the <c>v_blotter</c> view) matching <paramref name="predicate"/>, unordered.</summary>
+        internal static async Task<List<BlotterModel>> QueryAsync(IFinancistoDatabase db, Expression<Func<BlotterTransactions, bool>> predicate)
+        {
+            using var uow = db.CreateUnitOfWork();
+            var repo = uow.GetRepository<BlotterTransactions>();
+            return await repo.FindManyAndProjectAsync(
                 predicate: predicate,
                 projection: x => new BlotterModel
                 {
@@ -543,11 +559,6 @@ namespace Financisto.Desktop.ViewModels.Pages
                     ToAccountCurrency = x.ToAccountCurrencyId == null ? default : DbManual.CurrencyIds.GetValueOrDefault(x.ToAccountCurrencyId.Value),
                     OriginalCurrency = x.OriginalCurrencyId == null ? default : DbManual.CurrencyIds.GetValueOrDefault(x.OriginalCurrencyId.Value)
                 });
-
-            if (items != null)
-            {
-                Entities = new System.Collections.ObjectModel.ObservableCollection<BlotterModel>(items.OrderByDescending(x => x.Datetime).ThenByDescending(x => x.Id));
-            }
         }
     }
 }

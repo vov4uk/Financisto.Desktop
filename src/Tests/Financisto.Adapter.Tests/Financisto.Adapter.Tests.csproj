@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+      <TargetFramework>net10.0</TargetFramework>
+      <IsPackable>false</IsPackable>
+      <DebugType>full</DebugType>
+      <AssemblyName>Financisto.Adapter.Tests</AssemblyName>
+      <RootNamespace>Financisto.Adapter.Tests</RootNamespace>
+      <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+      <IsTestProject>true</IsTestProject>
+      <OutputType>Library</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\min">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\min.backup">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoFixture" />
+    <PackageReference Include="AutoFixture.AutoMoq" />
+    <PackageReference Include="AutoFixture.Xunit3" />
+    <PackageReference Include="coverlet.collector">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" />
+    <PackageReference Include="Moq" />
+    <PackageReference Include="StyleCop.Analyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="xunit.runner.visualstudio">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Financisto.Adapter\Financisto.Adapter.csproj" />
+    <ProjectReference Include="..\Financisto.Tests.Common\Financisto.Tests.Common.csproj" />
+  </ItemGroup>
+
+</Project>

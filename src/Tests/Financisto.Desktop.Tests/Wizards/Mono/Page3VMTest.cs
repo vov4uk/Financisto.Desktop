@@ -1,0 +1,816 @@
+﻿namespace Financisto.Desktop.Tests.Wizards.Mono
+{
+    using System;
+    using System.Collections.Generic;
+    using System.Collections.ObjectModel;
+    using System.Data;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using Financisto.Common.Entities;
+    using Financisto.Common.Localization;
+    using Financisto.Common.Model;
+    using Financisto.Desktop.Data;
+    using Financisto.Desktop.Helpers;
+    using Financisto.Desktop.ViewModels.Dialogs;
+    using Financisto.Desktop.Views.Dialogs;
+    using Financisto.Desktop.Wizards;
+    using Financisto.Desktop.Wizards.MonoWizard.ViewModel;
+    using Financisto.Tests.Common;
+    using Moq;
+    using Newtonsoft.Json;
+    using Xunit;
+
+    public class Page3VMTest
+    {
+        private readonly Mock<IDialogWrapper> dialogWrapperMock = new Mock<IDialogWrapper>();
+
+        [Theory]
+        [AutoMoqData]
+        public void MonoAccount_SetValue_AccountsNotContainsMonoAccount(
+            List<AccountFilterModel> accounts)
+        {
+            var monoAccount = accounts.FirstOrDefault();
+            DbManual.SetupTests(accounts);
+            var vm = new Page3VM(dialogWrapperMock.Object);
+
+            vm.MonoAccount = monoAccount;
+
+            accounts.Remove(monoAccount);
+            Assert.True(vm.Accounts.SequenceEqual(accounts.OrderByDescending(x => x.IsActive).ThenBy(x => x.SortOrder)));
+        }
+
+        [Theory]
+        [AutoMoqData]
+        public async Task SetMonoTransactions_SetValue_TransformToFinancistoTransactions(AccountFilterModel monoAccount)
+        {
+            var rules = new List<RuleModel>
+            {
+                new RuleModel
+                {
+                 Id = 8,
+                 Created = new DateTime(2026, 5, 16, 22, 32, 55, 354),
+                 Condition = RuleConditionType.DescriptionContains,
+                 Description = "Google",
+                 Title = null,
+                 IsActive = true,
+                 PayeeId = null,
+                 ProjectId = null,
+                 CategoryId = null,
+                 LocationId = 200,
+                 MCCCategory = Mcc.none,
+                },
+                new RuleModel
+                {
+                 Id = 0,
+                 Created = new DateTime(2026, 5, 16, 22, 32, 55, 354),
+                 Condition = RuleConditionType.DescriptionContains,
+                 Description = "Hot Water",
+                 Title = null,
+                 IsActive = true,
+                 PayeeId = null,
+                 ProjectId = null,
+                 CategoryId = 100,
+                 LocationId = null,
+                 MCCCategory = Mcc.none,
+                },
+            };
+
+            List<BankTransaction> transactions = new List<BankTransaction>
+            {
+                new BankTransaction // Description -> Location.Title
+                {
+                    CardCurrencyAmount = 100.0,
+                    ExchangeRate = null,
+                    Balance = 1100.0,
+                    Cashback = 3.0,
+                    Date = new DateTime(2021, 12, 04, 21, 12, 04),
+                    OperationCurrency = "UAH",
+                    OperationAmount = 0,
+                    Description = "Google",
+                    Commission = 0.0,
+                    MCC = "1000",
+                },
+                new BankTransaction// Description -> Location.Address
+                {
+                    CardCurrencyAmount = 100.0,
+                    ExchangeRate = null,
+                    Balance = 1200.0,
+                    Cashback = 3.0,
+                    Date = new DateTime(2021, 12, 04, 21, 12, 03),
+                    OperationCurrency = "UAH",
+                    OperationAmount = 0,
+                    Description = "Google Store",
+                    Commission = 0.0,
+                    MCC = "1000",
+                },
+                new BankTransaction // Description -> Category.Title
+                {
+                    CardCurrencyAmount = 100.0,
+                    ExchangeRate = null,
+                    Balance = 1300.0,
+                    Cashback = 3.0,
+                    Date = new DateTime(2021, 12, 04, 21, 12, 02),
+                    OperationCurrency = "UAH",
+                    OperationAmount = 0,
+                    Description = "Hot Water",
+                    Commission = 0.0,
+                    MCC = "1000",
+                },
+                new BankTransaction // Description -> Note
+                {
+                    CardCurrencyAmount = 100.0,
+                    ExchangeRate = null,
+                    Balance = 1400.0,
+                    Cashback = 3.0,
+                    Date = new DateTime(2021, 12, 04, 21, 12, 01),
+                    OperationCurrency = "UAH",
+                    OperationAmount = 0,
+                    Description = "Unknown place",
+                    Commission = 0.0,
+                    MCC = "1000",
+                },
+                new BankTransaction // OperationCurrency -> OriginalCurrencyId
+                {
+                    CardCurrencyAmount = 100.0,
+                    ExchangeRate = 25.0,
+                    Balance = 1500.0,
+                    Cashback = 3.0,
+                    Date = new DateTime(2021, 12, 04, 21, 12, 00),
+                    OperationCurrency = "USD",
+                    OperationAmount = 4.0,
+                    Description = "Unknown",
+                    Commission = 0.0,
+                    MCC = "1000",
+                },
+            };
+
+            var expected = new ObservableCollection<FinancistoTransactionDto>()
+            {
+                new FinancistoTransactionDto
+                {
+                    MonoAccountId = monoAccount.Id,
+                    FromAmount = 10000,
+                    OriginalFromAmount = null,
+                    OriginalCurrencyId = 0,
+                    CategoryId = 0,
+                    ToAccountId = 0,
+                    FromAccountId = 0,
+                    LocationId = 200,
+                    Note = "Google",
+                    MCC = 1000,
+                    DateTime = new DateTimeOffset(new DateTime(2021, 12, 04, 21, 12, 04)).ToUnixTimeMilliseconds(),
+                },
+                new FinancistoTransactionDto
+                {
+                    MonoAccountId = monoAccount.Id,
+                    FromAmount = 10000,
+                    OriginalFromAmount = null,
+                    OriginalCurrencyId = 0,
+                    CategoryId = 0,
+                    ToAccountId = 0,
+                    FromAccountId = 0,
+                    LocationId = 200,
+                    Note = "Google Store",
+                    MCC = 1000,
+                    DateTime = new DateTimeOffset(new DateTime(2021, 12, 04, 21, 12, 03)).ToUnixTimeMilliseconds(),
+                },
+                new FinancistoTransactionDto
+                {
+                    MonoAccountId = monoAccount.Id,
+                    FromAmount = 10000,
+                    OriginalFromAmount = null,
+                    OriginalCurrencyId = 0,
+                    CategoryId = 100,
+                    ToAccountId = 0,
+                    FromAccountId = 0,
+                    LocationId = 0,
+                    Note = "Hot Water",
+                    MCC = 1000,
+                    DateTime = new DateTimeOffset(new DateTime(2021, 12, 04, 21, 12, 02)).ToUnixTimeMilliseconds(),
+                },
+                new FinancistoTransactionDto
+                {
+                    MonoAccountId = monoAccount.Id,
+                    FromAmount = 10000,
+                    OriginalFromAmount = null,
+                    OriginalCurrencyId = 0,
+                    CategoryId = 0,
+                    ToAccountId = 0,
+                    FromAccountId = 0,
+                    LocationId = 0,
+                    Note = "Unknown place",
+                    MCC = 1000,
+                    DateTime = new DateTimeOffset(new DateTime(2021, 12, 04, 21, 12, 01)).ToUnixTimeMilliseconds(),
+                },
+                new FinancistoTransactionDto
+                {
+                    MonoAccountId = monoAccount.Id,
+                    FromAmount = 10000,
+                    OriginalFromAmount = 400,
+                    OriginalCurrencyId = 1,
+                    CategoryId = 0,
+                    ToAccountId = 0,
+                    FromAccountId = 0,
+                    LocationId = 0,
+                    Note = "Unknown",
+                    MCC = 1000,
+                    DateTime = new DateTimeOffset(new DateTime(2021, 12, 04, 21, 12, 00)).ToUnixTimeMilliseconds(),
+                },
+            };
+
+            List<CategoryModel> categories = new List<CategoryModel> { new CategoryModel { Title = "Hot water", Id = 100 } };
+            List<LocationModel> locations = new List<LocationModel> { new LocationModel { Id = 200, Title = "Google", Address = "Google Store", IsActive = true } };
+            List<CurrencyModel> currencies = new List<CurrencyModel> { new CurrencyModel { Id = 1, Name = "USD" }, new CurrencyModel { Id = 2, Name = "UAH" } };
+            DbManual.SetupTests(categories);
+            DbManual.SetupTests(locations);
+            DbManual.SetupTests(currencies);
+            DbManual.SetupTests(new List<AccountFilterModel>() { monoAccount });
+            DbManual.SetupTests(rules);
+
+            var vm = new Page3VM(dialogWrapperMock.Object);
+
+            vm.MonoAccount = monoAccount;
+            vm.SetMonoTransactions(transactions);
+
+            Assert.Equal(JsonConvert.SerializeObject(expected), JsonConvert.SerializeObject(vm.FinancistoTransactions));
+            DbManual.ResetAllDatabaseManuals();
+        }
+
+        [Theory]
+        [AutoMoqData]
+        public void DeleteCommand_Execute_TransactionsRemoved(
+            AccountFilterModel account)
+        {
+            List<BankTransaction> transactions = GetBankTransactions();
+
+            DbManual.SetupTests(new List<AccountFilterModel>() { account });
+            DbManual.SetupTests(new List<LocationModel>());
+            DbManual.SetupTests(new List<CategoryModel>());
+            var vm = new Page3VM(dialogWrapperMock.Object);
+
+            vm.MonoAccount = account;
+            vm.SetMonoTransactions(transactions);
+
+            vm.DeleteCommand.Execute(vm.FinancistoTransactions.FirstOrDefault());
+
+            Assert.Single(vm.FinancistoTransactions);
+            DbManual.ResetAllDatabaseManuals();
+        }
+
+        [Theory]
+        [AutoMoqData]
+        public void ClearAllNotes_Execute_NotesEmpty(
+            AccountFilterModel account)
+        {
+            List<BankTransaction> transactions = GetBankTransactions();
+
+            DbManual.SetupTests(new List<AccountFilterModel>() { account });
+            DbManual.SetupTests(new List<LocationModel>());
+            DbManual.SetupTests(new List<CategoryModel>());
+            var vm = new Page3VM(dialogWrapperMock.Object);
+
+            vm.MonoAccount = account;
+            vm.SetMonoTransactions(transactions);
+
+            vm.ClearAllNotesCommand.Execute();
+
+            foreach (var item in vm.FinancistoTransactions)
+            {
+                Assert.Null(item.Note);
+            }
+        }
+
+        [Theory]
+        [AutoMoqData]
+        public void ApplyRules_DescriptionContainsCondition_UpdatesTransactionCategory(
+            AccountFilterModel account)
+        {
+            // Arrange
+            var categoryId = 100;
+            var rule = new RuleModel
+            {
+                Id = 101,
+                IsActive = true,
+                Condition = RuleConditionType.DescriptionContains,
+                Description = "Amazon",
+                CategoryId = categoryId,
+                Created = DateTime.Now,
+            };
+
+            var transaction = new BankTransaction
+            {
+                Description = "Payment to Amazon Store",
+                CardCurrencyAmount = 100.0,
+                ExchangeRate = null,
+                Balance = 1200.0,
+                Cashback = 3.0,
+                Date = new DateTime(2021, 12, 04, 21, 12, 03),
+                OperationCurrency = "UAH",
+                OperationAmount = 0,
+                Commission = 0.0,
+                MCC = "1000",
+            };
+
+            DbManual.SetupTests(new List<AccountFilterModel>() { account });
+            DbManual.SetupTests(new List<RuleModel> { rule });
+
+            var vm = new Page3VM(dialogWrapperMock.Object);
+            vm.MonoAccount = account;
+            vm.SetMonoTransactions(new List<BankTransaction> { transaction });
+
+            // Assert
+            Assert.Single(vm.FinancistoTransactions);
+            Assert.Equal(categoryId, vm.FinancistoTransactions[0].CategoryId);
+            DbManual.ResetAllDatabaseManuals();
+        }
+
+        [Theory]
+        [AutoMoqData]
+        public void ApplyRules_DescriptionMatchesCondition_UpdatesTransactionCategory(
+            AccountFilterModel account)
+        {
+            // Arrange
+            var categoryId = 100;
+            var payeeId = 50;
+            var rule = new RuleModel
+            {
+                Id = 100,
+                IsActive = true,
+                Condition = RuleConditionType.DescriptionMatches,
+                Description = "Exact Match",
+                CategoryId = categoryId,
+                PayeeId = payeeId,
+                Created = DateTime.Now,
+            };
+
+            var transaction = new BankTransaction
+            {
+                Description = "Exact Match",
+                CardCurrencyAmount = 100.0,
+                ExchangeRate = null,
+                Balance = 1200.0,
+                Cashback = 3.0,
+                Date = new DateTime(2021, 12, 04, 21, 12, 03),
+                OperationCurrency = "UAH",
+                OperationAmount = 0,
+                Commission = 0.0,
+                MCC = "1000",
+            };
+
+            DbManual.SetupTests(new List<AccountFilterModel>() { account });
+            DbManual.SetupTests(new List<RuleModel> { rule });
+
+            var vm = new Page3VM(dialogWrapperMock.Object);
+            vm.MonoAccount = account;
+            vm.SetMonoTransactions(new List<BankTransaction> { transaction });
+
+            // Assert
+            Assert.Single(vm.FinancistoTransactions);
+            Assert.Equal(categoryId, vm.FinancistoTransactions[0].CategoryId);
+            Assert.Equal(payeeId, vm.FinancistoTransactions[0].PayeeId);
+            DbManual.ResetAllDatabaseManuals();
+        }
+
+        [Theory]
+        [AutoMoqData]
+        public void ApplyRules_MCCCondition_UpdatesTransactionProperties(
+            AccountFilterModel account)
+        {
+            // Arrange
+            var categoryId = 100;
+            var locationId = 75;
+            var projectId = 25;
+            var rule = new RuleModel
+            {
+                Id = 105,
+                IsActive = true,
+                Condition = RuleConditionType.MCC,
+                MCCCategory = Mcc.hotels_and_resorts,
+                CategoryId = categoryId,
+                LocationId = locationId,
+                ProjectId = projectId,
+                Created = DateTime.Now,
+            };
+
+            var transaction = new BankTransaction
+            {
+                Description = "Hotel booking",
+                CardCurrencyAmount = 100.0,
+                ExchangeRate = null,
+                Balance = 1200.0,
+                Cashback = 3.0,
+                Date = new DateTime(2021, 12, 04, 21, 12, 03),
+                OperationCurrency = "UAH",
+                OperationAmount = 0,
+                Commission = 0.0,
+                MCC = "3700",
+            };
+
+            DbManual.SetupTests(new List<AccountFilterModel>() { account });
+            DbManual.SetupTests(new List<RuleModel> { rule });
+
+            var vm = new Page3VM(dialogWrapperMock.Object);
+            vm.MonoAccount = account;
+            vm.SetMonoTransactions(new List<BankTransaction> { transaction });
+
+            // Assert
+            Assert.Single(vm.FinancistoTransactions);
+            Assert.Equal(categoryId, vm.FinancistoTransactions[0].CategoryId);
+            Assert.Equal(locationId, vm.FinancistoTransactions[0].LocationId);
+            Assert.Equal(projectId, vm.FinancistoTransactions[0].ProjectId);
+            DbManual.ResetAllDatabaseManuals();
+        }
+
+        [Theory]
+        [AutoMoqData]
+        public void ApplyRules_NoMatchingRule_TransactionUnchanged(
+            AccountFilterModel account)
+        {
+            // Arrange
+            var rule = new RuleModel
+            {
+                Id = 102,
+                IsActive = true,
+                Condition = RuleConditionType.DescriptionContains,
+                Description = "NonExistentText",
+                CategoryId = 100,
+                Created = DateTime.Now,
+            };
+
+            var transaction = new BankTransaction
+            {
+                Description = "Payment to Google Store",
+                CardCurrencyAmount = 100.0,
+                ExchangeRate = null,
+                Balance = 1200.0,
+                Cashback = 3.0,
+                Date = new DateTime(2021, 12, 04, 21, 12, 03),
+                OperationCurrency = "UAH",
+                OperationAmount = 0,
+                Commission = 0.0,
+                MCC = "1000",
+            };
+
+            DbManual.SetupTests(new List<AccountFilterModel>() { account });
+            DbManual.SetupTests(new List<RuleModel> { rule });
+
+            var vm = new Page3VM(dialogWrapperMock.Object);
+            vm.MonoAccount = account;
+            vm.SetMonoTransactions(new List<BankTransaction> { transaction });
+
+            // Assert
+            Assert.Single(vm.FinancistoTransactions);
+            Assert.Equal(0, vm.FinancistoTransactions[0].CategoryId);
+            DbManual.ResetAllDatabaseManuals();
+        }
+
+        [Theory]
+        [AutoMoqData]
+        public void ApplyRules_InactiveRule_TransactionUnchanged(
+            AccountFilterModel account)
+        {
+            // Arrange
+            var rule = new RuleModel
+            {
+                Id = 106,
+                IsActive = false,
+                Condition = RuleConditionType.DescriptionContains,
+                Description = "Apple",
+                CategoryId = 100,
+                Created = DateTime.Now,
+            };
+
+            var transaction = new BankTransaction
+            {
+                Description = "Payment to Apple Store",
+                CardCurrencyAmount = 100.0,
+                ExchangeRate = null,
+                Balance = 1200.0,
+                Cashback = 3.0,
+                Date = new DateTime(2021, 12, 04, 21, 12, 03),
+                OperationCurrency = "UAH",
+                OperationAmount = 0,
+                Commission = 0.0,
+                MCC = "1000",
+            };
+
+            DbManual.SetupTests(new List<AccountFilterModel>() { account });
+            DbManual.SetupTests(new List<RuleModel> { rule });
+
+            // Act
+            var vm = new Page3VM(dialogWrapperMock.Object);
+            vm.MonoAccount = account;
+            vm.SetMonoTransactions(new List<BankTransaction> { transaction });
+
+            // Assert
+            Assert.Single(vm.FinancistoTransactions);
+            Assert.Equal(0, vm.FinancistoTransactions[0].CategoryId);
+            DbManual.ResetAllDatabaseManuals();
+        }
+
+        [Theory]
+        [AutoMoqData]
+        public void ApplyRules_CaseInsensitiveMatching_SuccessfullyMatches(
+            AccountFilterModel account)
+        {
+            // Arrange
+            var categoryId = 100;
+            var rule = new RuleModel
+            {
+                Id = 103,
+                IsActive = true,
+                Condition = RuleConditionType.DescriptionContains,
+                Description = "google",
+                CategoryId = categoryId,
+                Created = DateTime.Now,
+            };
+
+            var transaction = new BankTransaction
+            {
+                Description = "Payment to GOOGLE STORE",
+                CardCurrencyAmount = 100.0,
+                ExchangeRate = null,
+                Balance = 1200.0,
+                Cashback = 3.0,
+                Date = new DateTime(2021, 12, 04, 21, 12, 03),
+                OperationCurrency = "UAH",
+                OperationAmount = 0,
+                Commission = 0.0,
+                MCC = "1000",
+            };
+
+            DbManual.SetupTests(new List<AccountFilterModel>() { account });
+            DbManual.SetupTests(new List<RuleModel> { rule });
+
+            var vm = new Page3VM(dialogWrapperMock.Object);
+            vm.MonoAccount = account;
+            vm.SetMonoTransactions(new List<BankTransaction> { transaction });
+
+            // Assert
+            Assert.Single(vm.FinancistoTransactions);
+            Assert.Equal(categoryId, vm.FinancistoTransactions[0].CategoryId);
+            DbManual.ResetAllDatabaseManuals();
+        }
+
+        [Theory]
+        [AutoMoqData]
+        public void ApplyRules_MultipleRules_LastMatchingRuleApplied(
+            AccountFilterModel account)
+        {
+            // Arrange
+            var categoryId1 = 100;
+            var categoryId2 = 200;
+            var rule1 = new RuleModel
+            {
+                Id = 201,
+                IsActive = true,
+                Condition = RuleConditionType.DescriptionContains,
+                Description = "Meta",
+                CategoryId = categoryId1,
+                Created = DateTime.Now,
+            };
+
+            var rule2 = new RuleModel
+            {
+                Id = 202,
+                IsActive = true,
+                Condition = RuleConditionType.DescriptionContains,
+                Description = "Paymnt",
+                CategoryId = categoryId2,
+                Created = DateTime.Now.AddSeconds(1),
+            };
+
+            var transaction = new BankTransaction
+            {
+                Description = "Paymnt to Meta Store",
+                CardCurrencyAmount = 100.0,
+                ExchangeRate = null,
+                Balance = 1200.0,
+                Cashback = 3.0,
+                Date = new DateTime(2021, 12, 04, 21, 12, 03),
+                OperationCurrency = "UAH",
+                OperationAmount = 0,
+                Commission = 0.0,
+                MCC = "1000",
+            };
+
+            DbManual.SetupTests(new List<AccountFilterModel>() { account });
+            DbManual.SetupTests(new List<RuleModel> { rule1, rule2 });
+
+            var vm = new Page3VM(dialogWrapperMock.Object);
+            vm.MonoAccount = account;
+            vm.SetMonoTransactions(new List<BankTransaction> { transaction });
+
+            // Assert
+            Assert.Single(vm.FinancistoTransactions);
+            Assert.Equal(categoryId2, vm.FinancistoTransactions[0].CategoryId);
+            DbManual.ResetAllDatabaseManuals();
+        }
+
+        [Fact]
+        public async Task OpenRulesDialogAsync_ValidRuleCreated_AddsRuleAndReappliesRules()
+        {
+            // Arrange
+            var account = new AccountFilterModel { Id = 1 };
+            var description = "Payment to Store";
+
+            object ruleDto = new RuleDto
+            {
+                Description = description,
+                Condition = RuleConditionType.DescriptionContains,
+                Created = DateTime.Now,
+                IsActive = true,
+                CategoryId = 1000,
+            };
+
+            dialogWrapperMock
+                .Setup(d => d.ShowDialogAsync<RuleDialog>(It.IsAny<RuleDialogVM>(), 420, 440, LocalizationService.Instance.rule))
+                .ReturnsAsync(ruleDto);
+
+            List<BankTransaction> transactions = new List<BankTransaction>
+            {
+                new BankTransaction
+                {
+                    CardCurrencyAmount = 100.0,
+                    ExchangeRate = null,
+                    Balance = 1100.0,
+                    Cashback = 3.0,
+                    Date = new DateTime(2021, 12, 04, 21, 12, 04),
+                    OperationCurrency = "UAH",
+                    OperationAmount = 0,
+                    Description = description,
+                    Commission = 0.0,
+                    MCC = "0",
+                },
+            };
+
+            DbManual.SetupTests(new List<AccountFilterModel>() { account });
+            DbManual.SetupTests(new List<LocationModel>());
+            DbManual.SetupTests(new List<CategoryModel>());
+
+            var vm = new Page3VM(dialogWrapperMock.Object);
+            vm.MonoAccount = account;
+            vm.SetMonoTransactions(transactions);
+
+            // Act
+            await vm.AddRuleCommand.ExecuteAsync(new FinancistoTransactionDto
+            {
+                Note = description,
+                MonoAccountId = account.Id,
+                FromAmount = 10000,
+                MCC = 0,
+            });
+
+            // Assert
+            Assert.NotEmpty(DbManual.Rules);
+            var addedRule = DbManual.Rules.LastOrDefault();
+            Assert.NotNull(addedRule);
+            Assert.Equal(description, addedRule.Description);
+            Assert.Equal(RuleConditionType.DescriptionContains, addedRule.Condition);
+            Assert.True(addedRule.IsActive);
+            Assert.Equal(1000, addedRule.CategoryId);
+
+            // Verify the transaction was updated with the new rule
+            var transaction = vm.FinancistoTransactions.FirstOrDefault();
+            Assert.NotNull(transaction);
+            Assert.Equal(1000, transaction.CategoryId);
+
+            DbManual.ResetAllDatabaseManuals();
+        }
+
+        [Fact]
+        public async Task OpenRulesDialogAsync_DialogCancelled_RuleNotAdded()
+        {
+            // Arrange
+            var account = new AccountFilterModel { Id = 1 };
+            var description = "Payment to Store";
+
+            dialogWrapperMock
+                .Setup(d => d.ShowDialogAsync<RuleDialog>(It.IsAny<RuleDialogVM>(), 420, 440, LocalizationService.Instance.rule))
+                .ReturnsAsync((RuleDto)null);
+
+            DbManual.SetupTests(new List<AccountFilterModel>() { account });
+            DbManual.SetupTests(new List<LocationModel>());
+            DbManual.SetupTests(new List<CategoryModel>());
+            DbManual.SetupTests(new List<RuleModel>());
+
+            var vm = new Page3VM(dialogWrapperMock.Object);
+            vm.MonoAccount = account;
+
+            await vm.AddRuleCommand.ExecuteAsync(new FinancistoTransactionDto
+            {
+                Note = description,
+                MonoAccountId = account.Id,
+                FromAmount = 10000,
+                MCC = 0,
+            });
+
+            // Assert
+            Assert.Empty(DbManual.Rules);
+            DbManual.ResetAllDatabaseManuals();
+        }
+
+        [Fact]
+        public async Task OpenRulesDialogAsync_RuleCreatedWithAllProperties_AllPropertiesPreserved()
+        {
+            var account = new AccountFilterModel { Id = 1 };
+            var description = "Restaurant Payment";
+
+            var ruleDto = new RuleDto
+            {
+                Description = description,
+                Condition = RuleConditionType.DescriptionMatches,
+                Created = DateTime.Now,
+                IsActive = true,
+                CategoryId = 100,
+                LocationId = 50,
+                PayeeId = 25,
+                ProjectId = 10,
+            };
+
+            List<BankTransaction> transactions = new List<BankTransaction>
+            {
+                new BankTransaction
+                {
+                    CardCurrencyAmount = 100.0,
+                    ExchangeRate = null,
+                    Balance = 1100.0,
+                    Cashback = 3.0,
+                    Date = new DateTime(2021, 12, 04, 21, 12, 04),
+                    OperationCurrency = "UAH",
+                    OperationAmount = 0,
+                    Description = description,
+                    Commission = 0.0,
+                    MCC = "0",
+                },
+            };
+
+            dialogWrapperMock
+                .Setup(d => d.ShowDialogAsync<RuleDialog>(It.IsAny<RuleDialogVM>(), 420, 440, LocalizationService.Instance.rule))
+                .ReturnsAsync(ruleDto);
+
+            DbManual.SetupTests(new List<AccountFilterModel>() { account });
+            DbManual.SetupTests(new List<LocationModel>());
+            DbManual.SetupTests(new List<CategoryModel>());
+            DbManual.SetupTests(new List<RuleModel>());
+
+            var vm = new Page3VM(dialogWrapperMock.Object);
+            vm.MonoAccount = account;
+            vm.SetMonoTransactions(transactions);
+
+            // Act
+            await vm.AddRuleCommand.ExecuteAsync(new FinancistoTransactionDto
+            {
+                Note = description,
+                MonoAccountId = account.Id,
+                FromAmount = 10000,
+                MCC = 0,
+            });
+
+            // Assert
+            Assert.Single(DbManual.Rules);
+            var addedRule = DbManual.Rules.First();
+            Assert.Equal(description, addedRule.Description);
+            Assert.Equal(RuleConditionType.DescriptionMatches, addedRule.Condition);
+            Assert.True(addedRule.IsActive);
+            Assert.Equal(100, addedRule.CategoryId);
+            Assert.Equal(50, addedRule.LocationId);
+            Assert.Equal(25, addedRule.PayeeId);
+            Assert.Equal(10, addedRule.ProjectId);
+        }
+
+        private static List<BankTransaction> GetBankTransactions()
+        {
+            List<BankTransaction> transactions = new List<BankTransaction>
+            {
+                new BankTransaction // Description -> Location.Title
+                {
+                    CardCurrencyAmount = 100.0,
+                    ExchangeRate = null,
+                    Balance = 1100.0,
+                    Cashback = 3.0,
+                    Date = new DateTime(2021, 12, 04, 21, 12, 04),
+                    OperationCurrency = "UAH",
+                    OperationAmount = 0,
+                    Description = "Google",
+                    Commission = 0.0,
+                    MCC = "1000",
+                },
+                new BankTransaction// Description -> Location.Address
+                {
+                    CardCurrencyAmount = 100.0,
+                    ExchangeRate = null,
+                    Balance = 1200.0,
+                    Cashback = 3.0,
+                    Date = new DateTime(2021, 12, 04, 21, 12, 03),
+                    OperationCurrency = "UAH",
+                    OperationAmount = 0,
+                    Description = "Google Store",
+                    Commission = 0.0,
+                    MCC = "1000",
+                },
+            };
+            return transactions;
+        }
+    }
+}

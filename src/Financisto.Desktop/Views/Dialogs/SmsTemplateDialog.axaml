@@ -1,0 +1,215 @@
+<UserControl
+    x:Class="Financisto.Desktop.Views.Dialogs.SmsTemplateDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:entities="using:Financisto.Common.Entities"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:model="using:Financisto.Common.Model"
+    xmlns:vm="using:Financisto.Desktop.ViewModels.Dialogs"
+    d:DesignHeight="760"
+    d:DesignWidth="560"
+    x:DataType="vm:SmsTemplateDialogVM"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <UserControl.Styles>
+        <Style Selector="ComboBox">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="TextBlock.caption">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Margin" Value="0,6,0,2" />
+        </Style>
+    </UserControl.Styles>
+    <GroupBox
+        Margin="5"
+        FontSize="14"
+        Header="{loc:Translate Key=sms_template_details}">
+        <Grid RowDefinitions="*,Auto">
+            <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="2,0,10,0">
+                    <TextBlock Classes="caption" Text="{loc:Translate Key=sms_description}" />
+                    <TextBox Text="{Binding Entity.Description}" PlaceholderText="{loc:Translate Key=sms_description_hint}" />
+
+                    <TextBlock Classes="caption" Text="{loc:Translate Key=sms_sender}" />
+                    <TextBox Text="{Binding Entity.Sender}" PlaceholderText="{loc:Translate Key=sms_number_hint}" />
+
+                    <Expander
+                        Margin="0,6,0,0"
+                        Padding="0"
+                        HorizontalAlignment="Stretch"
+                        Header="{loc:Translate Key=sms_tpl_title}">
+                        <TextBlock
+                            FontSize="12"
+                            Text="{loc:Translate Key=sms_tpl_desc}"
+                            TextWrapping="Wrap" />
+                    </Expander>
+                    <TextBox
+                        MinHeight="60"
+                        AcceptsReturn="True"
+                        Text="{Binding Entity.Template}"
+                        TextWrapping="Wrap"
+                        PlaceholderText="{loc:Translate Key=sms_tpl_hint}" />
+
+                    <StackPanel Margin="0,4,0,0">
+                        <RadioButton
+                            Content="{loc:Translate Key=sms_tpl_match_normal}"
+                            GroupName="match"
+                            IsChecked="{Binding MatchNormal}" />
+                        <RadioButton
+                            Content="{loc:Translate Key=sms_tpl_match_group_summary}"
+                            GroupName="match"
+                            IsChecked="{Binding MatchGroupSummary}" />
+                    </StackPanel>
+
+                    <Expander
+                        Margin="0,6,0,0"
+                        Padding="0"
+                        HorizontalAlignment="Stretch"
+                        Header="{loc:Translate Key=sms_note_title}">
+                        <TextBlock
+                            FontSize="12"
+                            Text="{loc:Translate Key=sms_note_desc}"
+                            TextWrapping="Wrap" />
+                    </Expander>
+                    <TextBox
+                        MinHeight="40"
+                        AcceptsReturn="True"
+                        Text="{Binding Entity.Note}"
+                        TextWrapping="Wrap"
+                        PlaceholderText="{loc:Translate Key=sms_note_hint}" />
+
+                    <Grid
+                        Margin="0,6,0,0"
+                        ColumnDefinitions="*,*"
+                        RowDefinitions="Auto,Auto,Auto">
+                        <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,4,0">
+                            <TextBlock Classes="caption" Text="{loc:Translate Key=categories}" />
+                            <ComboBox
+                                IsTextSearchEnabled="True"
+                                ItemTemplate="{StaticResource CategoryTemplate}"
+                                ItemsSource="{x:Static entities:DbManual.Category}"
+                                SelectedValue="{Binding Entity.CategoryId}"
+                                SelectedValueBinding="{Binding Id, DataType=model:CategoryModel}"
+                                TextSearch.TextBinding="{Binding Title, DataType=model:CategoryModel}" />
+                        </StackPanel>
+                        <StackPanel Grid.Row="0" Grid.Column="1" Margin="4,0,0,0">
+                            <TextBlock Classes="caption" Text="{loc:Translate Key=payees}" />
+                            <ComboBox
+                                IsTextSearchEnabled="True"
+                                ItemTemplate="{StaticResource IActive}"
+                                ItemsSource="{x:Static entities:DbManual.Payee}"
+                                SelectedValue="{Binding Entity.PayeeId}"
+                                SelectedValueBinding="{Binding Id, DataType=model:PayeeModel}"
+                                TextSearch.TextBinding="{Binding Title, DataType=model:PayeeModel}" />
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,4,0">
+                            <TextBlock Classes="caption" Text="{loc:Translate Key=projects}" />
+                            <ComboBox
+                                IsTextSearchEnabled="True"
+                                ItemTemplate="{StaticResource IActive}"
+                                ItemsSource="{x:Static entities:DbManual.Project}"
+                                SelectedValue="{Binding Entity.ProjectId}"
+                                SelectedValueBinding="{Binding Id, DataType=model:ProjectModel}"
+                                TextSearch.TextBinding="{Binding Title, DataType=model:ProjectModel}" />
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Grid.Column="1" Margin="4,0,0,0">
+                            <TextBlock Classes="caption" Text="{loc:Translate Key=locations}" />
+                            <ComboBox
+                                IsTextSearchEnabled="True"
+                                ItemTemplate="{StaticResource IActive}"
+                                ItemsSource="{x:Static entities:DbManual.Location}"
+                                SelectedValue="{Binding Entity.LocationId}"
+                                SelectedValueBinding="{Binding Id, DataType=model:LocationModel}"
+                                TextSearch.TextBinding="{Binding Title, DataType=model:LocationModel}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Classes="caption" Text="{loc:Translate Key=choose_sms_template_type_and_account}" />
+                    <Grid ColumnDefinitions="Auto,*">
+                        <StackPanel
+                            Grid.Column="0"
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal">
+                            <RadioButton
+                                Content="{loc:Translate Key=expense}"
+                                GroupName="type"
+                                IsChecked="{Binding IsExpense}" />
+                            <RadioButton
+                                Content="{loc:Translate Key=income}"
+                                GroupName="type"
+                                IsChecked="{Binding IsIncome}" />
+                        </StackPanel>
+                        <ComboBox
+                            Grid.Column="1"
+                            IsTextSearchEnabled="True"
+                            ItemTemplate="{StaticResource IActive}"
+                            ItemsSource="{Binding Accounts}"
+                            SelectedValue="{Binding Entity.AccountId}"
+                            SelectedValueBinding="{Binding Id, DataType=model:AccountFilterModel}"
+                            TextSearch.TextBinding="{Binding Title, DataType=model:AccountFilterModel}" />
+                    </Grid>
+
+                    <TextBlock Classes="caption" Text="{loc:Translate Key=choose_sms_template_transfer_to_account}" />
+                    <ComboBox
+                        IsTextSearchEnabled="True"
+                        ItemTemplate="{StaticResource IActive}"
+                        ItemsSource="{Binding ToAccounts}"
+                        SelectedValue="{Binding Entity.ToAccountId}"
+                        SelectedValueBinding="{Binding Id, DataType=model:AccountFilterModel}"
+                        TextSearch.TextBinding="{Binding Title, DataType=model:AccountFilterModel}" />
+
+                    <Border
+                        Margin="0,10,0,0"
+                        Background="{Binding ExampleBackground}"
+                        CornerRadius="3">
+                        <TextBox
+                            MinHeight="50"
+                            AcceptsReturn="True"
+                            Text="{Binding Example}"
+                            TextWrapping="Wrap"
+                            PlaceholderText="{loc:Translate Key=sms_tpl_check}" />
+                    </Border>
+
+                    <TextBlock Classes="caption" Text="{loc:Translate Key=tpl_parse_result}" />
+                    <TextBlock
+                        FontSize="12"
+                        Text="{Binding ParseResult}"
+                        TextWrapping="Wrap" />
+
+                    <CheckBox
+                        Margin="0,8,0,0"
+                        Content="{loc:Translate Key=is_active}"
+                        IsChecked="{Binding Entity.IsActive}" />
+                </StackPanel>
+            </ScrollViewer>
+            <Grid
+                Grid.Row="1"
+                Margin="0,8,0,0"
+                ColumnDefinitions="*,*">
+                <Button
+                    Grid.Column="0"
+                    Margin="2"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding SaveCommand}"
+                    Content="{loc:Translate Key=save}" />
+                <Button
+                    Grid.Column="1"
+                    Margin="2"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding CancelCommand}"
+                    Content="{loc:Translate Key=cancel}" />
+            </Grid>
+        </Grid>
+    </GroupBox>
+</UserControl>

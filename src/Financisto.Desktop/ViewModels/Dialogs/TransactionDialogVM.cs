@@ -10,6 +10,7 @@ using Financisto.Common.Utils;
 using Financisto.Desktop.Data;
 using Financisto.Desktop.Helpers;
 using Financisto.Desktop.Views.Dialogs;
+using Financisto.Desktop.Wizards.RecipesWizard.ViewModel;
 using Prism.Commands;
 
 namespace Financisto.Desktop.ViewModels.Dialogs;
@@ -25,6 +26,7 @@ public class TransactionDialogVM : SubTransactionDialogVM
     private DelegateCommand _clearTagCommand;
     private DelegateCommand<BaseTransactionDto> _deleteSubTransactionCommand;
     private AsyncCommand<BaseTransactionDto> _editSubTransaction;
+    private Common.IAsyncCommand _openRecipesDialogCommand;
 
     /// <param name="accountBalances">Account id → current balance (<c>IFinancistoDatabase.GetLastRunningBalancesAsync</c>), read right before
     /// the dialog opens; shown under the account combobox. Null shows no balance.</param>
@@ -72,6 +74,8 @@ public class TransactionDialogVM : SubTransactionDialogVM
 
     public AsyncCommand<BaseTransactionDto> EditSubTransactionCommand => _editSubTransaction ??= new AsyncCommand<BaseTransactionDto>(EditSubTransaction);
 
+    public Common.IAsyncCommand OpenRecipesDialogCommand => _openRecipesDialogCommand ??= new AsyncCommand(ShowRecipesDialog);
+
     // Only a split must be fully distributed among its parts; a regular transaction has no parts, so its UnsplitAmount is the whole amount.
     protected override bool CanSaveCommandExecute() => Transaction.FromAccount != null && Transaction.FromAmount != 0 && base.CanSaveCommandExecute();
 
@@ -100,6 +104,25 @@ public class TransactionDialogVM : SubTransactionDialogVM
         original.ToAmount = Math.Abs(modifiedCopy.IsToAmountVisible ? modifiedCopy.ToAmount : modifiedCopy.FromAmount);
         original.Date = modifiedCopy.DateTime.Date;
         original.Time = modifiedCopy.DateTime;
+    }
+
+    /// <summary>Recipes wizard: parses a pasted receipt into split parts of this transaction.</summary>
+    private async Task ShowRecipesDialog()
+    {
+        var vm = new RecipesVM(Transaction.RealFromAmount / 100.0);
+
+        var output = await dialogWrapper.ShowWizardAsync(vm);
+
+        if (output is List<TransactionDto> outputTransactions)
+        {
+            foreach (var item in outputTransactions)
+            {
+                item.Category = DbManual.Category?.Find(x => x.Id == item.CategoryId)!;
+                Transaction.SubTransactions.Add(item);
+            }
+            Transaction.RecalculateUnSplitAmount();
+            SaveCommand.NotifyCanExecuteChanged();
+        }
     }
 
     private async Task EditSubTransaction(BaseTransactionDto original)

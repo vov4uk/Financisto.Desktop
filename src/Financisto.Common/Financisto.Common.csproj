@@ -44,6 +44,7 @@
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Financisto.DataAccess\Financisto.DataAccess.csproj" />
+		<ProjectReference Include="..\CustomControls\AvaloniaSearchableComboBox\AvaloniaSearchableComboBox.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<Compile Update="Localization\Resources.Designer.cs">

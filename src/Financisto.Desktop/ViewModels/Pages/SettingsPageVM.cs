@@ -19,7 +19,6 @@ namespace Financisto.Desktop.ViewModels.Pages
         private readonly IFinancistoDatabase db;
         private readonly IToastNotifierWrapper notifier;
         private readonly IDialogWrapper dialogWrapper;
-
         private readonly UpdateService updateService;
         private IAsyncCommand _refreshDataCommand;
         private IAsyncCommand _saveCommand;
@@ -35,6 +34,9 @@ namespace Financisto.Desktop.ViewModels.Pages
             this.notifier = notifier;
             this.dialogWrapper = dialogWrapper;
             this.updateService = updateService;
+
+            // Initialize Entity so bindings don't fail when the view first loads
+            Entity = new SettingsDto();
         }
 
         public bool IsOpenExchangeRatesProviderSelected
@@ -60,7 +62,7 @@ namespace Financisto.Desktop.ViewModels.Pages
             private set => SetProperty(ref _entity, value);
         }
 
-        public string AppVersion { get; } = typeof(SettingsPageVM).Assembly.GetName().Version?.ToString(3);
+        public string AppVersion { get; } = typeof(SettingsPageVM).Assembly.GetName().Version?.ToString(3)!;
 
         public IAsyncCommand RefreshDataCommand => _refreshDataCommand ??= new AsyncCommand(RefreshData);
 

@@ -1058,7 +1058,16 @@ namespace Financisto.Common.Localization {
                 return ResourceManager.GetString("import", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Could not read the {0} statement file..
+        /// </summary>
+        public static string import_failed {
+            get {
+                return ResourceManager.GetString("import_failed", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Imported {0} transactions..
         /// </summary>
@@ -1823,7 +1832,16 @@ namespace Financisto.Common.Localization {
                 return ResourceManager.GetString("recipes_instructions_line1", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Total: {0:F2}   Current: {1:F2}   Diff: {2:F2}.
+        /// </summary>
+        public static string recipe_wizard_total_format {
+            get {
+                return ResourceManager.GetString("recipe_wizard_total_format", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to For example: &quot;123.45 A&quot;, &quot;-54,32-A&quot;, &quot;100 Б&quot;, &quot;123.01 a&quot;.
         /// </summary>

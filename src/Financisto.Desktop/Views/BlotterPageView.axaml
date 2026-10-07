@@ -13,6 +13,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
             </ResourceDictionary.MergedDictionaries>
+            <conv:DateTimeToDateTimeOffsetConverter x:Key="DateTimeToDateTimeOffsetConverter" />
             <conv:UnixTimeConverter x:Key="UnixTimeConverter" />
             <conv:TransactionTypeBrushConverter x:Key="TransactionTypeBrushConverter" />
             <conv:TransactionTypeIconConverter x:Key="TransactionTypeIconConverter" />
@@ -81,17 +82,40 @@
             IsExpanded="True">
             <Grid ColumnDefinitions="*,Auto">
                 <WrapPanel Grid.Column="0" Orientation="Horizontal">
+                    <!--  A preset only sets the control's own From/To, so they have to be bound to the VM for the preset to filter  -->
                     <filters:PeriodFilter
                         Margin="0"
                         DataContext="{Binding}"
                         Orientation="Horizontal"
-                        SelectedPeriodType="{Binding PeriodType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                    <filters:AccountFilter MinWidth="120" Margin="4" />
-                    <filters:CategoryFilter MinWidth="120" Margin="4" />
-                    <filters:ProjectFilter MinWidth="120" Margin="4" />
-                    <filters:PayeeFilter MinWidth="120" Margin="4" />
-                    <filters:LocationFilter MinWidth="120" Margin="4" />
-                    <filters:TagFilter MinWidth="120" Margin="4" SelectedTags="{Binding Tags, Mode=TwoWay}" />
+                        SelectedPeriodType="{Binding PeriodType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        From="{Binding From, Mode=TwoWay, Converter={StaticResource DateTimeToDateTimeOffsetConverter}}"
+                        To="{Binding To, Mode=TwoWay, Converter={StaticResource DateTimeToDateTimeOffsetConverter}}" />
+                    <filters:AccountsFilter
+                        MinWidth="120"
+                        MaxWidth="220"
+                        Margin="4"
+                        SelectedAccounts="{Binding SelectedAccounts, Mode=TwoWay}" />
+                    <filters:CategoryFilter
+                        MinWidth="120"
+                        MaxWidth="220"
+                        Margin="4" />
+                    <filters:ProjectFilter
+                        MinWidth="120"
+                        MaxWidth="220"
+                        Margin="4" />
+                    <filters:PayeeFilter
+                        MinWidth="120"
+                        MaxWidth="220"
+                        Margin="4" />
+                    <filters:LocationFilter
+                        MinWidth="120"
+                        MaxWidth="220"
+                        Margin="4" />
+                    <filters:TagFilter
+                        MinWidth="120"
+                        MaxWidth="220"
+                        Margin="4"
+                        SelectedTags="{Binding Tags, Mode=TwoWay}" />
 
                 </WrapPanel>
                 <Grid Grid.Column="1">
@@ -200,7 +224,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock
-                                Name="MyText"
+                                Margin="4,0,0,0"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Center"
                                 Foreground="{Binding Path=Type, Converter={StaticResource TransactionTypeBrushConverter}}"
@@ -212,7 +236,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock
-                                Name="MyText"
+                                Margin="4,0,0,0"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Center"
                                 Text="{Binding Path=BalanceTitle}" />

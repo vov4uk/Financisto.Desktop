@@ -1,0 +1,169 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="clr-namespace:Message.Avalonia.Controls"
+                    x:ClassModifier="internal">
+
+    <x:Double x:Key="MessageIconSize">18</x:Double>
+    <!--  This is actually for the animation  -->
+    <x:Double x:Key="MessageMaxHeight">800</x:Double>
+    <x:Double x:Key="MessageMinWidth">350</x:Double>
+    <x:Double x:Key="MessageMaxWidth">500</x:Double>
+    <Thickness x:Key="MessageIconMargin">0,2,8,0</Thickness>
+
+    <ControlTheme x:Key="{x:Type controls:MessageItem}" TargetType="controls:MessageItem">
+        <Setter Property="Opacity" Value="0" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="PART_RootBorder"
+                        MinWidth="{StaticResource MessageMinWidth}"
+                        MaxWidth="{StaticResource MessageMaxWidth}"
+                        Background="{DynamicResource MenuFlyoutPresenterBackground}"
+                        BorderThickness="1"
+                        ClipToBounds="True"
+                        CornerRadius="{DynamicResource ControlCornerRadius}">
+                    <Panel>
+                        <Grid Margin="16" ColumnDefinitions="Auto *">
+                            <PathIcon Name="PART_Icon"
+                                      Width="{StaticResource MessageIconSize}"
+                                      Height="{StaticResource MessageIconSize}"
+                                      Margin="{StaticResource MessageIconMargin}"
+                                      VerticalAlignment="Top" />
+                            <TextBlock Grid.Column="1"
+                                       Text="{TemplateBinding Message}"
+                                       TextWrapping="Wrap" />
+                        </Grid>
+                        <Button Name="PART_CloseButton"
+                                Width="20"
+                                Height="20"
+                                Margin="4"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top"
+                                Background="Transparent"
+                                CornerRadius="4"
+                                Opacity="0">
+                            <Button.Transitions>
+                                <Transitions>
+                                    <DoubleTransition Property="Opacity" Duration="0:0:0.1" />
+                                </Transitions>
+                            </Button.Transitions>
+                            <PathIcon Width="8"
+                                      Height="8"
+                                      Data="{DynamicResource message_close_icon}" />
+                        </Button>
+                    </Panel>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+
+        <Style Selector="^:pointerover /template/ Button#PART_CloseButton">
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+        <Style Selector="^ /template/ Button#PART_CloseButton:pointerover">
+            <Setter Property="Opacity" Value="0.75" />
+        </Style>
+
+        <Style Selector="^:information">
+            <Style Selector="^ /template/ PathIcon#PART_Icon">
+                <Setter Property="Data" Value="{DynamicResource message_info_icon}" />
+                <Setter Property="Foreground" Value="{DynamicResource MessageInfoColor}" />
+            </Style>
+            <Style Selector="^ /template/ Border#PART_RootBorder">
+                <Setter Property="BorderBrush" Value="{DynamicResource MessageInfoBorderColor}" />
+            </Style>
+        </Style>
+        <Style Selector="^:warning">
+            <Style Selector="^ /template/ PathIcon#PART_Icon">
+                <Setter Property="Data" Value="{DynamicResource message_warning_icon}" />
+                <Setter Property="Foreground" Value="{DynamicResource MessageWarningColor}" />
+            </Style>
+            <Style Selector="^ /template/ Border#PART_RootBorder">
+                <Setter Property="BorderBrush" Value="{DynamicResource MessageWarningBorderColor}" />
+            </Style>
+        </Style>
+
+        <!--  Animations: slide in from the right, slide out to the right and collapse  -->
+        <Style Selector="^[Expanded=False]">
+            <Style.Animations>
+                <Animation Easing="QuadraticEaseIn"
+                           FillMode="Forward"
+                           Duration="0:0:0.2">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="MaxHeight" Value="0" />
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="MaxHeight" Value="{StaticResource MessageMaxHeight}" />
+                        <Setter Property="Expanded" Value="True" />
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
+        <Style Selector="^[Expanded=True]">
+            <Style.Animations>
+                <Animation Easing="QuadraticEaseIn"
+                           FillMode="Forward"
+                           Duration="0:0:0.3">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0" />
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="1" />
+                    </KeyFrame>
+                </Animation>
+                <Animation Easing="QuadraticEaseIn"
+                           FillMode="Forward"
+                           Duration="0:0:0.3">
+                    <KeyFrame Cue="0%" KeySpline="0.62,0.63,0,1.12">
+                        <Setter Property="TranslateTransform.X" Value="500" />
+                    </KeyFrame>
+                    <KeyFrame Cue="100%" KeySpline="0.62,0.63,0,1.12">
+                        <Setter Property="TranslateTransform.X" Value="0" />
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
+        <Style Selector="^[IsClosing=true]">
+            <Style.Animations>
+                <Animation Easing="QuadraticEaseOut"
+                           FillMode="Forward"
+                           Duration="0:0:0.3">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="1" />
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="0" />
+                    </KeyFrame>
+                </Animation>
+                <Animation Easing="QuadraticEaseOut"
+                           FillMode="Forward"
+                           Duration="0:0:0.3">
+                    <KeyFrame Cue="0%" KeySpline="0.62,0.63,0,1.12">
+                        <Setter Property="TranslateTransform.X" Value="0" />
+                    </KeyFrame>
+                    <KeyFrame Cue="100%" KeySpline="0.62,0.63,0,1.12">
+                        <Setter Property="TranslateTransform.X" Value="500" />
+                    </KeyFrame>
+                </Animation>
+                <Animation Delay="0:0:0.3"
+                           Easing="QuadraticEaseOut"
+                           FillMode="Forward"
+                           Duration="0:0:0.2">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="MaxHeight" Value="{StaticResource MessageMaxHeight}" />
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="MaxHeight" Value="0" />
+                    </KeyFrame>
+                </Animation>
+                <Animation Easing="QuadraticEaseOut"
+                           FillMode="Forward"
+                           Duration="0:0:0.5">
+                    <KeyFrame Cue="100%">
+                        <Setter Property="IsClosed" Value="True" />
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+    </ControlTheme>
+</ResourceDictionary>

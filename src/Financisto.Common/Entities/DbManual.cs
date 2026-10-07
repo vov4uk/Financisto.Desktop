@@ -14,6 +14,8 @@ namespace Financisto.Common.Entities
     [ExcludeFromCodeCoverage]
     public static class DbManual
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         private static List<AccountFilterModel> _accounts;
         private static List<LocationModel> _location;
         private static List<CategoryModel> _category;
@@ -29,6 +31,7 @@ namespace Financisto.Common.Entities
         private static Dictionary<int, Mcc> _mccCodes;
         private static Dictionary<int, ProjectModel> _projectIds;
         private static Dictionary<int, CurrencyModel> _currencyIds;
+        private static List<RuleModel> _rules;
         private static List<List<string>> _allCurrencies;
 
         public static async Task SetupAsync(IFinancistoDatabase FinancistoDatabase)
@@ -37,6 +40,7 @@ namespace Financisto.Common.Entities
             {
                 return;
             }
+
 
             if (_accounts == null)
             {
@@ -158,6 +162,11 @@ ORDER  BY is_active DESC, title ASC");
                 _tag.Insert(0, new TagModel());
             }
 
+            if (_rules == null)
+            {
+                _rules = await new RulesRepository(FinancistoDatabase).LoadAsync();
+            }
+
             if (_yearMonths == null)
             {
                 var yearMonths = await FinancistoDatabase.ExecuteQuery<YearMonths>(@"
@@ -183,6 +192,8 @@ ORDER  BY 1 DESC ");
 
         public static List<AccountFilterModel> Account => _accounts ?? new();
 
+        public static List<AccountFilterModel> SelectableAccounts => _accounts?.Where(a => a.Id.HasValue).ToList() ?? new();
+
         public static List<CategoryModel> Category => _category ?? new();
 
         public static List<CategoryModel> SubCategory => _category?.Where(x => x.Id > 0).ToList() ?? new();
@@ -206,6 +217,9 @@ ORDER  BY 1 DESC ");
         public static List<Years> Years => _years ?? new();
 
         public static List<LocationModel> Location => _location ?? new();
+
+        /// <summary>Import rules; stored in the backup's sms_template table (see <see cref="RuleSmsTemplateMapper"/>).</summary>
+        public static List<RuleModel> Rules => _rules ??= new List<RuleModel>();
 
         public static Dictionary<Mcc, int[]> MCCEnums
         {
@@ -307,6 +321,7 @@ ORDER  BY 1 DESC ");
             _yearMonths = null;
             _years = null;
             _location = null;
+            _rules = null;
         }
 
         public static void ResetManuals(string manual)
@@ -318,6 +333,7 @@ ORDER  BY 1 DESC ");
                 case nameof(Project):          _project = null; break;
                 case nameof(Tag):              _tag = null; break;
                 case nameof(Account):          _accounts = null; break;
+                case nameof(Rules):            _rules = null; break;
                 case nameof(MCCEnums):         _mccEnums = null; break;
                 case nameof(MCCTitles):        _mccTitles = null; break;
                 case nameof(Currencies):       _currencies = null; _currencyIds = null; break;
@@ -356,6 +372,11 @@ ORDER  BY 1 DESC ");
         internal static void SetupTests(List<ProjectModel> pj)
         {
             _project = pj;
+        }
+
+        internal static void SetupTests(List<RuleModel> rl)
+        {
+            _rules = rl;
         }
 
         private static void InitializaMccCodes()

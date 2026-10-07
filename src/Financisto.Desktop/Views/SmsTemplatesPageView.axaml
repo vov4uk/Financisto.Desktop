@@ -1,0 +1,81 @@
+<UserControl
+    x:Class="Financisto.Desktop.Views.SmsTemplatesPageView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviors="using:Financisto.Common.Behaviors"
+    xmlns:conv="using:Financisto.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:Financisto.Desktop.ViewModels.Pages"
+    d:DesignHeight="600"
+    d:DesignWidth="800"
+    x:DataType="vm:SmsTemplatesPageVM"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <conv:EnumDescriptionConverter x:Key="EnumDescriptionConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid
+        Margin="10"
+        ColumnDefinitions="*,Auto,Auto,Auto,Auto"
+        RowDefinitions="Auto,*">
+        <TextBlock
+            Grid.Column="0"
+            VerticalAlignment="Center"
+            FontSize="20"
+            FontWeight="Bold"
+            Text="{loc:Translate Key=sms_templates}" />
+        <Button
+            Grid.Column="1"
+            Margin="4,2"
+            Classes="icon"
+            Command="{Binding AddCommand}"
+            Content="{loc:Translate Key=add_sms_template}"
+            Tag="{StaticResource IconPlus}" />
+        <Button
+            Grid.Column="2"
+            Margin="4,2"
+            Classes="icon"
+            Command="{Binding AddRuleCommand}"
+            Content="{loc:Translate Key=add_rule}"
+            Tag="{StaticResource IconPlus}" />
+        <Button
+            Grid.Column="3"
+            Margin="4,2"
+            Classes="icon"
+            Command="{Binding EditCommand}"
+            Content="{loc:Translate Key=edit}"
+            Tag="{StaticResource IconPencil}" />
+        <Button
+            Grid.Column="4"
+            Margin="4,2"
+            Classes="icon"
+            Command="{Binding DeleteCommand}"
+            Content="{loc:Translate Key=delete}"
+            Tag="{StaticResource IconTrash}" />
+        <DataGrid
+            Grid.Row="1"
+            Grid.ColumnSpan="5"
+            Margin="5"
+            behaviors:CommandBehavior.DoubleTappedCommand="{Binding EditCommand}"
+            AutoGenerateColumns="False"
+            Classes="activeStatus"
+            FontSize="14"
+            IsReadOnly="True"
+            ItemsSource="{Binding Entities}"
+            SelectedItem="{Binding SelectedValue}">
+            <DataGrid.Columns>
+                <DataGridCheckBoxColumn Binding="{Binding IsActive}" Header="{loc:Translate Key=active}" />
+                <DataGridTextColumn Binding="{Binding Kind}" Header="{loc:Translate Key=type}" />
+                <DataGridTextColumn Binding="{Binding Title}" Header="{loc:Translate Key=sms_sender_column}" />
+                <DataGridTextColumn Binding="{Binding Description}" Header="{loc:Translate Key=description}" />
+                <DataGridTextColumn Binding="{Binding Template}" Header="{loc:Translate Key=sms_template_column}" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

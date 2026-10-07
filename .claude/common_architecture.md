@@ -65,7 +65,8 @@ All derive from `BaseModel` (an empty marker). Two ways they get filled:
 | `ProjectModel`, `TagModel : TagBaseModel` | `DbManual` SQL | `TagModel` + SortOrder |
 | `ExchangeRateModel` | `ExchangeRatesPageVM` | FromCurrencyId, ToCurrencyId, Date, `Rate` (double), From/To `CurrencyModel` |
 | `YearMonths`, `Years` | `DbManual` SQL over `v_report_transactions` | period pickers |
-| `TreeNode` (+ `[Header]`) | — | leftover from Financier's reports tree; currently unused |
+| `RuleModel : IActive` (+ enum `RuleConditionType`: DescriptionContains, DescriptionMatches, MCC) | `sms_template` row (`RuleSmsTemplateMapper`) | import rule: Id, Created, Condition, Description, `MCCCategory` (`Mcc`), IsActive, action ids `CategoryId`/`LocationId`/`PayeeId`/`ProjectId` (`int?`). `UpdateTitles()` fills the display-only `Title` (the actions, from `DbManual` lists) and `UserFirendlyDescription` (sic; the description or the MCC title). |
+| `TreeNode` (+ `[Header]`) | — | a node of the reports tree (`ReportsControlVM`): `Name` (localized), `Type` (a report VM's full type name, empty for a group), `Child` |
 
 `IActive` (`int? Id`, `bool IsActive`, `string Title`) is what the shared `IActive` item template renders (inactive = different brush).
 
@@ -83,7 +84,8 @@ DbManual.ResetAllDatabaseManuals();         // null every DB-backed cache (on ba
 - **Index 0 of every list is an "empty/all" item** with `Id == null` (for Currencies, `Name = all_currencies`). Filters use it as "no filter", and real rows are usually `Where(x => x.Id > 0)`.
 - Static data: `MCCEnums`, `MCCTitles`, `MCCCodes` (from the `Mcc` enum attributes) and `AllCurrencies` (embedded `Assets/currencies.csv`, the currency template list).
 - XAML binds to the lists directly: `ItemsSource="{x:Static ent:DbManual.Account}"`.
-- There are no rules and no `rules.json` in this app (that was Financier).
+- **Import rules:** `Rules` (`List<RuleModel>`, never null) is a `DbManual` list like the others: `SetupAsync(db)` loads it once (via `RulesRepository`, from the `sms_template` rows whose `template` is `RuleSmsTemplateMapper.Marker`), `ResetAllDatabaseManuals()` / `ResetManuals(nameof(Rules))` clear it. `RulesRepository(db)` (`Financisto.Common`) does the persistence: `LoadAsync()` returns the rules in id order (the order they were added, which is the order they apply in); `SaveAsync(rules)` upserts/deletes the rule rows, leaves real templates alone and lets the database assign ids to new rules, so callers reset the list and call `SetupAsync` again afterwards. The SMS templates page and `MainWindowVM.OpenImportWizardAsync` (after the wizard closes, only when it added a rule) do that.
+- `internal SetupTests(List<…>)` overloads (accounts, categories, currencies, locations, payees, projects, rules) let a test assembly named `Financisto.Desktop.Tests` seed the caches.
 
 ## Localization (`Localization/`)
 
@@ -122,22 +124,25 @@ Avalonia specifics: there is no `Visibility` enum, so "…ToVisibility" converte
 | `NullToBoolConverter` / `NullToVisibilityConverter` | object → `value != null` | MarkupExtensions |
 | `StringEmptyToVisibilityConverter` | string → `IsNullOrEmpty` | MarkupExtension |
 | `TransactionTypeBrushConverter` / `TransactionTypeIconConverter` | `BlotterModel.Type` → brush / `Icon*` resource | blotter rows |
-| `MccConverter` | MCC int → `Mcc` via `DbManual.MCCCodes` | |
+| `MccConverter` | MCC int → `Mcc` via `DbManual.MCCCodes`; for a `string` target, the localized MCC title | WPF showed the enum through its `TypeConverter`; Avalonia would show the enum name |
 | `EnumDescriptionConverter` | Enum → description text | |
 | `AccentColorBrushConverter` | account `accent_color` code → left-to-right `LinearGradientBrush` (color → transparent), `null` if empty/invalid | the highlight behind the account icon (Android `AccountRecyclerAdapter`); parses with `AndroidColor` |
 | `AccountTypeConverter` (multi) | (type, card_issuer) → `Bitmap` | `avares://Financisto.Common/Assets/AccountType/...png` |
 | `CategoryTitleConverter` (multi) | (title, level) → title padded with `-` per level | |
 | `LocalizedFormatConverter` (multi) | 2 values → `"Label (value)"`; 3+ → `string.Format` | |
-| `DifferentCurrencyConverter`, `OnlyOneSelectedConverter` (multi) | → bool | |
+| `DifferentCurrencyConverter`, `OnlyOneSelectedConverter` (multi) | (FromAccountId, ToAccountId, CategoryId[, imported account]) → bool | import wizard: a transfer to/from an account in another currency; exactly one of the three chosen |
+| `ImportRowBackgroundConverter` (multi) | same values → orange (different-currency transfer) / pink (not exactly one chosen) / transparent | import wizard date cell; replaces the WPF DataTriggers |
 
 `Assets/Generic.axaml` registers only `categoryTitleConvert`, `localizedFormatConverter` and `activeStatusBrush`, plus the `IActive` DataTemplate, theme brushes and all `Icon*` `DrawingImage`s. Other converters are instantiated locally in each view's resources.
 
 ## Controls, filters, behaviors
 
 - `Filters/*` are UserControls with a header `TextBlock` + a picker. Most bind **loosely to the host DataContext** by convention (e.g. `AccountFilter` binds `SelectedItem="{Binding Account}"` with `ItemsSource` = `DbManual.Account`). The csproj sets `AvaloniaUseCompiledBindingsByDefault=false` for this reason. The host VM must expose the matching property names: `Account`, `Category`, `Payee`, `Project`, `Location`, …
-- `PeriodFilter` exposes real styled properties: `SelectedPeriodType` (`PeriodType`), `From`/`To` (`DateTimeOffset?`), `Orientation`. Period presets set From/To directly; picker edits merge date and time.
+- `PeriodFilter` exposes real styled properties: `SelectedPeriodType` (`PeriodType`), `From`/`To` (`DateTimeOffset?`), `Orientation`. Period presets set From/To directly; picker edits merge date and time. **Its inner date pickers bind to the host's `From`/`To` (a `DateTime?` each), but the presets only set the control's own `From`/`To`**, so a host must also bind the control's `From`/`To` to its VM (two-way, through `DateTimeToDateTimeOffsetConverter`) for a preset to have any effect: `BlotterPageView` and `ByCategoryReportView` both do. A VM that resets its filters must clear `From`/`To` through the properties (as `BlotterPageVM.ClearFilters` does), so the pickers follow.
+- `DateFilter` binds a `DateTimeOffset?`-typed `DatePicker` to the host's `DateFilter` (`DateTime?`) through `DateTimeToDateTimeOffsetConverter`; `ConvertBack` gives `null` for a `DateTime?` target when there is no date (a `DateTime` target gets `DateTime.MinValue`).
 - `TagFilter` / `Controls/TagSelector`: styled property `SelectedTags` (`ObservableCollection<TagModel>`), a flyout of checkboxes over `DbManual.Tag`, header joined with " | ".
 - Also: `CategoryFilter`, `TopCategoryFilter`, `CurrencyFilter`, `DateFilter`, `Start/EndYearMonthFilter`, `LocationFilter`, `PayeeFilter`, `ProjectFilter`. The blotter uses Account, Category, Payee, Project, Location, Period and Tag.
+- `Controls/DataGridAutoHeaders : DataGrid` is a read-only table that builds its columns from the row type (the reports' models): only properties with `[DisplayName("key")]` get a column (others are cancelled in `AutoGeneratingColumn`), the header is `LocalizationService.Instance[key]`, and `long`/`double` columns get the `numeric` cell class (right-aligned by a style in `Assets/DataGridStyles.axaml`). The row type is read from the `IEnumerable<T>` of `ItemsSource`. It overrides `StyleKeyOverride` (`typeof(DataGrid)`): a `DataGrid` subclass has no control theme of its own and would be drawn unstyled.
 - `Behaviors/CommandBehavior.DoubleTappedCommand` (+`…Parameter`) is an attached property that replaces WPF `MouseBinding`.
 - `Behaviors/DataGridSelectionBehavior.SelectionChangedCommand` passes `DataGrid.SelectedItems` to the command (used by the blotter selection summary).
 
@@ -147,12 +152,14 @@ Avalonia specifics: there is no `Visibility` enum, so "…ToVisibility" converte
 - **TransactionTitleUtils:** `GenerateTransactionTitle(payee, note, location, categoryId, category, toAccount)` handles split (`-1`), regular and transfer transactions.
 - **AndroidColor:** port of Android `Color.parseColor` (`#RRGGBB`, `#AARRGGBB`, Android's 23 color names; Android `green` = `#00FF00`, `gray` = `#888888`, no `#RGB`) → `TryParse(text, out Color)`; `ToHex(color)` writes `#rrggbb` (or `#aarrggbb` when not opaque) like Android's palette. Used for `account.accent_color`.
 - **DoubleUtils:** `GetDouble(text)` (flexible separator), `DoubleEqual`/`DoubleNotEqual`.
+- **ChartText:** `Label(text)` makes a user's text (category or account name) fit for a chart: LiveCharts draws a text with one typeface, so a name with an emoji (`Продукти🥗`) is drawn in the emoji font and its Cyrillic turns into boxes; `Label` drops emoji and other pictographs (and the double spaces they leave), and returns a text of only emoji as it is. Used for axis labels and pie slice names in the reports and the dashboard; details in `reports_architecture.md`, "Charts".
+- **ExchangeRateSql:** builds the SQL that converts an amount between currencies with the stored rates as of a date: `Convert(amount, fromCurrencyId, toCurrencyId, atMs)`, `Rate(...)`, and the `HomeCurrencyId` / `UsdCurrencyId` subqueries. It picks the stored rate in force at the date and falls back to the inverse pair and to a conversion through the home currency, else `NULL`. Used by the Assets and Saldo reports and the dashboard's net worth chart; details in `reports_architecture.md`, "Exchange rates".
 
 ## Attributes (`Attribute/`)
 
 - `[LocalizedDescription("key")]` : `DescriptionAttribute`, resolved through `LocalizationService`.
 - `[LocalizedMccDescription("key")]` resolves through `ResourcesMcc`. `[MccCodes(params int[])]` maps `Mcc` enum values to numeric MCC codes.
-- `[Header("key")]` is only used by the unused `TreeNode`.
+- `[Header("key")]` on a report VM gives its localized tab title and tree node name (`TreeNode`, `ReportsControlVM`).
 
 ## Enums (`Entities/`, namespace `Financisto.Common.Entities`)
 
@@ -164,4 +171,4 @@ Avalonia specifics: there is no `Visibility` enum, so "…ToVisibility" converte
 - `TextSearch.TextPath="X"` becomes `IsTextSearchEnabled="True"` + `TextSearch.TextBinding="{Binding X}"`. `DisplayMemberPath` becomes `DisplayMemberBinding`.
 - Date/time pickers use `DateTimeOffset?` / `TimeSpan?`.
 - Resources are loaded with `avares://Financisto.Common/...`. PNG assets must be listed as `AvaloniaResource` in the csproj (they are listed individually).
-- `InternalsVisibleTo` is granted to `Financisto.Desktop.Tests` and `Financisto.Reports.Tests`. No such projects exist in the repo; a scratch headless harness can use the `Financisto.Desktop.Tests` assembly name.
+- `InternalsVisibleTo` is granted to `Financisto.Desktop.Tests` and `Financisto.Reports.Tests` (`DbManual.SetupTests` is used by the reports' tests). DataAccess and Desktop grant it to `Financisto.Desktop.Tests` too, DataAccess also to `Financisto.DataAccess.Tests`.

@@ -24,7 +24,8 @@ namespace Financisto.Converters
                 return dateTimeOffset.DateTime;
             }
 
-            return DateTime.MinValue;
+            // no date: a DateTime? property (a filter) becomes null, a DateTime one falls back to the minimum
+            return targetType == typeof(DateTime) ? DateTime.MinValue : null;
         }
 
         public override object ProvideValue(IServiceProvider serviceProvider)

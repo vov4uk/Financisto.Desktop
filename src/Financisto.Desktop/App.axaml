@@ -17,6 +17,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
                 <ResourceInclude Source="avares://LoadingIndicators.Avalonia/LoadingIndicators.axaml" />
+                <ResourceInclude Source="avares://AvaloniaSearchableComboBox/Themes/SearchableComboBox.axaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

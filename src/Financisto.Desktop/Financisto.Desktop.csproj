@@ -29,7 +29,7 @@
     <ItemGroup>
         <!-- NLog reads its config from next to the exe, so keep it out of the single-file bundle -->
         <None Update="NLog.config" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
-        <None Update="NLog.xsd" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true"/>
+        <None Update="NLog.xsd" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
     </ItemGroup>
 
     <ItemGroup>
@@ -53,16 +53,26 @@
         <PackageReference Include="LiveChartsCore.SkiaSharpView" />
         <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" />
         <PackageReference Include="MacBundle" />
-        <PackageReference Include="Message.Avalonia" />
+        <PackageReference Include="MiniExcel" />
         <PackageReference Include="Onova" />
         <PackageReference Include="Optris.LoadingIndicators.Avalonia" />
         <PackageReference Include="System.Security.Cryptography.ProtectedData" />
+        <PackageReference Include="Tabula" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>Financisto.Desktop.Tests</_Parameter1>
+        </AssemblyAttribute>
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\Financisto.Common\Financisto.Common.csproj" />
         <ProjectReference Include="..\Financisto.DataAccess\Financisto.DataAccess.csproj" />
         <ProjectReference Include="..\Financisto.Adapter\Financisto.Adapter.csproj" />
+        <ProjectReference Include="..\Financisto.Reports\Financisto.Reports.csproj" />
+        <ProjectReference Include="..\CustomControls\AvaloniaSearchableComboBox\AvaloniaSearchableComboBox.csproj" />
+        <ProjectReference Include="..\CustomControls\Message.Avalonia\Message.Avalonia.csproj" />
     </ItemGroup>
 
 </Project>

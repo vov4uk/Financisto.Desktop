@@ -87,7 +87,9 @@ namespace Financisto.Common.Controls
 
         private void UpdateHeaderText()
         {
-            HeaderText.Text = string.Join(" | ", _items.Where(i => i.IsSelected).Select(i => i.Tag.Title));
+            var text = string.Join(" | ", _items.Where(i => i.IsSelected).Select(i => i.Tag.Title));
+            HeaderText.Text = text;
+            ToolTip.SetTip(HeaderButton, string.IsNullOrEmpty(text) ? null : text);
         }
 
         private void OnClearClick(object sender, RoutedEventArgs e)

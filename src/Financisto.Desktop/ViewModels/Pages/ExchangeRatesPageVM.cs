@@ -8,14 +8,18 @@ using Financisto.Common;
 using Financisto.Common.Entities;
 using Financisto.Common.Localization;
 using Financisto.Common.Model;
+using Financisto.Converters;
 using Financisto.DataAccess.Abstractions;
 using Financisto.DataAccess.Data;
 using Financisto.Desktop.Helpers;
 using Financisto.Desktop.Services;
 using Microsoft.EntityFrameworkCore;
-//using OxyPlot;
-//using OxyPlot.Axes;
-//using OxyPlot.Series;
+using Avalonia.Threading;
+using LiveChartsCore;
+using LiveChartsCore.Defaults;
+using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Painting;
+using SkiaSharp;
 
 namespace Financisto.Desktop.ViewModels.Pages
 {
@@ -29,7 +33,11 @@ namespace Financisto.Desktop.ViewModels.Pages
         private string _from;
         private string _to;
 
-        //private PlotModel plotModel;
+        private List<ExchangeRateModel> _allRates = [];
+        private ReportStructureSaldoRange _range = ReportStructureSaldoRange.Last12Months;
+        private ISeries[] _series = [];
+        private Axis[] _xAxes = [new DateTimeAxis(TimeSpan.FromDays(1), date => date.ToString("d"))];
+        private Axis[] _yAxes = [new Axis()];
 
         public ExchangeRatesPageVM(IFinancistoDatabase db, IDialogWrapper dialogWrapper, IToastNotifierWrapper notifier)
             : base(db, dialogWrapper)
@@ -37,6 +45,53 @@ namespace Financisto.Desktop.ViewModels.Pages
             this.notifier = notifier;
             From = FromCurrencies.FirstOrDefault()!;
             To = ToCurrencies.FirstOrDefault()!;
+        }
+
+        /// <summary>Period selector shared with the saldo report.</summary>
+        public ReportStructureSaldoRange Range
+        {
+            get => _range;
+            set
+            {
+                if (SetProperty(ref _range, value))
+                {
+                    ApplyPeriod();
+                }
+            }
+        }
+
+        private DateTime? GetPeriodStart()
+        {
+            var today = DateTime.Today;
+            var firstOfMonth = new DateTime(today.Year, today.Month, 1);
+            return _range switch
+            {
+                ReportStructureSaldoRange.CurrentYear => new DateTime(today.Year, 1, 1),
+                ReportStructureSaldoRange.Last6Months => firstOfMonth.AddMonths(-5),
+                ReportStructureSaldoRange.Last12Months => firstOfMonth.AddMonths(-11),
+                ReportStructureSaldoRange.Last2Years => new DateTime(today.Year - 1, 1, 1),
+                ReportStructureSaldoRange.Last24Months => firstOfMonth.AddMonths(-23),
+                ReportStructureSaldoRange.AllPeriods => null,
+                _ => firstOfMonth.AddMonths(-11),
+            };
+        }
+
+        public ISeries[] Series
+        {
+            get => _series;
+            private set => SetProperty(ref _series, value);
+        }
+
+        public Axis[] XAxes
+        {
+            get => _xAxes;
+            private set => SetProperty(ref _xAxes, value);
+        }
+
+        public Axis[] YAxes
+        {
+            get => _yAxes;
+            private set => SetProperty(ref _yAxes, value);
         }
 
         public string From
@@ -53,16 +108,6 @@ namespace Financisto.Desktop.ViewModels.Pages
         }
 
         public static List<string> FromCurrencies => DbManual.Currencies.Where(x => x.Id > 0).Select(x => x.Name).ToList();
-
-        //public PlotModel PlotModel
-        //{
-        //    get => plotModel;
-        //    private set
-        //    {
-        //        plotModel = value;
-        //        RaisePropertyChanged(nameof(PlotModel));
-        //    }
-        //}
 
         public string To
         {
@@ -123,37 +168,50 @@ namespace Financisto.Desktop.ViewModels.Pages
             {
                 return;
             }
-            Entities = new ObservableCollection<ExchangeRateModel>(items.OrderByDescending(x => x.Date));
+            _allRates = items.OrderBy(x => x.Date).ToList();
+            ApplyPeriod();
+        }
 
-            //var model = new PlotModel();
-            //var dateTimeAxis = new DateTimeAxis();
+        /// <summary>Rebuilds the grid and the chart from the loaded rates, limited to the selected period.</summary>
+        private void ApplyPeriod()
+        {
+            var start = GetPeriodStart();
+            var fromMs = start.HasValue ? UnixTimeConverter.ConvertBack(start.Value) : long.MinValue;
+            var rates = _allRates.Where(x => x.Date >= fromMs).ToList();
 
-            //var linearAxis = new LinearAxis
-            //{
-            //    MajorGridlineStyle = LineStyle.Solid,
-            //    MinorGridlineStyle = LineStyle.Dot,
-            //};
-            //var lineSeries = new LineSeries
-            //{
-            //    Color = OxyColor.FromArgb(255, 78, 154, 6),
-            //    MarkerFill = OxyColor.FromArgb(255, 78, 154, 6),
-            //    MarkerStroke = OxyColors.ForestGreen,
-            //    MarkerType = MarkerType.Plus,
-            //    StrokeThickness = 1
-            //};
+            var symbol = rates.FirstOrDefault()?.ToCurrency?.Symbol ?? string.Empty;
+            ISeries[] series =
+            [
+                new LineSeries<DateTimePoint>
+                {
+                    Name = $"{_from} → {_to}",
+                    Values = rates.Select(x => new DateTimePoint(UnixTimeConverter.Convert(x.Date), x.Rate)).ToArray(),
+                    Fill = null,
+                    LineSmoothness = 0,
+                    Stroke = new SolidColorPaint(SKColor.Parse("#4E9A06"), 2),
+                    GeometryFill = new SolidColorPaint(SKColors.White),
+                    GeometryStroke = new SolidColorPaint(SKColor.Parse("#4E9A06"), 2),
+                    GeometrySize = 6,
+                },
+            ];
+            Axis[] yAxes = [new Axis { Labeler = value => $"{value:0.####} {symbol}" }];
 
-            //foreach (var item in items.OrderBy(x => x.Date))
-            //{
-            //    var date = UnixTimeConverter.Convert(item.Date);
-            //    lineSeries.Points.Add(DateTimeAxis.CreateDataPoint(date, item.Rate));
-            //}
+            // navigation refreshes pages from a thread-pool thread; bound collections and charts must be updated on the UI thread
+            void Apply()
+            {
+                Entities = new ObservableCollection<ExchangeRateModel>(rates.OrderByDescending(x => x.Date));
+                Series = series;
+                YAxes = yAxes;
+            }
 
-            //model.Axes.Add(dateTimeAxis);
-            //model.Axes.Add(linearAxis);
-            //model.Series.Add(lineSeries);
-
-            //PlotModel = model;
-
+            if (Dispatcher.UIThread.CheckAccess())
+            {
+                Apply();
+            }
+            else
+            {
+                Dispatcher.UIThread.Post(Apply);
+            }
         }
 
         private async Task RefreshExchangeRates_Click()
@@ -172,6 +230,9 @@ namespace Financisto.Desktop.ViewModels.Pages
                         break;
                     case ExchangeRatesProviders.OpenExchangeRates:
                         exchangeRates = await exchangeRateLoader.LoadOpenExchangeRates(erSettings.OpenExchangeRatesProviderAppId);
+                        break;
+                    case ExchangeRatesProviders.FloatRates:
+                        exchangeRates = await exchangeRateLoader.LoadFloatRates();
                         break;
                     case ExchangeRatesProviders.Monobank:
                         exchangeRates = await exchangeRateLoader.LoadMonobankRates();
@@ -208,7 +269,7 @@ namespace Financisto.Desktop.ViewModels.Pages
                         return;
                     }
 
-                    notifier?.ShowMessage(string.Format(LocalizationService.Instance.exchange_rates_updated, erSettings.Provider));
+                    notifier?.ShowMessage(string.Format(LocalizationService.Instance.exchange_rates_updated, erSettings.Provider.GetEnumDescription()));
                 }
             }
             else

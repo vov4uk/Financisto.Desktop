@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Financisto.Desktop.ViewModels.Pages;
 using Financisto.Desktop.Views;
+using Financisto.Reports;
 using Prism.Mvvm;
 
 namespace Financisto.Desktop;
@@ -30,8 +31,10 @@ public class ViewLocator : IDataTemplate
         [typeof(TagsPageVM)] = typeof(TagPageView),
         [typeof(ProjectsPageVM)] = typeof(TagPageView),
         [typeof(BlotterPageVM)] = typeof(BlotterPageView),
+        [typeof(SmsTemplatesPageVM)] = typeof(SmsTemplatesPageView),
         [typeof(SettingsPageVM)] = typeof(SettingsPageView),
         [typeof(DashboardPageVM)] = typeof(DashboardPageView),
+        [typeof(ReportsControlVM)] = typeof(ReportsControl),
     };
 
     public Control? Build(object? param)

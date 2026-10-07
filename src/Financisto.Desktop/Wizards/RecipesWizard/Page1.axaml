@@ -1,0 +1,70 @@
+<UserControl
+    x:Class="Financisto.Desktop.Wizards.RecipesWizard.View.Page1"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:local="using:Financisto.Desktop.Wizards.RecipesWizard.View"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:Financisto.Desktop.Wizards.RecipesWizard.ViewModel"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:DataType="vm:Page1VM"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <local:RecipesFormatter x:Key="RecipesFormatter" />
+    </UserControl.Resources>
+    <Grid RowDefinitions="Auto,Auto,*">
+        <TextBlock
+            Grid.Row="0"
+            Text="{loc:Translate Key=recipes_instructions_line1}"
+            TextWrapping="Wrap" />
+        <Grid
+            Grid.Row="1"
+            Margin="0,10,0,5"
+            ColumnDefinitions="Auto,Auto,*">
+            <Button
+                Grid.Column="0"
+                MinWidth="65"
+                Margin="2"
+                HorizontalContentAlignment="Center"
+                Click="OnPasteClick"
+                Content="{loc:Translate Key=paste}"
+                ToolTip.Tip="{loc:Translate Key=paste_tooltip}" />
+            <Button
+                Grid.Column="1"
+                MinWidth="65"
+                Margin="2"
+                HorizontalContentAlignment="Center"
+                Command="{Binding HighlightCommand}"
+                Content="{loc:Translate Key=highlight}"
+                ToolTip.Tip="{loc:Translate Key=highlight_tooltip}" />
+            <TextBlock
+                Grid.Column="2"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                Text="{Binding FormattedTotal}" />
+        </Grid>
+
+        <!--  Avalonia has no RichTextBox: edit on the left, the highlighted text (yellow = receipt rows) on the right  -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,*">
+            <TextBox
+                x:Name="RecipeText"
+                Grid.Column="0"
+                Margin="0,0,5,0"
+                AcceptsReturn="True"
+                Text="{Binding Text}"
+                TextWrapping="NoWrap" />
+            <Border
+                Grid.Column="1"
+                Margin="5,0,0,0"
+                Padding="10"
+                BorderBrush="Gray"
+                BorderThickness="1">
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                    <SelectableTextBlock Inlines="{Binding Text, Converter={StaticResource RecipesFormatter}}" />
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

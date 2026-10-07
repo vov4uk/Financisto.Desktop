@@ -37,6 +37,12 @@ namespace Financisto.DataAccess.Data
         [Column("project_id")]
         public int ProjectId { get; set; }
 
+        [Column("location_id")]
+        public int LocationId { get; set; }
+
+        [Column("match_group_summary")]
+        public bool MatchGroupSummary { get; set; }
+
         [Column("note")]
         public string Note { get; set; }
 

@@ -1028,5 +1028,25 @@ namespace Financisto.DataAccess.DataBase.Scripts {
                 return ResourceManager.GetString("_20260910_1300_create_tag_table", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ALTER TABLE sms_template ADD COLUMN location_id INTEGER NOT NULL DEFAULT 0;
+        ///.
+        /// </summary>
+        internal static string _20261005_1200_add_location_id_to_sms_template {
+            get {
+                return ResourceManager.GetString("_20261005_1200_add_location_id_to_sms_template", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ALTER TABLE sms_template ADD COLUMN match_group_summary BOOLEAN NOT NULL DEFAULT 0;
+        ///.
+        /// </summary>
+        internal static string _20261006_0452_add_match_group_summary_to_sms_template {
+            get {
+                return ResourceManager.GetString("_20261006_0452_add_match_group_summary_to_sms_template", resourceCulture);
+            }
+        }
     }
 }

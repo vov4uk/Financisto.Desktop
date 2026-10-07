@@ -12,7 +12,8 @@ namespace Financisto.Converters
             int code = (int)value;
             if (DbManual.MCCCodes.TryGetValue(code, out var mccValue))
             {
-                return mccValue;
+                // WPF showed the enum through its TypeConverter (the localized title); Avalonia uses ToString(), so return the title for text targets.
+                return targetType == typeof(string) ? mccValue.GetEnumLocalizedMccDescription() : mccValue;
             }
             return value;
         }

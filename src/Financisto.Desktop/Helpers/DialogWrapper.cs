@@ -7,6 +7,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
 using Financisto.Desktop.ViewModels.Dialogs;
 using Financisto.Desktop.Views.Dialogs;
+using Financisto.Desktop.Wizards;
 
 namespace Financisto.Desktop.Helpers;
 
@@ -32,6 +33,18 @@ public class DialogWrapper : IDialogWrapper
 
         context.RequestCancel += (_, _) => dialog.Close(null);
         context.RequestSave += (sender, _) => dialog.Close(sender);
+
+        return await dialog.ShowDialog<object>(owner);
+    }
+
+    public async Task<object?> ShowWizardAsync(WizardBaseVM context)
+    {
+        var owner = GetOwner();
+        if (owner == null)
+            return null;
+
+        var dialog = new WizardWindow { DataContext = context };
+        context.RequestClose += (sender, save) => dialog.Close(save ? sender : null);
 
         return await dialog.ShowDialog<object>(owner);
     }

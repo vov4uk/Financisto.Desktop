@@ -1,0 +1,106 @@
+<UserControl
+    x:Class="Financisto.Reports.ReportsControl"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviors="clr-namespace:Financisto.Common.Behaviors;assembly=Financisto.Common"
+    xmlns:local="using:Financisto.Reports"
+    xmlns:model="clr-namespace:Financisto.Common.Model;assembly=Financisto.Common"
+    x:DataType="local:ReportsControlVM">
+    <UserControl.Styles>
+        <StyleInclude Source="avares://Financisto.Reports/ReportStyles.axaml" />
+        <Style Selector="TabStripItem">
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+    </UserControl.Styles>
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <!--
+        Which view shows which report. Checked before the app-wide ViewLocator, which matches every view model.
+        The views of all opened reports stay in the visual tree (a view swapped out of a container loses its
+        toolbar state, e.g. chart or table), so each one is visible only while its report is the selected one.
+    -->
+    <UserControl.DataTemplates>
+        <DataTemplate DataType="local:ReportByPeriodMonthCrcVM">
+            <local:ReportByPeriodMonthCrc IsVisible="{Binding IsSelected}" />
+        </DataTemplate>
+        <DataTemplate DataType="local:ReportStructureActivesVM">
+            <local:ReportStructureActives IsVisible="{Binding IsSelected}" />
+        </DataTemplate>
+        <DataTemplate DataType="local:ReportStructureSaldoVM">
+            <local:ReportStructureSaldo IsVisible="{Binding IsSelected}" />
+        </DataTemplate>
+        <DataTemplate DataType="local:ReportStructureIncomeExpenseVM">
+            <local:ReportStructureIncomeExpense IsVisible="{Binding IsSelected}" />
+        </DataTemplate>
+        <DataTemplate DataType="local:ReportDynamicDebitCretitPayeeVM">
+            <local:ReportDynamicDebitCretitPayee IsVisible="{Binding IsSelected}" />
+        </DataTemplate>
+        <DataTemplate DataType="local:ByCategoryReportVM">
+            <local:ByCategoryReportView IsVisible="{Binding IsSelected}" />
+        </DataTemplate>
+        <DataTemplate DataType="local:ReportDynamicRestVM">
+            <local:ReportDynamicRest IsVisible="{Binding IsSelected}" />
+        </DataTemplate>
+    </UserControl.DataTemplates>
+
+    <Grid ColumnDefinitions="270,*">
+
+        <TreeView ItemsSource="{Binding ReportsInfo, Mode=OneWay}" SelectedItem="{Binding SelectedTreeNode, Mode=TwoWay}">
+            <TreeView.Styles>
+                <Style Selector="TreeViewItem">
+                    <Setter Property="IsExpanded" Value="True" />
+                </Style>
+            </TreeView.Styles>
+            <TreeView.ItemTemplate>
+                <TreeDataTemplate DataType="model:TreeNode" ItemsSource="{Binding Child}">
+                    <TextBlock Text="{Binding Name}" />
+                </TreeDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
+
+
+        <Grid Grid.Column="1" RowDefinitions="Auto,*">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                <TabStrip ItemsSource="{Binding ReportsVM}" SelectedItem="{Binding SelectedReport, Mode=TwoWay}">
+                    <TabStrip.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </TabStrip.ItemsPanel>
+                    <TabStrip.ItemTemplate>
+                        <DataTemplate x:DataType="local:IReportVM">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock
+                                    MaxWidth="220"
+                                    VerticalAlignment="Center"
+                                    Text="{Binding Header}"
+                                    TextTrimming="CharacterEllipsis"
+                                    ToolTip.Tip="{Binding Header}" />
+                                <Button
+                                    Classes="closeTab"
+                                    Command="{Binding $parent[UserControl].DataContext.CloseReportCommand}"
+                                    CommandParameter="{Binding}">
+                                    <Image Source="{StaticResource IconXmark}" />
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </TabStrip.ItemTemplate>
+                </TabStrip>
+            </ScrollViewer>
+
+            <ItemsControl Grid.Row="1" ItemsSource="{Binding ReportsVM}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Panel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+        </Grid>
+    </Grid>
+</UserControl>

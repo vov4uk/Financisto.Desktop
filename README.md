@@ -46,6 +46,13 @@ A full-featured desktop companion for [Financisto](https://github.com/dsolonenko
 - **Tags**
 - Manage **Exchange Rates** (manual entry + auto-download)
 
+### Reports
+Each report opens in its own tab and can be shown as a chart or as a table:
+- Income and expense by month
+- Structure of assets, and of income or expenses by category
+- Net worth history (assets, liabilities and net worth by month)
+- Dynamics of income/expenses by payee or category, and of the balance
+
 ## License
 
 See [License](LICENSE)

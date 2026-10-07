@@ -10,6 +10,7 @@
     xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:msg="https://github.com/xiyaowong/Message.Avalonia"
+    xmlns:sys="using:System"
     xmlns:vm="using:Financisto.Desktop.ViewModels"
     Title="Financisto.Desktop"
     Width="1280"
@@ -26,6 +27,20 @@
         <Style Selector="ListBoxItem">
             <Setter Property="Padding" Value="12,8" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="MenuItem.bankImport">
+            <Setter Property="HeaderTemplate">
+                <DataTemplate x:DataType="sys:String">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="{Binding}" />
+                        <TextBlock
+                            Grid.Column="1"
+                            Margin="24,0,0,0"
+                            Opacity="0.6"
+                            Text="{Binding $parent[MenuItem].Tag}" />
+                    </Grid>
+                </DataTemplate>
+            </Setter>
         </Style>
     </Window.Styles>
     <Window.Resources>
@@ -78,6 +93,93 @@
                             Header="{loc:Translate Key=save_as_db}">
                             <MenuItem.Icon>
                                 <Image Source="{StaticResource ResourceKey=IconDatabase}" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </MenuItem>
+                    <!--  Bank statement import; Tag is the statement format shown on the right (two A-Bank formats)  -->
+                    <MenuItem Header="{loc:Translate Key=import}">
+                        <MenuItem
+                            Classes="bankImport"
+                            Command="{Binding ImportCommand}"
+                            CommandParameter="{x:Static Wizard:WizardTypes.Monobank}"
+                            Header="{loc:Translate Key=monobank}"
+                            Tag="{loc:Translate Key=csv}">
+                            <MenuItem.Icon>
+                                <Image Source="/Assets/bank/monobank.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem
+                            Classes="bankImport"
+                            Command="{Binding ImportCommand}"
+                            CommandParameter="{x:Static Wizard:WizardTypes.Revolut}"
+                            Header="{loc:Translate Key=revolut}"
+                            Tag="{loc:Translate Key=csv}">
+                            <MenuItem.Icon>
+                                <Image Source="/Assets/bank/revolut.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <Separator />
+
+                        <MenuItem
+                            Classes="bankImport"
+                            Command="{Binding ImportCommand}"
+                            CommandParameter="{x:Static Wizard:WizardTypes.ABankExcel}"
+                            Header="{loc:Translate Key=a_bank}"
+                            Tag="{loc:Translate Key=xlsx}">
+                            <MenuItem.Icon>
+                                <Image Source="/Assets/bank/abank.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem
+                            Classes="bankImport"
+                            Command="{Binding ImportCommand}"
+                            CommandParameter="{x:Static Wizard:WizardTypes.Privat}"
+                            Header="{loc:Translate Key=privat}"
+                            Tag="{loc:Translate Key=xlsx}">
+                            <MenuItem.Icon>
+                                <Image Source="/Assets/bank/privat.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <Separator />
+
+                        <MenuItem
+                            Classes="bankImport"
+                            Command="{Binding ImportCommand}"
+                            CommandParameter="{x:Static Wizard:WizardTypes.ABank}"
+                            Header="{loc:Translate Key=a_bank}"
+                            Tag="{loc:Translate Key=pdf}">
+                            <MenuItem.Icon>
+                                <Image Source="/Assets/bank/abank.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem
+                            Classes="bankImport"
+                            Command="{Binding ImportCommand}"
+                            CommandParameter="{x:Static Wizard:WizardTypes.Pumb}"
+                            Header="{loc:Translate Key=pumb}"
+                            Tag="{loc:Translate Key=pdf}">
+                            <MenuItem.Icon>
+                                <Image Source="/Assets/bank/pumb.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem
+                            Classes="bankImport"
+                            Command="{Binding ImportCommand}"
+                            CommandParameter="{x:Static Wizard:WizardTypes.Pireus}"
+                            Header="{loc:Translate Key=pireus}"
+                            Tag="{loc:Translate Key=pdf}">
+                            <MenuItem.Icon>
+                                <Image Source="/Assets/bank/pireus.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem
+                            Classes="bankImport"
+                            Command="{Binding ImportCommand}"
+                            CommandParameter="{x:Static Wizard:WizardTypes.Pko}"
+                            Header="{loc:Translate Key=pko}"
+                            Tag="{loc:Translate Key=pdf}">
+                            <MenuItem.Icon>
+                                <Image Source="/Assets/bank/pko.png" />
                             </MenuItem.Icon>
                         </MenuItem>
                     </MenuItem>
