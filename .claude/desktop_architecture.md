@@ -20,13 +20,12 @@ There is **no DI container**: the `MainWindow` constructor creates every depende
 
 ```csharp
 // Views/MainWindow.axaml.cs
-DbManual.RulesPath = Path.Combine(Path.GetDirectoryName(StartOptions.Current.SettingsPath), "rules.json");
 ViewModel = new MainWindowVM(new DialogWrapper(), new FinancistoDatabaseFactory(), new EntityReader(),
                              new BackupWriter(), notificator /* ToastNotifierWrapper */,
                              new BankHelperFactory(), new UpdateService());
 ```
 
-Import rules are not part of the backup; `rules.json` lives next to `Settings.dat` (see [Bank statement import](#bank-statement-import-wizards)).
+Import rules are stored in the backup's `sms_template` table (see [Bank statement import](#bank-statement-import-wizards)).
 
 `MainWindow_Loaded` (code-behind) runs these steps:
 1. `SettingsService.Current.Load()` reads the Cogwheel JSON settings from `Settings.dat` next to the exe, or from `FINANCISTO_SETTINGS_PATH` (see `StartOptions`). If the file is corrupt or missing, it falls back to defaults and shows a warning toast.
@@ -101,7 +100,7 @@ public class MainWindowVM : BindableBase
 3. `db` is swapped, `_pages.Clear()` is called, and the old database is disposed. Pages are recreated lazily on the next navigation, bound to the new `db`.
 4. `_backupVersion` and `_entityColumnsOrder` are stored (saving needs both), and CanExecute is raised on the save and import commands.
 5. Keyless entities (`CCardClosingDate`, `CategoryAttribute`, `TransactionAttribute`) are kept in `keyLessEntities`. `ImportEntitiesAsync` inserts only `IIdentity` rows with `Id > 0`, so these rows never reach the DB and are written back as-is on save.
-6. `DbManual.ResetAllDatabaseManuals()`, `DbManual.SetupAsync(db)` and `DbManual.LoadRulesAsync()` run, the app navigates to the Blotter and shows a toast. If `Settings.ExchangeRates.UpdateOnStart` is set, exchange rates are refreshed.
+6. `DbManual.ResetAllDatabaseManuals()`, and `DbManual.SetupAsync(db)` (which also loads the import rules) run, the app navigates to the Blotter and shows a toast. If `Settings.ExchangeRates.UpdateOnStart` is set, exchange rates are refreshed.
 
 ### Backup save
 
@@ -153,7 +152,7 @@ public abstract class EntityBaseVM<T> : BaseViewModel<T>   // Common; gives db, 
 | `ProjectsPageVM` | `TagBasePageVM<ProjectModel>` | same | Delete not implemented. |
 | `TagsPageVM` | `TagBasePageVM<TagModel>` | same | **Bug:** `OnAdd` calls `OpenTagDialogAsync<Project>(0)` (creates a Project). Delete not implemented. |
 | `ExchangeRatesPageVM` | `EntityBaseVM<ExchangeRateModel>` | none | Read-only list with From/To currency pickers. `RefreshExchangeRatesCommand` downloads rates via `Services/ExchangeRatesService` (Monobank / OpenExchangeRates / FreeCurrencyRates, chosen in settings). Add/Edit/Delete throw `NotImplementedException`. |
-| `RulesPageVM` | `EntityBaseVM<RuleModel>` | `RuleDialog` / `RuleDialogVM` / `RuleDto` | Import rules from `DbManual.Rules` (not the DB). Add/Edit/Delete save `rules.json` right away; `RefreshData` re-reads it and calls `RuleModel.UpdateTitles()`. Delete has no confirmation (as in Financier). |
+| `SmsTemplatesPageVM` | `EntityBaseVM<SmsTemplateModel>` | `SmsTemplateDialog` / `SmsTemplateDialogVM` / `SmsTemplateDto` (Android-style template), `RuleDialog` / `RuleDialogVM` / `RuleDto` (rule) | All `sms_template` rows: Android templates and desktop rules (`RuleSmsTemplateMapper`). Add template / Add rule / Edit / Delete write to the database right away (reaching the file on Save backup); `RefreshData` re-reads it. Delete has no confirmation. |
 | `SettingsPageVM` | `BindableBase, IDataRefresh` | — | Edits a clone of `SettingsService.Current.Settings` (`SettingsDto`: General + ExchangeRates). Save, browse backup dir, check for updates (`UpdateService`, Onova + GitHub releases). The OpenExchangeRates app id is DPAPI-encrypted (`Helpers/SettingsProtection`). |
 
 ### BlotterPageVM details
@@ -302,9 +301,9 @@ Ported from Financier WPF (`Wizards/`, `Helpers/BankHelper/`, `Pages/RulesVM`, `
 
 ### Rules (`DbManual.Rules`, `RuleModel`)
 
-- Stored in `rules.json` (Newtonsoft, enums as numbers — the same file format as Financier, so a Financier `rules.json` can be copied next to `Settings.dat`).
+- Stored as `sms_template` rows (`RuleSmsTemplateMapper`): `template` = marker `financisto.desktop.rule` (Android never matches it), condition in `description` as `contains:x` / `matches:x` / `mcc:<Mcc name>`, `0` = not set for the action ids; no `sort_order` (rules apply in id order).
 - Condition: `DescriptionContains` / `DescriptionMatches` (case-insensitive, on the row note) or `MCC` (the row's MCC code is in the `Mcc` category's `[MccCodes]`). Every matching active rule is applied in list order, so for each action field the last match wins.
-- Loaded on backup open and by the Rules page; saved by the Rules page and the import wizard's **New rule** after each change. Nothing is saved on a plain refresh (Financier did, which could overwrite the file with an empty list).
+- Loaded once by `DbManual.SetupAsync` on backup open. The SMS templates page saves after each rule add/edit/delete; the import wizard's **New rule** only adds to `DbManual.Rules`, and `OpenImportWizardAsync` saves them once the wizard closes. Nothing is saved on a plain refresh.
 
 ## Tests (`src/Tests/`)
 
@@ -317,7 +316,7 @@ Ported from the Financier WPF repo (xunit v3, AutoFixture, Moq). In `Financisto.
 
 **Running:** `dotnet test` doesn't work here (Microsoft.Testing.Platform reports "Zero tests ran", also in the WPF repo). Build, then run the xunit exe: `src/Tests/<project>/bin/Debug/net10.0[/win-x64]/<AssemblyName>.exe`, optionally `-class Financisto.Desktop.Tests.Pages.BlotterVMIntegrationTests`.
 
-**Test setup in `Financisto.Desktop.Tests/TestEnvironment.cs`** (module initializers): `FINANCISTO_SETTINGS_PATH` and `DbManual.RulesPath` point to a scratch dir (`SettingsService.Current` is a static singleton that saves to disk); a background thread owns and pumps `Dispatcher.UIThread`, because `MainWindowVM` navigates through it and would hang otherwise (no Avalonia.Headless needed).
+**Test setup in `Financisto.Desktop.Tests/TestEnvironment.cs`** (module initializers): `FINANCISTO_SETTINGS_PATH` points to a scratch dir (`SettingsService.Current` is a static singleton that saves to disk); a background thread owns and pumps `Dispatcher.UIThread`, because `MainWindowVM` navigates through it and would hang otherwise (no Avalonia.Headless needed).
 
 **Porting notes:** WPF's `MainWindowVM.Blotter/Locations/...` are gone; page VMs are built directly (`new BlotterPageVM(db, dialogMock.Object)`), and `MainWindowVM.ImportCommand`/`SaveBackup*` stay disabled until `OpenBackup` ran (`MainWindowVMTest.GetLoadedFinancistoVM`). `IDialogWrapper` is async (`ShowDialogAsync<TDialog>(vm, height, width, title)` with `ReturnsAsync`), `SaveCommand`/`CancelCommand` are toolkit `RelayCommand`s (`CanExecute(null)`), import results are toasts, not message boxes. Running-balance rows store the transaction time, so integration tests zero `Datetime` before comparing (the DTO fixtures carry a `+02:00` offset).
 

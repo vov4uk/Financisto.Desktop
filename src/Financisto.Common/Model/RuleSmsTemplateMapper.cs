@@ -22,7 +22,7 @@ namespace Financisto.Common.Model
 
         public static bool IsRule(SmsTemplate template) => template?.Template == Marker;
 
-        public static SmsTemplate ToSmsTemplate(RuleModel rule, int sortOrder)
+        public static SmsTemplate ToSmsTemplate(RuleModel rule)
         {
             return new SmsTemplate
             {
@@ -36,7 +36,6 @@ namespace Financisto.Common.Model
                 PayeeId = rule.PayeeId ?? 0,
                 ProjectId = rule.ProjectId ?? 0,
                 LocationId = rule.LocationId ?? 0,
-                SortOrder = sortOrder,
                 UpdatedOn = new DateTimeOffset(rule.Created == default ? DateTime.Now : rule.Created).ToUnixTimeMilliseconds(),
             };
         }

@@ -10,8 +10,8 @@ namespace Financisto.Desktop.Tests
     internal static class TestEnvironment
     {
         /// <summary>
-        /// SettingsService.Current is a static singleton that saves to disk, and DbManual persists the import rules.
-        /// Point both at scratch files before anything touches them so tests never read or overwrite the real ones.
+        /// SettingsService.Current is a static singleton that saves to disk.
+        /// Point it at a scratch file before anything touches it so tests never read or overwrite the real one.
         /// </summary>
         [ModuleInitializer]
         internal static void IsolateSettings()
@@ -19,7 +19,6 @@ namespace Financisto.Desktop.Tests
             var dir = Path.Combine(Path.GetTempPath(), "Financisto.Desktop.Tests", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(dir);
             Environment.SetEnvironmentVariable("FINANCISTO_SETTINGS_PATH", Path.Combine(dir, "Settings.dat"));
-            DbManual.RulesPath = Path.Combine(dir, "rules.json");
         }
 
         /// <summary>

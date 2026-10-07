@@ -8,8 +8,6 @@ using System.Threading.Tasks;
 using Financisto.Common.Attribute;
 using Financisto.Common.Model;
 using Financisto.DataAccess.Abstractions;
-using Financisto.DataAccess.Data;
-using Newtonsoft.Json;
 
 namespace Financisto.Common.Entities
 {
@@ -28,14 +26,13 @@ namespace Financisto.Common.Entities
         private static List<TagModel> _tag;
         private static List<YearMonths> _yearMonths;
         private static List<Years> _years;
-        private static List<RuleModel> _rules = new List<RuleModel>();
         private static Dictionary<Mcc, int[]> _mccEnums;
         private static Dictionary<string, Mcc> _mccTitles;
         private static Dictionary<int, Mcc> _mccCodes;
         private static Dictionary<int, ProjectModel> _projectIds;
         private static Dictionary<int, CurrencyModel> _currencyIds;
+        private static List<RuleModel> _rules;
         private static List<List<string>> _allCurrencies;
-        private static IFinancistoDatabase _db;
 
         public static async Task SetupAsync(IFinancistoDatabase FinancistoDatabase)
         {
@@ -44,7 +41,6 @@ namespace Financisto.Common.Entities
                 return;
             }
 
-            _db = FinancistoDatabase;
 
             if (_accounts == null)
             {
@@ -166,6 +162,11 @@ ORDER  BY is_active DESC, title ASC");
                 _tag.Insert(0, new TagModel());
             }
 
+            if (_rules == null)
+            {
+                _rules = await new RulesRepository(FinancistoDatabase).LoadAsync();
+            }
+
             if (_yearMonths == null)
             {
                 var yearMonths = await FinancistoDatabase.ExecuteQuery<YearMonths>(@"
@@ -218,10 +219,7 @@ ORDER  BY 1 DESC ");
         public static List<LocationModel> Location => _location ?? new();
 
         /// <summary>Import rules; stored in the backup's sms_template table (see <see cref="RuleSmsTemplateMapper"/>).</summary>
-        public static List<RuleModel> Rules => _rules;
-
-        /// <summary>The legacy rules.json, imported into the backup once. The desktop app points it next to its settings file.</summary>
-        public static string RulesPath { get; set; } = Path.Combine(AppContext.BaseDirectory, "rules.json");
+        public static List<RuleModel> Rules => _rules ??= new List<RuleModel>();
 
         public static Dictionary<Mcc, int[]> MCCEnums
         {
@@ -323,7 +321,7 @@ ORDER  BY 1 DESC ");
             _yearMonths = null;
             _years = null;
             _location = null;
-            _db = null;
+            _rules = null;
         }
 
         public static void ResetManuals(string manual)
@@ -335,128 +333,13 @@ ORDER  BY 1 DESC ");
                 case nameof(Project):          _project = null; break;
                 case nameof(Tag):              _tag = null; break;
                 case nameof(Account):          _accounts = null; break;
+                case nameof(Rules):            _rules = null; break;
                 case nameof(MCCEnums):         _mccEnums = null; break;
                 case nameof(MCCTitles):        _mccTitles = null; break;
                 case nameof(Currencies):       _currencies = null; _currencyIds = null; break;
                 case nameof(Category):         _category = null; _topCategory = null; break;
                 default:
                     break;
-            }
-        }
-
-        /// <summary>
-        /// Loads the rules stored in the open backup's sms_template table. When the backup has none yet,
-        /// a legacy rules.json is imported once. Without an open database the in-memory rules stay as they are.
-        /// </summary>
-        public static async Task LoadRulesAsync()
-        {
-            if (_db == null)
-            {
-                return;
-            }
-
-            try
-            {
-                using var uow = _db.CreateUnitOfWork();
-                var templates = await uow.GetRepository<SmsTemplate>().GetAllAsync();
-                _rules = templates
-                    .Where(RuleSmsTemplateMapper.IsRule)
-                    .OrderBy(t => t.SortOrder)
-                    .ThenBy(t => t.Id)
-                    .Select(RuleSmsTemplateMapper.ToRule)
-                    .ToList();
-            }
-            catch (Exception ex)
-            {
-                _rules = new List<RuleModel>();
-                Logger.Error(ex, "Error occurred while loading rules.");
-                return;
-            }
-
-            if (_rules.Count == 0)
-            {
-                await ImportLegacyRulesAsync();
-            }
-        }
-
-        /// <summary>Writes the in-memory rules into sms_template; real SMS templates are left untouched.</summary>
-        public static async Task SaveRulesAsync()
-        {
-            if (_db == null)
-            {
-                return;
-            }
-
-            using var uow = _db.CreateUnitOfWork();
-            var repo = uow.GetRepository<SmsTemplate>();
-            var existing = await repo.GetAllAsync();
-            var existingRuleIds = existing.Where(RuleSmsTemplateMapper.IsRule).Select(t => t.Id).ToHashSet();
-            var foreignIds = existing.Where(t => !RuleSmsTemplateMapper.IsRule(t)).Select(t => t.Id).ToHashSet();
-
-            // Rule ids share the table with real SMS templates, so a rule must not reuse a template's id.
-            int nextId = existing.Select(t => t.Id).Append(0).Max() + 1;
-            var usedIds = new HashSet<int>(foreignIds);
-            foreach (var rule in _rules)
-            {
-                if (!rule.Id.HasValue || rule.Id.Value <= 0 || !usedIds.Add(rule.Id.Value))
-                {
-                    while (!usedIds.Add(nextId))
-                    {
-                        nextId++;
-                    }
-
-                    rule.Id = nextId;
-                }
-            }
-
-            var keptIds = _rules.Select(r => r.Id!.Value).ToHashSet();
-            foreach (var removed in existing.Where(t => existingRuleIds.Contains(t.Id) && !keptIds.Contains(t.Id)))
-            {
-                await repo.DeleteAsync(removed);
-            }
-
-            for (int i = 0; i < _rules.Count; i++)
-            {
-                var rule = _rules[i];
-                rule.UpdateTitles();
-                var template = RuleSmsTemplateMapper.ToSmsTemplate(rule, i);
-                if (existingRuleIds.Contains(template.Id))
-                {
-                    await repo.UpdateAsync(template);
-                }
-                else
-                {
-                    await repo.AddAsync(template);
-                }
-            }
-
-            await uow.SaveChangesAsync();
-        }
-
-        private static async Task ImportLegacyRulesAsync()
-        {
-            try
-            {
-                if (!File.Exists(RulesPath))
-                {
-                    return;
-                }
-
-                string rulesJson = await File.ReadAllTextAsync(RulesPath);
-                var rules = JsonConvert.DeserializeObject<List<RuleModel>>(rulesJson);
-                if (rules?.Any() != true)
-                {
-                    return;
-                }
-
-                _rules = rules;
-                await SaveRulesAsync();
-                File.Move(RulesPath, RulesPath + ".migrated", true);
-                Logger.Info($"Imported {rules.Count} rules from {RulesPath} into the backup.");
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex, "Error occurred while importing legacy rules.");
             }
         }
 

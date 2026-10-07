@@ -29,9 +29,6 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        // Import rules aren't part of the backup; keep them next to the settings file.
-        DbManual.RulesPath = Path.Combine(Path.GetDirectoryName(StartOptions.Current.SettingsPath) ?? string.Empty, "rules.json");
-
         this.ViewModel = new MainWindowVM(new DialogWrapper(), new FinancistoDatabaseFactory(), new EntityReader(), new BackupWriter(), notificator, new BankHelperFactory(), new UpdateService());
 
         DataContext = ViewModel;

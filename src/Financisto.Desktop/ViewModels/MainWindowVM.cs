@@ -216,7 +216,6 @@ namespace Financisto.Desktop.ViewModels
 
                 DbManual.ResetAllDatabaseManuals();
                 await Task.Run(() => DbManual.SetupAsync(db));
-                await DbManual.LoadRulesAsync();
 
                 stopwatch.Stop();
                 int entitiesCount = entities?.Count() ?? 0;
@@ -377,6 +376,14 @@ namespace Financisto.Desktop.ViewModels
             var vm = new MonoWizardVM(importHelper.BankTitle, sourceData, lastTransactions, dialogWrapper);
 
             var output = await dialogWrapper.ShowWizardAsync(vm);
+
+            // The wizard only adds new rules to DbManual.Rules; store them and reload to get their ids.
+            if (DbManual.Rules.Any(r => !(r.Id > 0)))
+            {
+                await new RulesRepository(db).SaveAsync(DbManual.Rules);
+                DbManual.ResetManuals(nameof(DbManual.Rules));
+                await DbManual.SetupAsync(db);
+            }
 
             if (output is List<Transaction> outputTransactions)
             {

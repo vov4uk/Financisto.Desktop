@@ -3,6 +3,7 @@ namespace Financisto.Desktop.Tests.Rules
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
+    using Financisto.Common;
     using Financisto.Common.Entities;
     using Financisto.Common.Localization;
     using Financisto.Common.Model;
@@ -92,10 +93,7 @@ namespace Financisto.Desktop.Tests.Rules
         [Fact]
         public async Task Edit_TemplateAndRule_OpenTheirOwnDialog()
         {
-            using var db = await CreateDbAsync(new SmsTemplate { Id = 1, Title = "Bank", Template = "Paid {{p}}", CategoryId = 2 });
-            DbManual.SetupTests(new List<RuleModel> { new RuleModel { Id = 2, Description = "lidl", IsActive = true, CategoryId = 3 } });
-            await DbManual.SetupAsync(db);
-            await DbManual.SaveRulesAsync();
+            using var db = await CreateDbWithTemplateAndRuleAsync();
             var vm = new SmsTemplatesPageVM(db, dialogMock.Object);
             await vm.RefreshDataCommand.ExecuteAsync();
 
@@ -113,10 +111,7 @@ namespace Financisto.Desktop.Tests.Rules
         [Fact]
         public async Task Delete_RuleAndTemplate_RemovesOnlyTheSelectedRow()
         {
-            using var db = await CreateDbAsync(new SmsTemplate { Id = 1, Title = "Bank", Template = "Paid {{p}}", CategoryId = 2 });
-            DbManual.SetupTests(new List<RuleModel> { new RuleModel { Id = 2, Description = "lidl", IsActive = true, CategoryId = 3 } });
-            await DbManual.SetupAsync(db);
-            await DbManual.SaveRulesAsync();
+            using var db = await CreateDbWithTemplateAndRuleAsync();
             var vm = new SmsTemplatesPageVM(db, dialogMock.Object);
             await vm.RefreshDataCommand.ExecuteAsync();
             Assert.Equal(2, vm.Entities.Count);
@@ -160,10 +155,13 @@ namespace Financisto.Desktop.Tests.Rules
             Assert.False(vm.SaveCommand.CanExecute(null));
         }
 
+        private static Task<IFinancistoDatabase> CreateDbWithTemplateAndRuleAsync() => CreateDbAsync(
+            new SmsTemplate { Id = 1, Title = "Bank", Template = "Paid {{p}}", CategoryId = 2 },
+            RuleSmsTemplateMapper.ToSmsTemplate(new RuleModel { Id = 2, Description = "lidl", IsActive = true, CategoryId = 3 }));
+
         private static async Task<IFinancistoDatabase> CreateDbAsync(params Entity[] entities)
         {
             DbManual.ResetAllDatabaseManuals();
-            DbManual.SetupTests(new List<RuleModel>());
             var db = new FinancistoDatabaseFactory().CreateDatabase();
             await db.ImportEntitiesAsync(entities);
             await DbManual.SetupAsync(db);

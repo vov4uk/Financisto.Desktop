@@ -380,16 +380,12 @@ namespace Financisto.Desktop.Wizards.MonoWizard.ViewModel
                     CategoryId = updatedItem.CategoryId,
                     Condition = updatedItem.Condition,
                     Created = updatedItem.Created,
-                    Id = DbManual.Rules.Count > 0 ? DbManual.Rules.Max(r => r.Id) + 1 : 1,
                     IsActive = updatedItem.IsActive,
                     LocationId = updatedItem.LocationId,
                     PayeeId = updatedItem.PayeeId,
                     ProjectId = updatedItem.ProjectId,
                     MCCCategory = updatedItem.MCCCategory
                 });
-
-                await DbManual.SaveRulesAsync();
-                await DbManual.LoadRulesAsync();
 
                 foreach (var transaction in FinancistoTransactions)
                 {

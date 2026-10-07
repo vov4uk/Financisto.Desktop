@@ -43,22 +43,15 @@ namespace Financisto.Desktop.ViewModels.Pages
         protected override async Task OnDelete(SmsTemplateModel item)
         {
             int id = item.Id ?? 0;
-            if (item.IsRule)
+
+            using (var uow = db.CreateUnitOfWork())
             {
-                DbManual.Rules.RemoveAll(r => r.Id == id);
-                await DbManual.SaveRulesAsync();
-            }
-            else
-            {
-                using (var uow = db.CreateUnitOfWork())
+                var repo = uow.GetRepository<SmsTemplate>();
+                var template = await repo.FindByAsync(t => t.Id == id);
+                if (template != null)
                 {
-                    var repo = uow.GetRepository<SmsTemplate>();
-                    var template = await repo.FindByAsync(t => t.Id == id);
-                    if (template != null)
-                    {
-                        await repo.DeleteAsync(template);
-                        await uow.SaveChangesAsync();
-                    }
+                    await repo.DeleteAsync(template);
+                    await uow.SaveChangesAsync();
                 }
             }
 
@@ -67,7 +60,6 @@ namespace Financisto.Desktop.ViewModels.Pages
 
         protected override async Task RefreshData()
         {
-            await DbManual.LoadRulesAsync();
 
             List<SmsTemplate> rows;
             using (var uow = db.CreateUnitOfWork())
@@ -88,6 +80,9 @@ namespace Financisto.Desktop.ViewModels.Pages
                 .Select(row => ToModel(row, categories, payees, projects, locations, accounts))
                 .ToList();
             Entities = new ObservableCollection<SmsTemplateModel>(items);
+
+            DbManual.ResetManuals(nameof(DbManual.Rules));
+            await DbManual.SetupAsync(db);
         }
 
         private static Dictionary<int, string> Titles(IEnumerable<(int? Id, string Title)> items)
@@ -216,17 +211,7 @@ namespace Financisto.Desktop.ViewModels.Pages
                 MCCCategory = updated.MCCCategory,
             };
 
-            int index = DbManual.Rules.FindIndex(r => r.Id == id);
-            if (id != 0 && index >= 0)
-            {
-                DbManual.Rules[index] = updatedRule;
-            }
-            else
-            {
-                DbManual.Rules.Add(updatedRule);
-            }
-
-            await DbManual.SaveRulesAsync();
+            await db.InsertOrUpdateAsync(new[] { RuleSmsTemplateMapper.ToSmsTemplate(updatedRule) });
             await RefreshData();
         }
     }

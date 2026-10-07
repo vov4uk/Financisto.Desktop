@@ -2,15 +2,14 @@ namespace Financisto.Desktop.Tests.Rules
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
+    using Financisto.Common;
     using Financisto.Common.Entities;
     using Financisto.Common.Model;
     using Financisto.DataAccess;
     using Financisto.DataAccess.Abstractions;
     using Financisto.DataAccess.Data;
-    using Newtonsoft.Json;
     using Xunit;
 
     /// <summary>Import rules are stored as sms_template rows, so they travel with the backup.</summary>
@@ -21,21 +20,18 @@ namespace Financisto.Desktop.Tests.Rules
         public async Task SaveAndLoad_AllRuleFields_RoundTripThroughSmsTemplate()
         {
             using var db = await CreateDbAsync();
-            DbManual.SetupTests(new List<RuleModel>
+            var repository = new RulesRepository(db);
+
+            await repository.SaveAsync(new List<RuleModel>
             {
-                new RuleModel { Id = 1, Condition = RuleConditionType.DescriptionContains, Description = "lidl", CategoryId = 5, PayeeId = 6, ProjectId = 7, LocationId = 8, IsActive = true, Created = new DateTime(2026, 10, 1, 12, 0, 0) },
-                new RuleModel { Id = 2, Condition = RuleConditionType.DescriptionMatches, Description = "a: b", IsActive = false },
-                new RuleModel { Id = 3, Condition = RuleConditionType.MCC, MCCCategory = Mcc.none, CategoryId = 9, IsActive = true },
+                new RuleModel { Condition = RuleConditionType.DescriptionContains, Description = "lidl", CategoryId = 5, PayeeId = 6, ProjectId = 7, LocationId = 8, IsActive = true, Created = new DateTime(2026, 10, 1, 12, 0, 0) },
+                new RuleModel { Condition = RuleConditionType.DescriptionMatches, Description = "a: b", IsActive = false },
+                new RuleModel { Condition = RuleConditionType.MCC, MCCCategory = Mcc.none, CategoryId = 9, IsActive = true },
             });
-            await DbManual.SetupAsync(db);
+            var rules = await repository.LoadAsync();
 
-            await DbManual.SaveRulesAsync();
-            DbManual.SetupTests(new List<RuleModel>());
-            await DbManual.LoadRulesAsync();
-
-            var rules = DbManual.Rules;
             Assert.Equal(3, rules.Count);
-            Assert.Equal(new[] { 1, 2, 3 }, rules.Select(r => r.Id!.Value));
+            Assert.All(rules, r => Assert.True(r.Id > 0));
 
             Assert.Equal(RuleConditionType.DescriptionContains, rules[0].Condition);
             Assert.Equal("lidl", rules[0].Description);
@@ -52,21 +48,17 @@ namespace Financisto.Desktop.Tests.Rules
             Assert.Equal(RuleConditionType.MCC, rules[2].Condition);
             Assert.Equal(Mcc.none, rules[2].MCCCategory);
             Assert.Equal(9, rules[2].CategoryId);
-
-            DbManual.ResetAllDatabaseManuals();
         }
 
         [Fact]
         public async Task Save_RuleRows_AreNotMatchableByAndroid_AndRealTemplatesSurvive()
         {
             using var db = await CreateDbAsync(new SmsTemplate { Id = 1, Title = "Bank", Template = "Paid {{a}}", CategoryId = 2 });
-            DbManual.SetupTests(new List<RuleModel>
-            {
-                new RuleModel { Id = 1, Condition = RuleConditionType.DescriptionContains, Description = "lidl", LocationId = 4, IsActive = true },
-            });
-            await DbManual.SetupAsync(db);
 
-            await DbManual.SaveRulesAsync();
+            await new RulesRepository(db).SaveAsync(new List<RuleModel>
+            {
+                new RuleModel { Condition = RuleConditionType.DescriptionContains, Description = "lidl", LocationId = 4, IsActive = true },
+            });
 
             using var uow = db.CreateUnitOfWork();
             var rows = (await uow.GetRepository<SmsTemplate>().GetAllAsync()).OrderBy(t => t.Id).ToList();
@@ -75,66 +67,36 @@ namespace Financisto.Desktop.Tests.Rules
             Assert.Equal("contains:lidl", rows[1].Description);
             Assert.Equal(RuleSmsTemplateMapper.Marker, rows[1].Template);
             Assert.Equal(4, rows[1].LocationId);
-            Assert.NotEqual(1, rows[1].Id);
-            Assert.Equal(rows[1].Id, DbManual.Rules[0].Id);
-
-            DbManual.SetupTests(new List<RuleModel>());
-            await DbManual.LoadRulesAsync();
-            Assert.Single(DbManual.Rules);
-
-            DbManual.ResetAllDatabaseManuals();
         }
 
         [Fact]
         public async Task Save_RuleRemoved_DeletesItsRowOnly()
         {
             using var db = await CreateDbAsync();
-            DbManual.SetupTests(new List<RuleModel>
+            var repository = new RulesRepository(db);
+            await repository.SaveAsync(new List<RuleModel>
             {
-                new RuleModel { Id = 1, Description = "a", IsActive = true },
-                new RuleModel { Id = 2, Description = "b", IsActive = true },
+                new RuleModel { Description = "a", IsActive = true },
+                new RuleModel { Description = "b", IsActive = true },
             });
-            await DbManual.SetupAsync(db);
-            await DbManual.SaveRulesAsync();
 
-            DbManual.Rules.RemoveAt(0);
-            await DbManual.SaveRulesAsync();
-            await DbManual.LoadRulesAsync();
+            var rules = await repository.LoadAsync();
+            rules.RemoveAt(0);
+            await repository.SaveAsync(rules);
 
-            Assert.Equal("b", Assert.Single(DbManual.Rules).Description);
-            DbManual.ResetAllDatabaseManuals();
+            Assert.Equal("b", Assert.Single(await repository.LoadAsync()).Description);
         }
 
         [Fact]
-        public async Task Load_NoRulesInBackup_ImportsLegacyRulesJsonOnce()
+        public async Task Setup_DatabaseHasRules_LoadsThemIntoDbManual()
         {
             using var db = await CreateDbAsync();
-            var path = Path.Combine(Path.GetTempPath(), "Financisto.Desktop.Tests", Guid.NewGuid().ToString("N"), "rules.json");
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            var original = DbManual.RulesPath;
-            DbManual.RulesPath = path;
-            try
-            {
-                await File.WriteAllTextAsync(path, JsonConvert.SerializeObject(new List<RuleModel>
-                {
-                    new RuleModel { Id = 1, Description = "legacy", IsActive = true },
-                }));
-                DbManual.SetupTests(new List<RuleModel>());
-                await DbManual.SetupAsync(db);
+            await new RulesRepository(db).SaveAsync(new List<RuleModel> { new RuleModel { Description = "lidl", IsActive = true } });
 
-                await DbManual.LoadRulesAsync();
+            await DbManual.SetupAsync(db);
 
-                Assert.Equal("legacy", Assert.Single(DbManual.Rules).Description);
-                Assert.False(File.Exists(path));
-                DbManual.SetupTests(new List<RuleModel>());
-                await DbManual.LoadRulesAsync();
-                Assert.Equal("legacy", Assert.Single(DbManual.Rules).Description);
-            }
-            finally
-            {
-                DbManual.RulesPath = original;
-                DbManual.ResetAllDatabaseManuals();
-            }
+            Assert.Equal("lidl", Assert.Single(DbManual.Rules).Description);
+            DbManual.ResetAllDatabaseManuals();
         }
 
         [Theory]
