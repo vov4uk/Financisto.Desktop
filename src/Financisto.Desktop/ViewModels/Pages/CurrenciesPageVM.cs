@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -117,8 +118,30 @@ namespace Financisto.Desktop.ViewModels.Pages
             entity.SymbolFormat = updated.SymbolFormat.ToString();
             entity.NumberFormat = updated.NumberFormat;
 
-            await db.InsertOrUpdateAsync(new[] { entity });
+            var toSave = new List<Currency> { entity };
+            if (entity.IsDefault)
+            {
+                toSave.AddRange(await ResetOtherDefaultsAsync(entity.Id));
+            }
+
+            await db.InsertOrUpdateAsync(toSave);
             await RefreshData();
+        }
+
+        /// <summary>
+        /// Only one currency can be the default one: returns the other default currencies, already marked as non default,
+        /// so they can be saved together with the new default currency in a single transaction.
+        /// </summary>
+        private async Task<List<Currency>> ResetOtherDefaultsAsync(int newDefaultId)
+        {
+            using var uow = db.CreateUnitOfWork();
+            var others = await uow.GetRepository<Currency>().FindManyAsync(c => c.IsDefault && c.Id != newDefaultId);
+            foreach (var other in others)
+            {
+                other.IsDefault = false;
+            }
+
+            return others;
         }
 
         private async Task SaveFromTemplateAsync(System.Collections.Generic.List<string> template)

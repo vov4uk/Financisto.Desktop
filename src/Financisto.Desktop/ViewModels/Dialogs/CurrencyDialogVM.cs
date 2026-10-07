@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using Financisto.Common.Converters;
+using Financisto.Converters;
 using Financisto.Desktop.Data;
 
 namespace Financisto.Desktop.ViewModels.Dialogs
@@ -64,15 +65,19 @@ namespace Financisto.Desktop.ViewModels.Dialogs
             {
                 case ".":
                 case "'.'":
+                case nameof(GroupSeparator.PERIOD):
                     return GroupSeparator.PERIOD;
                 case ",":
                 case "','":
+                case nameof(GroupSeparator.COMMA):
                     return GroupSeparator.COMMA;
                 case " ":
                 case "' '":
+                case nameof(GroupSeparator.SPACE):
                     return GroupSeparator.SPACE;
                 case "":
                 case "''":
+                case nameof(GroupSeparator.NONE):
                     return GroupSeparator.NONE;
                 default:
                     return GroupSeparator.PERIOD;
@@ -85,12 +90,15 @@ namespace Financisto.Desktop.ViewModels.Dialogs
             {
                 case ".":
                 case "'.'":
+                case nameof(DecimalSeparator.PERIOD):
                     return DecimalSeparator.PERIOD;
                 case ",":
                 case "','" :
+                case nameof(DecimalSeparator.COMMA):
                     return DecimalSeparator.COMMA;
                 case " ":
                 case "' '":
+                case nameof(DecimalSeparator.SPACE):
                     return DecimalSeparator.SPACE;
                 default:
                     return DecimalSeparator.PERIOD;
@@ -99,8 +107,9 @@ namespace Financisto.Desktop.ViewModels.Dialogs
 
         public override object OnRequestSave()
         {
-            Entity.DecimalSeparator = SelectedDecimalSeparator.ToString();
-            Entity.GroupSeparator = SelectedGroupSeparator.ToString();
+            // the database keeps the quoted character (',' or ' '), not the name of the enum member
+            Entity.DecimalSeparator = SelectedDecimalSeparator.GetEnumDescription();
+            Entity.GroupSeparator = SelectedGroupSeparator.GetEnumDescription();
             Entity.Decimals = (int)SelectedDecimals;
             return Entity;
         }
