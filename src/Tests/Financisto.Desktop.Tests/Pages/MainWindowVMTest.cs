@@ -764,6 +764,13 @@
             this.dbMock.Setup(x => x.ExecuteQuery<Years>(It.IsAny<string>())).ReturnsAsync(new List<Years>() { new Years() });
             this.dbMock.Setup(x => x.ExecuteQuery<LocationModel>(It.IsAny<string>())).ReturnsAsync(new List<LocationModel>() { new LocationModel() });
 
+            // DbManual reads the import rules from sms_template
+            var rulesRepo = new Mock<IBaseRepository<SmsTemplate>>();
+            rulesRepo.Setup(x => x.GetAllAsync()).ReturnsAsync(new List<SmsTemplate>());
+            this.uowMock.Setup(x => x.GetRepository<SmsTemplate>()).Returns(rulesRepo.Object);
+            this.uowMock.Setup(x => x.Dispose());
+            this.dbMock.Setup(x => x.CreateUnitOfWork()).Returns(this.uowMock.Object);
+
             DbManual.ResetAllDatabaseManuals();
             await DbManual.SetupAsync(this.dbMock.Object);
         }

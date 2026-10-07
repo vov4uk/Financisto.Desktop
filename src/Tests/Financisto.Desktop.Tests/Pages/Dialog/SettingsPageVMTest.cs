@@ -6,6 +6,7 @@ namespace Financisto.Desktop.Tests.Pages.Dialog
     using Financisto.Common.Localization;
     using Financisto.Common.Model;
     using Financisto.DataAccess.Abstractions;
+    using Financisto.DataAccess.Data;
     using Financisto.Desktop.Data;
     using Financisto.Desktop.Helpers;
     using Financisto.Desktop.Services;
@@ -287,6 +288,13 @@ namespace Financisto.Desktop.Tests.Pages.Dialog
             dbMock.Setup(x => x.ExecuteQuery<YearMonths>(It.IsAny<string>())).ReturnsAsync(new List<YearMonths> { new YearMonths() });
             dbMock.Setup(x => x.ExecuteQuery<Years>(It.IsAny<string>())).ReturnsAsync(new List<Years> { new Years() });
             dbMock.Setup(x => x.ExecuteQuery<LocationModel>(It.IsAny<string>())).ReturnsAsync(new List<LocationModel> { new LocationModel() });
+
+            // DbManual reads the import rules from sms_template
+            var rulesRepo = new Mock<IBaseRepository<SmsTemplate>>();
+            rulesRepo.Setup(x => x.GetAllAsync()).ReturnsAsync(new List<SmsTemplate>());
+            var uowMock = new Mock<IUnitOfWork>();
+            uowMock.Setup(x => x.GetRepository<SmsTemplate>()).Returns(rulesRepo.Object);
+            dbMock.Setup(x => x.CreateUnitOfWork()).Returns(uowMock.Object);
 
             DbManual.ResetAllDatabaseManuals();
             await DbManual.SetupAsync(dbMock.Object);

@@ -144,8 +144,8 @@ namespace Financisto.Desktop.Wizards.MonoWizard.ViewModel
                 {
                     MonoAccountId = MonoAccount.Id,
                     FromAmount = amount,
-                    OriginalFromAmount = x.ExchangeRate == null ? null : Convert.ToInt64(x.OperationAmount * 100.0),
-                    OriginalCurrencyId = x.ExchangeRate == null ? 0 : (DbManual.Currencies.FirstOrDefault(c => c.Name == x.OperationCurrency)?.Id ?? 0),
+                    OriginalFromAmount = IsForeignCurrency(x) ? Convert.ToInt64(x.OperationAmount * 100.0) : null,
+                    OriginalCurrencyId = IsForeignCurrency(x) ? (DbManual.Currencies.FirstOrDefault(c => c.Name == x.OperationCurrency)?.Id ?? 0) : 0,
                     CategoryId = parsedDescription.categoryId,
                     ToAccountId = toAccountId,
                     FromAccountId = fromAccountId,
@@ -163,6 +163,9 @@ namespace Financisto.Desktop.Wizards.MonoWizard.ViewModel
 
             FinancistoTransactions = new ObservableCollection<FinancistoTransactionDto>(transToAdd);
         }
+
+        // Only some banks give an exchange rate; the others just name the operation currency when it differs from the card's.
+        private static bool IsForeignCurrency(BankTransaction x) => x.ExchangeRate != null || (!string.IsNullOrEmpty(x.OperationCurrency) && x.OperationAmount != 0 && Financisto.Common.Utils.DoubleUtils.DoubleNotEqual(Math.Abs(x.OperationAmount), Math.Abs(x.CardCurrencyAmount)));
 
         private static void ApplyRules(FinancistoTransactionDto transaction)
         {
