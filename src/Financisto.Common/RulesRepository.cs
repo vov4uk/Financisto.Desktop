@@ -38,7 +38,7 @@ namespace Financisto.Common
             catch (Exception ex)
             {
                 Logger.Error(ex, "Error occurred while loading rules.");
-                return new List<RuleModel>();
+                throw;
             }
         }
 
