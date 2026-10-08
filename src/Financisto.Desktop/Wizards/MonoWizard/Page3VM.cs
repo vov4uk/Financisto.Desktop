@@ -134,7 +134,7 @@ namespace Financisto.Desktop.Wizards.MonoWizard.ViewModel
             List<FinancistoTransactionDto> transToAdd = new List<FinancistoTransactionDto>();
             foreach (var x in transactions)
             {
-                var parsedDescription = ParseDescription(x.Description);
+                var parsedDescription = ParseDescription(x.Description, MonoAccount?.Id);
                 long amount = Convert.ToInt64(x.CardCurrencyAmount * 100.0);
                 int toAccountId = amount < 0 ? parsedDescription.accountId : 0;
                 int fromAccountId = amount > 0 ? parsedDescription.accountId : 0;
@@ -150,7 +150,7 @@ namespace Financisto.Desktop.Wizards.MonoWizard.ViewModel
                     ToAccountId = toAccountId,
                     FromAccountId = fromAccountId,
                     LocationId = parsedDescription.locationId,
-                    Note = x.Description,
+                    Note = RemoveOwnCardLine(x.Description, MonoAccount),
                     DateTime = new DateTimeOffset(x.Date).ToUnixTimeMilliseconds(),
                     MCC = mcc,
                     IsAmountNegative = amount < 0
@@ -162,6 +162,26 @@ namespace Financisto.Desktop.Wizards.MonoWizard.ViewModel
             }
 
             FinancistoTransactions = new ObservableCollection<FinancistoTransactionDto>(transToAdd);
+        }
+
+        // A card payment's first line names the card and the amount ("VISA PLAT 421352******8814 74.00 PLN"). When the card
+        // is the imported account's own (same last 4 digits), the line only repeats what the transaction already holds, so
+        // the note keeps the lines after it. A note that is only that line stays as it is.
+        private static string RemoveOwnCardLine(string note, AccountFilterModel importedAccount)
+        {
+            var accountDigits = new string((importedAccount?.Number ?? string.Empty).Where(char.IsDigit).ToArray());
+            var lineEnd = note?.IndexOf('\n') ?? -1;
+            if (accountDigits.Length < 4 || lineEnd < 0)
+            {
+                return note;
+            }
+
+            var ownCard = accountDigits[^4..];
+            var firstLine = note[..lineEnd];
+            var namesOwnCard = CardNumberRegex.Matches(firstLine).Any(m => m.Groups[2].Value == ownCard);
+            var rest = note[(lineEnd + 1)..].Trim();
+
+            return namesOwnCard && rest.Length > 0 ? rest : note;
         }
 
         // Only some banks give an exchange rate; the others just name the operation currency when it differs from the card's.
@@ -228,12 +248,12 @@ namespace Financisto.Desktop.Wizards.MonoWizard.ViewModel
             }
         }
 
-        private static (int categoryId, int locationId, int accountId) ParseDescription(string description)
+        private static (int categoryId, int locationId, int accountId) ParseDescription(string description, int? importedAccountId)
         {
             int accountId, locationId, categoryId;
             TryParseLocation(description, out locationId);
             TryParseCategory(description, out categoryId);
-            TryParseAccount(description, out accountId);
+            TryParseAccount(description, importedAccountId, out accountId);
             return (categoryId, locationId, accountId);
         }
 
@@ -270,20 +290,22 @@ namespace Financisto.Desktop.Wizards.MonoWizard.ViewModel
             }
         }
 
-        private static void TryParseAccount(string desc, out int accountId)
+        // A card number in the note names the other side of a transfer. A card payment's own card (e.g. Erste's
+        // "VISA PLAT 421352******8814") belongs to the imported account, which must not become its own transfer target.
+        private static void TryParseAccount(string desc, int? importedAccountId, out int accountId)
         {
             accountId = 0;
-            var res = CardNumberRegex.Match(desc);
 
-            if (res.Success && res.Groups.Count > 2)
+            foreach (Match match in CardNumberRegex.Matches(desc))
             {
-                string cardNumber = res.Groups[2].Value;
+                string cardNumber = match.Groups[2].Value;
                 var acc = DbManual.Account
-                    .Find(y => !string.IsNullOrWhiteSpace(y.Number) && string.Equals(y.Number, cardNumber, StringComparison.InvariantCultureIgnoreCase));
+                    .Find(y => y.Id != importedAccountId && !string.IsNullOrWhiteSpace(y.Number) && string.Equals(y.Number, cardNumber, StringComparison.InvariantCultureIgnoreCase));
 
                 if (acc?.Id != null)
                 {
                     accountId = acc.Id.Value;
+                    return;
                 }
             }
         }

@@ -13,6 +13,7 @@
     </UserControl.Resources>
     <Button
         x:Name="HeaderButton"
+        Theme="{StaticResource ComboLikeButton}"
         Height="32"
         HorizontalAlignment="Stretch"
         HorizontalContentAlignment="Left">

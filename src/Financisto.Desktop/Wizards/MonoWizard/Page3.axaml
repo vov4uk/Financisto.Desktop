@@ -6,8 +6,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:entities="using:Financisto.Common.Entities"
     xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
-    xmlns:sc="using:AvaloniaSearchableComboBox"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sc="using:AvaloniaSearchableComboBox"
     xmlns:vm="using:Financisto.Desktop.Wizards.MonoWizard.ViewModel"
     d:DesignHeight="300"
     d:DesignWidth="1000"
@@ -20,7 +20,7 @@
                 <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
             </ResourceDictionary.MergedDictionaries>
             <conv:AmountConverter x:Key="AmountConverter" />
-            <conv:UnixTimeConverter x:Key="DatetimeConverter" />
+            <conv:UnixTimeConverter x:Key="DatetimeConverter" Format="yyyy'-'MM'-'dd' 'HH':'mm" />
             <conv:MccConverter x:Key="MccConverter" />
             <conv:DifferentCurrencyConverter x:Key="DifferentCurrencyConverter" />
             <conv:ImportRowBackgroundConverter x:Key="ImportRowBackgroundConverter" />
@@ -105,8 +105,17 @@
                     CommandParameter="{Binding #MainGrid.SelectedItem}"
                     Gesture="Delete" />
             </DataGrid.KeyBindings>
+            <!--
+                Fixed widths (no star column, which would squash the others in a narrow window): a DataGrid builds the cells
+                of every row but the first only for columns that are on screen according to the widths known at that moment,
+                so auto-sized columns could leave Project/Payee empty.
+            -->
             <DataGrid.Columns>
-                <DataGridTemplateColumn Header="" MinWidth="28">
+                <DataGridTemplateColumn
+                    MinWidth="28"
+                    MaxWidth="28"
+                    CanUserResize="False"
+                    Header="">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Button
@@ -116,13 +125,20 @@
                                 HorizontalContentAlignment="Center"
                                 VerticalContentAlignment="Center"
                                 Command="{Binding $parent[DataGrid].DataContext.DeleteCommand}"
-                                CommandParameter="{Binding}"
-                                Content="x" />
+                                CommandParameter="{Binding}">
+                                <Image
+                                    Width="12"
+                                    Height="12"
+                                    Source="{StaticResource IconXmark}" />
+                            </Button>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <!--  Orange: transfer in another currency; pink: not exactly one of From/To account and Category chosen  -->
-                <DataGridTemplateColumn Header="{loc:Translate Key=date}" IsReadOnly="True">
+                <DataGridTemplateColumn
+                    Width="150"
+                    Header="{loc:Translate Key=date}"
+                    IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border>
@@ -147,10 +163,11 @@
                     Header="{loc:Translate Key=mcc}"
                     IsReadOnly="True"
                     IsVisible="{Binding #MainGrid.DataContext.HasMcc}" />
-                <DataGridTemplateColumn Header="{loc:Translate Key=from_account}">
+                <DataGridTemplateColumn Width="150" Header="{loc:Translate Key=from_account}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <sc:SearchableComboBox
+                                VerticalAlignment="Center"
                                 ItemTemplate="{StaticResource IActive}"
                                 ItemsSource="{Binding $parent[DataGrid].DataContext.Accounts}"
                                 SelectedValue="{Binding FromAccountId}"
@@ -159,10 +176,11 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="{loc:Translate Key=category}">
+                <DataGridTemplateColumn Width="190" Header="{loc:Translate Key=category}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <sc:SearchableComboBox
+                                VerticalAlignment="Center"
                                 ItemTemplate="{StaticResource CategoryTemplate}"
                                 ItemsSource="{x:Static entities:DbManual.Category}"
                                 SelectedValue="{Binding CategoryId}"
@@ -171,10 +189,11 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="{loc:Translate Key=to_account}">
+                <DataGridTemplateColumn Width="150" Header="{loc:Translate Key=to_account}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <sc:SearchableComboBox
+                                VerticalAlignment="Center"
                                 ItemTemplate="{StaticResource IActive}"
                                 ItemsSource="{Binding $parent[DataGrid].DataContext.Accounts}"
                                 SelectedValue="{Binding ToAccountId}"
@@ -183,7 +202,7 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="{loc:Translate Key=amount}">
+                <DataGridTemplateColumn Width="95" Header="{loc:Translate Key=amount}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock
@@ -193,18 +212,19 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="{loc:Translate Key=original}">
+                <DataGridTemplateColumn Width="95" Header="{loc:Translate Key=original}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Classes="number" Text="{Binding OriginalFromAmount, StringFormat=F2, Converter={StaticResource AmountConverter}, ConverterParameter=false}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="{loc:Translate Key=location}">
+                <DataGridTemplateColumn Width="190" Header="{loc:Translate Key=location}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <sc:SearchableComboBox 
+                            <sc:SearchableComboBox
                                 HorizontalAlignment="Stretch"
+                                VerticalAlignment="Center"
                                 ItemTemplate="{StaticResource IActive}"
                                 ItemsSource="{x:Static entities:DbManual.Location}"
                                 SelectedValue="{Binding LocationId}"
@@ -213,7 +233,10 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn MinWidth="200" Header="{loc:Translate Key=note}">
+                <DataGridTemplateColumn
+                    MinWidth="200"
+                    Width="420"
+                    Header="{loc:Translate Key=note}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Grid VerticalAlignment="Center" ColumnDefinitions="*,Auto">
@@ -230,16 +253,20 @@
                                     BorderThickness="0"
                                     Command="{Binding $parent[DataGrid].DataContext.ClearNoteCommand}"
                                     CommandParameter="{Binding}">
-                                    <Image Width="12" Height="12" Source="{StaticResource IconXmark}" />
+                                    <Image
+                                        Width="12"
+                                        Height="12"
+                                        Source="{StaticResource IconXmark}" />
                                 </Button>
                             </Grid>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="{loc:Translate Key=project}">
+                <DataGridTemplateColumn Width="160" Header="{loc:Translate Key=project}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <sc:SearchableComboBox
+                                VerticalAlignment="Center"
                                 ItemTemplate="{StaticResource IActive}"
                                 ItemsSource="{x:Static entities:DbManual.Project}"
                                 SelectedValue="{Binding ProjectId}"
@@ -248,10 +275,11 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="{loc:Translate Key=payee}">
+                <DataGridTemplateColumn Width="160" Header="{loc:Translate Key=payee}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <sc:SearchableComboBox
+                                VerticalAlignment="Center"
                                 ItemTemplate="{StaticResource IActive}"
                                 ItemsSource="{x:Static entities:DbManual.Payee}"
                                 SelectedValue="{Binding PayeeId}"

@@ -236,6 +236,139 @@
             DbManual.ResetAllDatabaseManuals();
         }
 
+        [Fact]
+        public void SetMonoTransactions_OwnCardInNote_NotMatchedAsTransferAccount()
+        {
+            var imported = new AccountFilterModel { Id = 1, Title = "Erste", Number = "8814", IsActive = true };
+            var other = new AccountFilterModel { Id = 2, Title = "Revolut", Number = "3169", IsActive = true };
+            DbManual.SetupTests(new List<AccountFilterModel> { imported, other });
+            DbManual.SetupTests(new List<LocationModel>());
+            DbManual.SetupTests(new List<CategoryModel>());
+            var vm = new Page3VM(dialogWrapperMock.Object) { MonoAccount = imported };
+
+            vm.SetMonoTransactions(new List<BankTransaction>
+            {
+                new BankTransaction { CardCurrencyAmount = -9.0, Date = new DateTime(2026, 10, 6), Description = "VISA PLAT 421352******8814 9.00 PLN\r\nNa Teatralce" },
+                new BankTransaction { CardCurrencyAmount = 9.0, Date = new DateTime(2026, 10, 7), Description = "VISA PLAT 421352******8814 9.00 PLN\r\nRefund" },
+            });
+
+            Assert.All(vm.FinancistoTransactions, t =>
+            {
+                Assert.Equal(0, t.ToAccountId);
+                Assert.Equal(0, t.FromAccountId);
+            });
+            DbManual.ResetAllDatabaseManuals();
+        }
+
+        [Fact]
+        public void SetMonoTransactions_OtherAccountsCardInNote_SelectsThatAccount()
+        {
+            var imported = new AccountFilterModel { Id = 1, Title = "Erste", Number = "8814", IsActive = true };
+            var other = new AccountFilterModel { Id = 2, Title = "Revolut", Number = "3169", IsActive = true };
+            DbManual.SetupTests(new List<AccountFilterModel> { imported, other });
+            DbManual.SetupTests(new List<LocationModel>());
+            DbManual.SetupTests(new List<CategoryModel>());
+            var vm = new Page3VM(dialogWrapperMock.Object) { MonoAccount = imported };
+
+            vm.SetMonoTransactions(new List<BankTransaction>
+            {
+                new BankTransaction { CardCurrencyAmount = -50.0, Date = new DateTime(2026, 10, 7), Description = "VISA PLAT 421352******8814 PRZELEW KARTA 50.00 PLN\r\nRevolut**3169* Dublin" },
+                new BankTransaction { CardCurrencyAmount = 50.0, Date = new DateTime(2026, 10, 8), Description = "VISA PLAT 421352******8814 PRZELEW KARTA 50.00 PLN\r\nRevolut**3169* Dublin" },
+            });
+
+            var outgoing = vm.FinancistoTransactions[0];
+            var incoming = vm.FinancistoTransactions[1];
+            Assert.Equal(2, outgoing.ToAccountId);
+            Assert.Equal(0, outgoing.FromAccountId);
+            Assert.Equal(2, incoming.FromAccountId);
+            Assert.Equal(0, incoming.ToAccountId);
+            DbManual.ResetAllDatabaseManuals();
+        }
+
+        [Fact]
+        public void SetMonoTransactions_CardMatchingNoAccount_LeavesAccountsEmpty()
+        {
+            var imported = new AccountFilterModel { Id = 1, Title = "Erste", Number = "8814", IsActive = true };
+            DbManual.SetupTests(new List<AccountFilterModel> { imported });
+            DbManual.SetupTests(new List<LocationModel>());
+            DbManual.SetupTests(new List<CategoryModel>());
+            var vm = new Page3VM(dialogWrapperMock.Object) { MonoAccount = imported };
+
+            vm.SetMonoTransactions(new List<BankTransaction>
+            {
+                new BankTransaction { CardCurrencyAmount = -226.0, Date = new DateTime(2026, 10, 5), Description = "VISA PLAT 421352******7053 226.00 PLN\r\nSAD PORAJ" },
+            });
+
+            var transaction = Assert.Single(vm.FinancistoTransactions);
+            Assert.Equal(0, transaction.ToAccountId);
+            Assert.Equal(0, transaction.FromAccountId);
+            DbManual.ResetAllDatabaseManuals();
+        }
+
+        [Theory]
+        [InlineData("8814")]
+        [InlineData("4213 5200 0000 8814")]
+        public void SetMonoTransactions_NoteStartsWithOwnCardLine_LineRemoved(string accountNumber)
+        {
+            var vm = CreateVmWithImportedAccount(accountNumber);
+
+            vm.SetMonoTransactions(new List<BankTransaction>
+            {
+                new BankTransaction { CardCurrencyAmount = -74.0, Date = new DateTime(2026, 10, 6), Description = "VISA PLAT 421352******8814 74.00 PLN\r\nJMP S.A. BIEDRONKA 4836 WARSZAWA" },
+                new BankTransaction { CardCurrencyAmount = -50.0, Date = new DateTime(2026, 10, 7), Description = "VISA PLAT 421352******8814 PRZELEW KARTA 50.00 PLN\r\nRevolut**3169* Dublin" },
+            });
+
+            Assert.Equal("JMP S.A. BIEDRONKA 4836 WARSZAWA", vm.FinancistoTransactions[0].Note);
+            Assert.Equal("Revolut**3169* Dublin", vm.FinancistoTransactions[1].Note);
+            DbManual.ResetAllDatabaseManuals();
+        }
+
+        [Fact]
+        public void SetMonoTransactions_NoteStartsWithAnotherCardLine_NoteKept()
+        {
+            var vm = CreateVmWithImportedAccount("8814");
+            const string note = "VISA PLAT 421352******7053 226.00 PLN\r\nSAD PORAJ MICHAL";
+
+            vm.SetMonoTransactions(new List<BankTransaction>
+            {
+                new BankTransaction { CardCurrencyAmount = -226.0, Date = new DateTime(2026, 10, 5), Description = note },
+            });
+
+            Assert.Equal(note, vm.FinancistoTransactions.Single().Note);
+            DbManual.ResetAllDatabaseManuals();
+        }
+
+        [Theory]
+        [InlineData("VISA PLAT 421352******8814 74.00 PLN")]
+        [InlineData("Zakup BLIK tpay.com plac Andersa 3 Poznan\r\nref:95057773731")]
+        public void SetMonoTransactions_OwnCardLineIsTheWholeNoteOrAbsent_NoteKept(string note)
+        {
+            var vm = CreateVmWithImportedAccount("8814");
+
+            vm.SetMonoTransactions(new List<BankTransaction>
+            {
+                new BankTransaction { CardCurrencyAmount = -74.0, Date = new DateTime(2026, 10, 6), Description = note },
+            });
+
+            Assert.Equal(note, vm.FinancistoTransactions.Single().Note);
+            DbManual.ResetAllDatabaseManuals();
+        }
+
+        [Fact]
+        public void SetMonoTransactions_ImportedAccountHasNoNumber_NoteKept()
+        {
+            var vm = CreateVmWithImportedAccount(null);
+            const string note = "VISA PLAT 421352******8814 74.00 PLN\r\nBIEDRONKA";
+
+            vm.SetMonoTransactions(new List<BankTransaction>
+            {
+                new BankTransaction { CardCurrencyAmount = -74.0, Date = new DateTime(2026, 10, 6), Description = note },
+            });
+
+            Assert.Equal(note, vm.FinancistoTransactions.Single().Note);
+            DbManual.ResetAllDatabaseManuals();
+        }
+
         [Theory]
         [AutoMoqData]
         public void DeleteCommand_Execute_TransactionsRemoved(
@@ -811,6 +944,15 @@
                 },
             };
             return transactions;
+        }
+
+        private Page3VM CreateVmWithImportedAccount(string accountNumber)
+        {
+            var imported = new AccountFilterModel { Id = 1, Title = "Erste", Number = accountNumber, IsActive = true };
+            DbManual.SetupTests(new List<AccountFilterModel> { imported });
+            DbManual.SetupTests(new List<LocationModel>());
+            DbManual.SetupTests(new List<CategoryModel>());
+            return new Page3VM(dialogWrapperMock.Object) { MonoAccount = imported };
         }
     }
 }

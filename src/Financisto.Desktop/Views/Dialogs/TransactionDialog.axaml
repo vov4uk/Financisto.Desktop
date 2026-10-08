@@ -10,6 +10,7 @@
     xmlns:entities="using:Financisto.Common.Entities"
     xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sc="using:AvaloniaSearchableComboBox"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xmlns:vm="using:Financisto.Desktop.ViewModels.Dialogs"
     d:DesignHeight="800"
@@ -125,16 +126,15 @@
                         Grid.Row="2"
                         Grid.Column="0"
                         Grid.ColumnSpan="2">
-                        <ComboBox
+                        <sc:SearchableComboBox
                             Height="32"
                             HorizontalAlignment="Stretch"
-                            IsTextSearchEnabled="True"
                             ItemTemplate="{StaticResource IActive}"
                             ItemsSource="{x:Static entities:DbManual.Account}"
                             SelectedItem="{Binding Transaction.FromAccount}"
                             SelectedValue="{Binding Transaction.FromAccountId}"
                             SelectedValueBinding="{Binding Id}"
-                            TextSearch.TextBinding="{Binding Title}" />
+                            TextPath="Title" />
                         <!--  Current balance of the selected account, formatted like the accounts grid  -->
                         <StackPanel
                             Margin="2,2,0,0"
@@ -156,16 +156,15 @@
                         Grid.ColumnSpan="2"
                         Text="{loc:Translate Key=payee}" />
 
-                    <ComboBox
+                    <sc:SearchableComboBox
                         Grid.Row="4"
                         Grid.Column="0"
                         HorizontalAlignment="Stretch"
-                        IsTextSearchEnabled="True"
                         ItemTemplate="{StaticResource IActive}"
                         ItemsSource="{x:Static entities:DbManual.Payee}"
                         SelectedValue="{Binding Transaction.PayeeId}"
                         SelectedValueBinding="{Binding Id}"
-                        TextSearch.TextBinding="{Binding Title}" />
+                        TextPath="Title" />
                     <Button
                         Grid.Row="4"
                         Grid.Column="1"
@@ -190,16 +189,15 @@
                             <ColumnDefinition Width="32" />
                         </Grid.ColumnDefinitions>
 
-                        <ComboBox
+                        <sc:SearchableComboBox
                             Grid.Column="0"
                             HorizontalAlignment="Stretch"
-                            IsTextSearchEnabled="True"
                             ItemTemplate="{StaticResource CategoryTemplate}"
                             ItemsSource="{x:Static entities:DbManual.Category}"
                             SelectedItem="{Binding Transaction.Category}"
                             SelectedValue="{Binding Transaction.CategoryId}"
                             SelectedValueBinding="{Binding Id}"
-                            TextSearch.TextBinding="{Binding Title}" />
+                            TextPath="Title" />
                         <Button
                             Grid.Column="1"
                             Height="32"
@@ -230,12 +228,12 @@
                         Grid.ColumnSpan="2"
                         Text="{loc:Translate Key=currency}" />
 
-                    <ComboBox
+                    <sc:SearchableComboBox
                         Grid.Row="8"
                         Grid.Column="0"
                         Grid.ColumnSpan="2"
                         HorizontalAlignment="Stretch"
-                        DisplayMemberBinding="{Binding Title}"
+                        TextPath="Title"
                         ItemsSource="{x:Static entities:DbManual.Currencies}"
                         SelectedItem="{Binding Transaction.OriginalCurrency}"
                         SelectedValue="{Binding Transaction.OriginalCurrencyId}"
@@ -374,16 +372,15 @@
                         Grid.ColumnSpan="2"
                         Text="{loc:Translate Key=location}" />
 
-                    <ComboBox
+                    <sc:SearchableComboBox
                         Grid.Row="14"
                         Grid.Column="0"
                         HorizontalAlignment="Stretch"
-                        IsTextSearchEnabled="True"
                         ItemTemplate="{StaticResource IActive}"
                         ItemsSource="{x:Static entities:DbManual.Location}"
                         SelectedValue="{Binding Transaction.LocationId}"
                         SelectedValueBinding="{Binding Id}"
-                        TextSearch.TextBinding="{Binding Title}" />
+                        TextPath="Title" />
                     <Button
                         Grid.Row="14"
                         Grid.Column="1"
@@ -418,16 +415,15 @@
                         IsVisible="{Binding ElementName=ProjectIdBox, Path=IsVisible}"
                         Text="{loc:Translate Key=project}" />
 
-                    <ComboBox
+                    <sc:SearchableComboBox
                         Grid.Row="18"
                         Grid.Column="0"
                         HorizontalAlignment="Stretch"
-                        IsTextSearchEnabled="True"
                         ItemTemplate="{StaticResource IActive}"
                         ItemsSource="{x:Static entities:DbManual.Project}"
                         SelectedValue="{Binding Transaction.ProjectId}"
                         SelectedValueBinding="{Binding Id}"
-                        TextSearch.TextBinding="{Binding Title}" />
+                        TextPath="Title" />
                     <Button
                         Grid.Row="18"
                         Grid.Column="1"

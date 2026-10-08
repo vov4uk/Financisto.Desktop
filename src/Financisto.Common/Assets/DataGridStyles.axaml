@@ -17,4 +17,8 @@
         <Setter Property="HorizontalAlignment" Value="Right" />
     </Style>
 
+     <Style Selector="DataGrid">
+       <Setter Property="GridLinesVisibility" Value="All" />
+     </Style>
+
 </Styles>
