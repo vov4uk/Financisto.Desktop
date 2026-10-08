@@ -5,10 +5,10 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 
-namespace Financisto.BankHelpers.Monobank
+namespace Financisto.BankHelpers
 {
     [ExcludeFromCodeCoverage]
-    public class DateTimeConvert : DefaultTypeConverter
+    internal sealed class DateTimeConvert : DefaultTypeConverter
     {
         private static readonly string[] DATE_TIME_FORMATS =
         {

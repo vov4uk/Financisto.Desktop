@@ -16,7 +16,8 @@ namespace Financisto.BankHelpers.Pdf
     {
         protected const string Space = " ";
 
-        protected readonly CsvConfiguration DefaultCsvReaderConfig = new CsvConfiguration(CultureInfo.CurrentCulture)
+        /// <summary>A new configuration on every access: helpers live for the whole run, so nothing (the culture) is captured when they are created.</summary>
+        protected CsvConfiguration DefaultCsvReaderConfig => new CsvConfiguration(CultureInfo.CurrentCulture)
         {
             HasHeaderRecord = true,
             Delimiter = ";",

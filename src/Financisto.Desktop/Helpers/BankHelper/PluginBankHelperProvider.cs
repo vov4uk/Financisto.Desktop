@@ -36,11 +36,35 @@ namespace Financisto.Desktop.Helpers.BankHelper
                 return helpers;
             }
 
-            foreach (var file in Directory.EnumerateFiles(pluginsDirectory, "*.dll").OrderBy(x => x, StringComparer.OrdinalIgnoreCase))
+            string[] files;
+            try
+            {
+                files = Directory.EnumerateFiles(pluginsDirectory, "*.dll").OrderBy(x => x, StringComparer.OrdinalIgnoreCase).ToArray();
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                Logger.Error(ex, $"The plugins folder {pluginsDirectory} could not be read");
+                return helpers;
+            }
+
+            // The same helper class from several DLLs (e.g. an old copy left next to a newer one) is listed once: the first DLL wins.
+            var sources = new Dictionary<string, string>();
+            foreach (var file in files)
             {
                 try
                 {
-                    helpers.AddRange(LoadPlugin(file));
+                    foreach (var helper in LoadPlugin(file))
+                    {
+                        var typeName = helper.GetType().FullName ?? helper.GetType().Name;
+                        if (sources.TryGetValue(typeName, out var firstFile))
+                        {
+                            Logger.Warn($"{typeName} in {file} is already provided by {firstFile}, skipped");
+                            continue;
+                        }
+
+                        sources[typeName] = file;
+                        helpers.Add(helper);
+                    }
                 }
                 catch (Exception ex)
                 {

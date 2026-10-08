@@ -61,7 +61,6 @@ namespace Financisto.Desktop.ViewModels
             IEntityReader entityReader,
             IBackupWriter backupWriter,
             IToastNotifierWrapper notifier,
-            IBankHelperProvider bankHelpers,
             UpdateService updateService)
         {
             this.dialogWrapper = dialogWrapper;

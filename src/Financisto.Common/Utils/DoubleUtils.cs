@@ -15,11 +15,5 @@ namespace Financisto.Common.Utils
         {
             return valueA != valueB; //Math.Abs(valueA - valueB) >= AmountEpsilon;
         }
-
-        public static double GetDouble(string text)
-        {
-            double.TryParse(Convert.ToString(text).Replace(',', '.').Replace(" ", string.Empty), System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo, out double retNum);
-            return retNum;
-        }
     }
 }

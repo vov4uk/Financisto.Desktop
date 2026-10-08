@@ -1,43 +1,23 @@
-using System.ComponentModel;
 using Financisto.BankHelpers;
-using Financisto.Common.Localization;
-using Prism.Mvvm;
 
 namespace Financisto.Desktop.ViewModels
 {
-    /// <summary>One bank helper in the Import menu.</summary>
-    public sealed class BankImportItem : BindableBase
+    /// <summary>One bank helper in the Import menu (the menu is rebuilt when the UI language changes, so the title is read once).</summary>
+    public sealed class BankImportItem
     {
-        private string title;
-
         public BankImportItem(IBankHelper helper)
         {
             Helper = helper;
-            title = helper.BankTitle;
-
-            // The title may depend on the UI language (the menu is built once and lives as long as the app).
-            LocalizationService.Instance.PropertyChanged += OnLocalizationChanged;
+            Title = helper.BankTitle;
         }
 
         public IBankHelper Helper { get; }
 
-        public string Title
-        {
-            get => title;
-            private set => SetProperty(ref title, value);
-        }
+        public string Title { get; }
 
         /// <summary>The statement format shown at the right of the menu entry, e.g. <c>CSV</c>.</summary>
         public string ReportTypeLabel => Helper.ReportType.ToString().ToUpperInvariant();
 
         public byte[]? Icon => Helper.Icon;
-
-        private void OnLocalizationChanged(object? sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(LocalizationService.CurrentCulture))
-            {
-                Title = Helper.BankTitle;
-            }
-        }
     }
 }

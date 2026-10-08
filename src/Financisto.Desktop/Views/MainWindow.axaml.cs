@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Data;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using Financisto.Adapter;
 using Financisto.BankHelpers;
 using Financisto.Common.Entities;
@@ -28,25 +29,60 @@ public partial class MainWindow : Window
     private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
     private readonly ToastNotifierWrapper notificator = new ToastNotifierWrapper();
 
+    private IBankHelperProvider? bankHelperProvider;
+
     MainWindowVM ViewModel { get; }
 
     public MainWindow()
     {
         InitializeComponent();
-        var banksProvider = new PluginBankHelperProvider(StartOptions.Current.PluginsPath);
 
-        this.ViewModel = new MainWindowVM(new DialogWrapper(), new FinancistoDatabaseFactory(), new EntityReader(), new BackupWriter(), notificator, banksProvider, new UpdateService());
+        this.ViewModel = new MainWindowVM(new DialogWrapper(), new FinancistoDatabaseFactory(), new EntityReader(), new BackupWriter(), notificator, new UpdateService());
 
         DataContext = ViewModel;
-        PopulateImportMenu(banksProvider);
+
+        // The Import menu stays disabled until the plugins are loaded; loading them is slow enough to keep off the UI thread.
+        ImportMenu.IsEnabled = false;
+        LocalizationService.Instance.PropertyChanged += OnLocalizationChanged;
+        Closed += (_, _) => LocalizationService.Instance.PropertyChanged -= OnLocalizationChanged;
+        _ = LoadBankHelpersAsync();
+
         var version = typeof(MainWindow).Assembly.GetName().Version;
         Title = $"Financisto Desktop v.{version?.ToString(3)}";
         Logger.Info("App started");
     }
 
-    /// <summary>Fills the Import menu from the bank helper plugins: one entry per helper, a separator between statement formats.</summary>
-    private void PopulateImportMenu(IBankHelperProvider bankHelperProvider)
+    private async Task LoadBankHelpersAsync()
     {
+        try
+        {
+            var pluginsPath = StartOptions.Current.PluginsPath;
+            bankHelperProvider = await Task.Run(() => new PluginBankHelperProvider(pluginsPath));
+            PopulateImportMenu();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "The bank helper plugins could not be loaded");
+        }
+    }
+
+    // The titles depend on the UI language, so the menu (and its alphabetical order) is rebuilt when the language changes.
+    private void OnLocalizationChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(LocalizationService.CurrentCulture))
+        {
+            Dispatcher.UIThread.Post(PopulateImportMenu);
+        }
+    }
+
+    /// <summary>Fills the Import menu from the bank helper plugins: one entry per helper, a separator between statement formats.</summary>
+    private void PopulateImportMenu()
+    {
+        if (bankHelperProvider is null)
+        {
+            return;
+        }
+
         var banks = bankHelperProvider.BankHelpers
                     .Select(x => new BankImportItem(x))
                     .GroupBy(x => x.Helper.ReportType)
@@ -76,10 +112,10 @@ public partial class MainWindow : Window
             Classes = { "bankImport" },
             Command = (ICommand)ViewModel.ImportCommand,
             CommandParameter = item.Helper,
+            Header = item.Title,
             Tag = item.ReportTypeLabel,
             Icon = CreateIcon(item),
         };
-        menuItem.Bind(MenuItem.HeaderProperty, new Binding(nameof(BankImportItem.Title)) { Source = item });
         return menuItem;
     }
 

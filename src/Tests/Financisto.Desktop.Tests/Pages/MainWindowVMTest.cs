@@ -15,7 +15,6 @@
     using Financisto.DataAccess.View;
     using Financisto.Desktop.Data;
     using Financisto.Desktop.Helpers;
-    using Financisto.Desktop.Helpers.BankHelper;
     using Financisto.Desktop.Services;
     using Financisto.Desktop.ViewModels;
     using Financisto.Desktop.ViewModels.Dialogs;
@@ -33,7 +32,6 @@
     {
         private readonly Mock<IBaseRepository<Account>> accountsRepo;
         private readonly Mock<IBackupWriter> backupWriterMock;
-        private readonly Mock<IBankHelperProvider> bankMock;
         private readonly Mock<IBaseRepository<Category>> categoriesRepo;
         private readonly Mock<IBankHelper> csvMock;
         private readonly Mock<IFinancistoDatabaseFactory> dbFactoryMock;
@@ -59,7 +57,6 @@
 
         public MainWindowVMTest()
         {
-            this.bankMock = new (MockBehavior.Strict);
             this.csvMock = new (MockBehavior.Strict);
             this.dialogMock = new (MockBehavior.Strict);
             this.dbFactoryMock = new (MockBehavior.Strict);
@@ -75,8 +72,6 @@
 
             this.dbFactoryMock.Setup(x => x.CreateDatabase())
                 .Returns(this.dbMock.Object);
-            this.bankMock.SetupGet(x => x.BankHelpers)
-                .Returns(Array.Empty<IBankHelper>());
         }
 
         [Fact]
@@ -758,15 +753,7 @@
             return vm;
         }
 
-        private static IBankHelper Helper(string title, ReportType reportType)
-        {
-            var helper = new Mock<IBankHelper>();
-            helper.SetupGet(x => x.BankTitle).Returns(title);
-            helper.SetupGet(x => x.ReportType).Returns(reportType);
-            return helper.Object;
-        }
-
-        private MainWindowVM GetFinancistoVM() => new MainWindowVM(this.dialogMock.Object, this.dbFactoryMock.Object, this.entityReaderMock.Object, this.backupWriterMock.Object, this.toastNotifierMock.Object, this.bankMock.Object, null);
+        private MainWindowVM GetFinancistoVM() => new MainWindowVM(this.dialogMock.Object, this.dbFactoryMock.Object, this.entityReaderMock.Object, this.backupWriterMock.Object, this.toastNotifierMock.Object, null);
 
         private async Task SetupDbManual()
         {

@@ -69,14 +69,6 @@ namespace Financisto.Common.Localization {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized string similar to A Bank.
-        /// </summary>
-        public static string a_bank {
-            get {
-                return ResourceManager.GetString("a_bank", resourceCulture);
-            }
-        }
 
         /// <summary>
         ///   Looks up a localized string similar to Accent Color Code.
@@ -628,15 +620,6 @@ namespace Financisto.Common.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to CSV.
-        /// </summary>
-        public static string csv {
-            get {
-                return ResourceManager.GetString("csv", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Currencies.
         /// </summary>
         public static string currencies {
@@ -870,14 +853,6 @@ namespace Financisto.Common.Localization {
             }
         }
 
-        /// <summary>
-        ///   Looks up a localized string similar to Erste.
-        /// </summary>
-        public static string erste {
-            get {
-                return ResourceManager.GetString("erste", resourceCulture);
-            }
-        }
 
         /// <summary>
         ///   Looks up a localized string similar to Exchange Rate.
@@ -1321,15 +1296,6 @@ namespace Financisto.Common.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Monobank.
-        /// </summary>
-        public static string monobank {
-            get {
-                return ResourceManager.GetString("monobank", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Month.
         /// </summary>
         public static string month {
@@ -1546,15 +1512,6 @@ namespace Financisto.Common.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to PDF.
-        /// </summary>
-        public static string pdf {
-            get {
-                return ResourceManager.GetString("pdf", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Period.
         /// </summary>
         public static string period {
@@ -1663,24 +1620,6 @@ namespace Financisto.Common.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Pireus.
-        /// </summary>
-        public static string pireus {
-            get {
-                return ResourceManager.GetString("pireus", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to PKO.
-        /// </summary>
-        public static string pko {
-            get {
-                return ResourceManager.GetString("pko", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Please select account.
         /// </summary>
         public static string please_select_account {
@@ -1771,15 +1710,6 @@ namespace Financisto.Common.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Privat.
-        /// </summary>
-        public static string privat {
-            get {
-                return ResourceManager.GetString("privat", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Project.
         /// </summary>
         public static string project {
@@ -1803,15 +1733,6 @@ namespace Financisto.Common.Localization {
         public static string providers {
             get {
                 return ResourceManager.GetString("providers", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to PUMB.
-        /// </summary>
-        public static string pumb {
-            get {
-                return ResourceManager.GetString("pumb", resourceCulture);
             }
         }
         
@@ -2010,15 +1931,6 @@ namespace Financisto.Common.Localization {
         public static string reports_structure {
             get {
                 return ResourceManager.GetString("reports_structure", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Revolut.
-        /// </summary>
-        public static string revolut {
-            get {
-                return ResourceManager.GetString("revolut", resourceCulture);
             }
         }
         
@@ -2514,15 +2426,6 @@ namespace Financisto.Common.Localization {
         public static string what_should_happen {
             get {
                 return ResourceManager.GetString("what_should_happen", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to XLSX.
-        /// </summary>
-        public static string xlsx {
-            get {
-                return ResourceManager.GetString("xlsx", resourceCulture);
             }
         }
         

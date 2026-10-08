@@ -14,16 +14,13 @@ namespace Financisto.Desktop.Helpers.BankHelper
     internal sealed class PluginLoadContext : AssemblyLoadContext
     {
         internal const string EmbeddedDependencyPrefix = "embedded-dependencies/";
+        private const string HostProvidedAssembliesResource = "HostProvidedAssemblies.txt";
 
         /// <summary>
         /// Assemblies the plugin shares with the app: the contract (so <c>IBankHelper</c> is the same type on both sides) and the logger.
-        /// Keep in step with <c>HostProvidedAssembly</c> in src/BankHelpers/Plugins/Directory.Build.targets.
+        /// The list is src/BankHelpers/Plugins/HostProvidedAssemblies.txt, which the plugin build also reads to leave them out of the plugin DLL.
         /// </summary>
-        private static readonly HashSet<string> HostProvidedAssemblies = new(StringComparer.OrdinalIgnoreCase)
-        {
-            "Financisto.BankHelpers.Abstractions",
-            "NLog",
-        };
+        private static readonly HashSet<string> HostProvidedAssemblies = ReadHostProvidedAssemblies();
 
         private readonly Dictionary<string, Assembly> embedded = new(StringComparer.OrdinalIgnoreCase);
         private Assembly? plugin;
@@ -62,6 +59,15 @@ namespace Financisto.Desktop.Helpers.BankHelper
 
                 return embedded[name] = LoadFromStream(stream);
             }
+        }
+
+        private static HashSet<string> ReadHostProvidedAssemblies()
+        {
+            using var stream = typeof(PluginLoadContext).Assembly.GetManifestResourceStream(HostProvidedAssembliesResource)
+                ?? throw new InvalidOperationException($"The embedded resource {HostProvidedAssembliesResource} is missing");
+            using var reader = new StreamReader(stream);
+            var names = reader.ReadToEnd().Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            return new HashSet<string>(names, StringComparer.OrdinalIgnoreCase);
         }
     }
 }

@@ -18,7 +18,23 @@ namespace Financisto.Desktop.Tests.Plugins
     {
         private static readonly string[] PluginNames = { "ABank", "Erste", "Monobank", "Pireus", "Pko", "Privat", "Pumb", "Revolut" };
 
-        private readonly string pluginsFolder = Path.Combine(Path.GetTempPath(), "financisto-plugins-" + Guid.NewGuid().ToString("N"));
+        // A loaded plugin keeps its DLL locked until the process ends, so a test cannot delete its own folder.
+        // All of them live under one root, which the next run clears before it starts, so the temp folder does not keep growing.
+        private static readonly string Root = Path.Combine(Path.GetTempPath(), "financisto-plugin-tests");
+
+        private readonly string pluginsFolder = Path.Combine(Root, Guid.NewGuid().ToString("N"));
+
+        static PluginBankHelperProviderTest()
+        {
+            try
+            {
+                Directory.Delete(Root, true);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // leftovers still locked by another running test process; they are cleared by a later run
+            }
+        }
 
         public PluginBankHelperProviderTest()
         {
@@ -33,7 +49,7 @@ namespace Financisto.Desktop.Tests.Plugins
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                // a loaded plugin keeps its file open; the temp folder is cleaned up by the OS later
+                // a loaded plugin keeps its file open; the next run clears the root folder
             }
         }
 

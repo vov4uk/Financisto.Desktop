@@ -86,6 +86,11 @@
         <ProjectReference Include="@(BankHelperPlugin)" ReferenceOutputAssembly="false" />
     </ItemGroup>
 
+    <ItemGroup>
+        <!-- The assemblies shared with the plugins; the plugin build reads the same file (see PluginLoadContext) -->
+        <EmbeddedResource Include="..\BankHelpers\Plugins\HostProvidedAssemblies.txt" LogicalName="HostProvidedAssemblies.txt" />
+    </ItemGroup>
+
     <Target Name="GetBankHelperPluginOutputs">
         <!-- The plugins are plain net10.0 libraries, built without the app's runtime (the SDK drops these properties for a library reference too) -->
         <MSBuild Projects="@(BankHelperPlugin)" Targets="GetTargetPath" RemoveProperties="RuntimeIdentifier;SelfContained">

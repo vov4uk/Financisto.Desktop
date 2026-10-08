@@ -2,12 +2,10 @@
     <!--
         A plugin is one DLL: its dependencies (NuGet packages, shared plugin libraries) are embedded into it as
         resources named "embedded-dependencies/<assembly>.dll", and the app's PluginLoadContext loads them from there.
-        The assemblies the app and the plugin must share are left out (the app supplies them):
-        keep this list in step with PluginLoadContext.HostProvidedAssemblies in Financisto.Desktop.
+        The assemblies the app and the plugin must share are left out (the app supplies them): they are listed, one name per line,
+        in HostProvidedAssemblies.txt, which Financisto.Desktop also embeds for PluginLoadContext, so there is a single list.
+        Only managed assemblies are embedded: native assets and satellite (culture) assemblies are skipped.
     -->
-    <ItemGroup>
-        <HostProvidedAssembly Include="Financisto.BankHelpers.Abstractions.dll;NLog.dll" />
-    </ItemGroup>
 
     <!-- The bank's logo: icon.png in the project folder is the "icon.png" resource that BankHelperBase.Icon reads. -->
     <ItemGroup Condition="Exists('$(MSBuildProjectDirectory)/icon.png')">
@@ -15,8 +13,12 @@
     </ItemGroup>
 
     <Target Name="EmbedPluginDependencies" BeforeTargets="AssignTargetPaths" DependsOnTargets="ResolveReferences">
+        <ReadLinesFromFile File="$(MSBuildThisFileDirectory)HostProvidedAssemblies.txt">
+            <Output TaskParameter="Lines" ItemName="_HostProvidedName" />
+        </ReadLinesFromFile>
         <ItemGroup>
-            <_PluginDependency Include="@(ReferenceCopyLocalPaths)" Condition="'%(Extension)' == '.dll'" />
+            <HostProvidedAssembly Include="@(_HostProvidedName->'%(Identity).dll')" />
+            <_PluginDependency Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.Extension)' == '.dll' And '%(ReferenceCopyLocalPaths.AssetType)' != 'native' And '%(ReferenceCopyLocalPaths.DestinationSubDirectory)' == ''" />
             <_PluginDependency Remove="@(HostProvidedAssembly)" MatchOnMetadata="Filename" MatchOnMetadataOptions="CaseInsensitive" />
             <EmbeddedResource Include="@(_PluginDependency)" LogicalName="embedded-dependencies/%(Filename)%(Extension)" WithCulture="false" />
         </ItemGroup>
