@@ -7,6 +7,7 @@
     xmlns:entities="using:Financisto.Common.Entities"
     xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sc="using:AvaloniaSearchableComboBox"
     xmlns:vm="using:Financisto.Desktop.ViewModels.Dialogs"
     d:DesignHeight="480"
     d:DesignWidth="440"
@@ -101,17 +102,16 @@
                     Grid.Row="2"
                     Grid.Column="0"
                     Grid.ColumnSpan="3">
-                    <ComboBox
+                    <sc:SearchableComboBox
                         Height="32"
                         HorizontalAlignment="Stretch"
                         IsEnabled="{Binding Transfer.IsSubTransaction, Converter={StaticResource InverseBooleanConverter}}"
-                        IsTextSearchEnabled="True"
                         ItemTemplate="{StaticResource IActive}"
                         ItemsSource="{x:Static entities:DbManual.Account}"
                         SelectedItem="{Binding Transfer.FromAccount}"
                         SelectedValue="{Binding Transfer.FromAccountId}"
                         SelectedValueBinding="{Binding Id}"
-                        TextSearch.TextBinding="{Binding Title}" />
+                        TextPath="Title" />
                     <!--  Current balance of the selected account, formatted like the accounts grid  -->
                     <StackPanel
                         Margin="2,2,0,0"
@@ -133,18 +133,17 @@
                     Grid.ColumnSpan="3"
                     Text="{Binding Transfer.ToAccountCaption}" />
 
-                <ComboBox
+                <sc:SearchableComboBox
                     Grid.Row="4"
                     Grid.Column="0"
                     Grid.ColumnSpan="3"
                     HorizontalAlignment="Stretch"
-                    IsTextSearchEnabled="True"
                     ItemTemplate="{StaticResource IActive}"
                     ItemsSource="{x:Static entities:DbManual.Account}"
                     SelectedItem="{Binding Transfer.ToAccount}"
                     SelectedValue="{Binding Transfer.ToAccountId}"
                     SelectedValueBinding="{Binding Id}"
-                    TextSearch.TextBinding="{Binding Title}" />
+                    TextPath="Title" />
 
                 <TextBlock
                     x:Name="FromAmountBlock"
