@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <RootNamespace>Financisto.BankHelpers.ABank</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="CsvHelper" />
+        <PackageReference Include="MiniExcel" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Financisto.BankHelpers.Pdf\Financisto.BankHelpers.Pdf.csproj" />
+    </ItemGroup>
+</Project>

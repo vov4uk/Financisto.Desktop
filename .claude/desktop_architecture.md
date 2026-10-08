@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The runnable Avalonia 12 app (`net10.0`, `WinExe`, self-contained single-file, `win-x64` by default; CI also publishes macOS through `MacBundle`). It holds the shell window, page and dialog VMs and views, DTOs, services (settings, exchange rates, updates, dashboard totals), and the bank statement import (parsers, wizards, rules). It references Common, DataAccess, Adapter and Reports (the Reports page is its own project, see `reports_architecture.md`).
+The runnable Avalonia 12 app (`net10.0`, `WinExe`, self-contained single-file, `win-x64` by default; CI also publishes macOS through `MacBundle`). It holds the shell window, page and dialog VMs and views, DTOs, services (settings, exchange rates, updates, dashboard totals), and the bank statement import (wizards, rules, and the loader for the bank helper plugins). It references Common, DataAccess, Adapter, Reports (the Reports page is its own project, see `reports_architecture.md`) and `Financisto.BankHelpers.Abstractions`. The statement parsers are **not** in this project: each bank is a plugin DLL in `<app>/plugins` (see `bankhelpers_architecture.md`).
 
 There is **no DI container**: the `MainWindow` constructor creates every dependency itself.
 
@@ -22,8 +22,11 @@ There is **no DI container**: the `MainWindow` constructor creates every depende
 // Views/MainWindow.axaml.cs
 ViewModel = new MainWindowVM(new DialogWrapper(), new FinancistoDatabaseFactory(), new EntityReader(),
                              new BackupWriter(), notificator /* ToastNotifierWrapper */,
-                             new BankHelperFactory(), new UpdateService());
+                             new PluginBankHelperProvider(StartOptions.Current.PluginsPath), new UpdateService());
+// then PopulateImportMenu() fills the Import menu from ViewModel.ImportGroups
 ```
+
+`StartOptions.Current.PluginsPath` is `<exe dir>/plugins`, or the `FINANCISTO_PLUGINS_PATH` environment variable (the tests and the headless harness point it elsewhere). The plugins are scanned in the `MainWindow` constructor (about 50 ms for 8 plugins, plus a one-off JIT warm-up).
 
 Import rules are stored in the backup's `sms_template` table (see [Bank statement import](#bank-statement-import-wizards)).
 
@@ -41,7 +44,7 @@ Import rules are stored in the backup's `sms_template` table (see [Bank statemen
 public class MainWindowVM : BindableBase
 {
     MainWindowVM(IDialogWrapper, IFinancistoDatabaseFactory, IEntityReader, IBackupWriter,
-                 IToastNotifierWrapper, IBankHelperFactory, UpdateService);
+                 IToastNotifierWrapper, IBankHelperProvider, UpdateService);
 
     BindableBase CurrentPage { get; private set; }
     bool IsLoading { get; }            // disables the menu and sidebar, shows the loading indicator
@@ -54,7 +57,8 @@ public class MainWindowVM : BindableBase
     IAsyncCommand<Type> MenuNavigateCommand;
     IAsyncCommand OpenBackupCommand;
     IAsyncCommand SaveBackupCommand, SaveBackupAsDbCommand;         // CanExecute: a backup is loaded
-    IAsyncCommand<WizardTypes> ImportCommand;                       // Import menu; CanExecute: a backup is loaded
+    IAsyncCommand<IBankHelper> ImportCommand;                       // Import menu; parameter = the helper; CanExecute: a backup is loaded
+    IReadOnlyList<IReadOnlyList<BankImportItem>> ImportGroups;      // the Import menu: one group per ReportType (enum order), items sorted by title
     IAsyncCommand OpenPanelCommand;
 
     Task OpenBackup(string backupPath);   // also used by the startup auto-load
@@ -257,29 +261,31 @@ All in `src/Financisto.Desktop/Data/` (namespace `Financisto.Desktop.Data`), Pri
 
 ## Bank statement import (`Wizards/`)
 
-Ported from Financier WPF (`Wizards/`, `Helpers/BankHelper/`, `Pages/RulesVM`, `Pages/Dialogs/RuleControl`). Financier's tests for this code (parsers against its `Assets` fixtures, wizard flows, rules) live in `src/Tests/Financisto.Desktop.Tests` (`Wizards/`, `Pages/Dialog/RuleDialogVMTest`).
+Ported from Financier WPF (`Wizards/`, the parsers, `Pages/RulesVM`, `Pages/Dialogs/RuleControl`). The parsers have since become plugins (`src/BankHelpers`, see `bankhelpers_architecture.md`). Financier's tests for this code (parsers against its `Assets` fixtures, wizard flows, rules) live in `src/Tests/Financisto.Desktop.Tests` (`Wizards/`, `Pages/Dialog/RuleDialogVMTest`); the plugin loader's tests are in `Plugins/`.
 
-### Flow (`MainWindowVM.OpenImportWizardAsync(WizardTypes)`)
+### Flow (`MainWindowVM.OpenImportWizardAsync(IBankHelper)`)
 
-1. The **Import** menu in `MainWindow.axaml` has one `MenuItem.bankImport` per `WizardTypes` value (`Tag` = the format shown on the right, since A-Bank has two). All bind `ImportCommand` with the enum as `CommandParameter`.
-2. `OpenFileDialogAsync(ext)` — the extension is the enum's `[Description]` (`csv`/`xlsx`/`pdf`).
-3. `IBankHelperFactory.CreateBankHelper(type).ParseReport(file)` runs on a worker thread. A parse error is logged and shows the `import_failed` warning toast (no crash).
+1. The **Import** menu is built at startup from the plugins folder. `MainWindow.axaml` only has an empty `MenuItem x:Name="ImportMenu"`; `MainWindow.PopulateImportMenu()` fills it from `MainWindowVM.ImportGroups` with one `MenuItem.bankImport` per helper (header bound to `BankImportItem.Title`, `Tag` = the report type shown on the right, icon = `IBankHelper.Icon` decoded to a `Bitmap`) and a `Separator` between report types. Each binds `ImportCommand` with the helper as `CommandParameter`. With no plugins the menu is disabled.
+2. `OpenFileDialogAsync(ext)` — the extension is `helper.ReportType.GetFileExtension()` (`csv`/`xlsx`/`pdf`/...).
+3. `helper.ParseReport(file)` runs on a worker thread. A parse error is logged and shows the `import_failed` warning toast (no crash).
 4. `GetLastTransactionsAsync()`: account id → its latest `v_blotter` row (from `Account.LastTransactionId`; a split part maps to its split parent), for the wizard's hint.
 5. `ShowWizardAsync(new MonoWizardVM(bankTitle, rows, lastTransactions, dialogWrapper))` returns `List<Transaction>` (`Id = 0`).
 6. `ImportTransactionsAsync` (worker thread): skips rows whose `(FromAccountId, DateTime, FromAmount)` already exists, `db.AddTransactionsAsync`, `RebuildAccountBalanceAsync` for every from/to account, `DbManual` Account cache reset + setup. Then the current page refreshes and the `import_result` / `import_result_with_duplicates` toast shows.
 
-### Parsers (`Helpers/BankHelper/`, `IBankHelper { BankTitle; ParseReport(path) }`)
+### Parsers (plugins in `src/BankHelpers/Plugins`; the app side is `Helpers/BankHelper/`)
 
-| `WizardTypes` | Class | Format / library |
+`IBankHelper { BankTitle; ReportType; Icon; ParseReport(path) }` (contract in `Financisto.BankHelpers.Abstractions`). `PluginBankHelperProvider(pluginsDir)` is the `IBankHelperProvider`: it loads every DLL in the folder that references the contract assembly and creates each public `IBankHelper` class with a public parameterless constructor (details: `bankhelpers_architecture.md`). The Desktop csproj builds the plugin projects and copies their DLLs to `plugins/` in the build output and in the publish folder (also inside the macOS bundle's `Contents/MacOS`).
+
+| Plugin project | Helper class (`ReportType`) | Format / library |
 |---|---|---|
-| Monobank | `MonobankHelper` | CSV (CsvHelper) mapped straight onto `BankTransaction` (`[Name]` with English + Ukrainian headers) |
-| Revolut | `RevolutHelper` | CSV, `Model/RevolutRow` (English + Polish headers) |
-| Erste | `ErsteHelper` | CSV without a header row (first line is a statement summary: account currency in column 5). Dates only, so `Date` = the second column (transaction date; the first column, booking date, is only the fallback) + minutes by the file's order (rows are newest first; the oldest row of a day is 00:00, hours roll over after 59). The file is sorted by transaction date; card payments book 1-3 days later, so the balance column follows booking order and can differ from the file's order within a day. Card titles are shortened to `<card> 44.37 PLN` + `\r\n` + `<merchant>` (`PŁATNOŚĆ KARTĄ` dropped, other wording like `PRZELEW KARTĄ` kept); a transfer's counterparty is appended unless the title already names it. Foreign-currency card titles (`KARTĄ 25.00 EUR`) fill `OperationAmount/Currency` |
-| ABankExcel / Privat | `AbankExcelHelper` / `PrivatHelper` | XLSX via MiniExcel → CSV → `AbankRow` / `PrivatRow` → `MapperHelper.ToBankTransaction` |
-| ABank / Pumb / Pireus | `ABankHelper` / `PumbHelper` / `PireusHelper` : `BankPdfHelperBase` | PDF tables via Tabula (+PdfPig) → CSV → row model |
-| Pko | `PkoHelper` | PDF text via Tabula, parsed with regexes (Polish markers such as `Saldo końcowe`) |
+| `...Monobank` | `MonobankHelper` (Csv) | CSV (CsvHelper) mapped onto `BankTransaction` by `MonobankMap` (a `ClassMap` with English + Ukrainian headers) |
+| `...Revolut` | `RevolutHelper` (Csv) | CSV, `RevolutRow` (English + Polish headers) |
+| `...Erste` | `ErsteHelper` (Csv) | CSV without a header row (first line is a statement summary: account currency in column 5). Dates only, so `Date` = the second column (transaction date; the first column, booking date, is only the fallback) + minutes by the file's order (rows are newest first; the oldest row of a day is 00:00, hours roll over after 59). The file is sorted by transaction date; card payments book 1-3 days later, so the balance column follows booking order and can differ from the file's order within a day. Card titles are shortened to `<card> 44.37 PLN` + `\r\n` + `<merchant>` (`PŁATNOŚĆ KARTĄ` dropped, other wording like `PRZELEW KARTĄ` kept); a transfer's counterparty is appended unless the title already names it. Foreign-currency card titles (`KARTĄ 25.00 EUR`) fill `OperationAmount/Currency` |
+| `...ABank` (two helpers) / `...Privat` | `AbankExcelHelper` (Xlsx) / `PrivatHelper` (Xlsx) | XLSX via MiniExcel → CSV → `AbankRow` / `PrivatRow` → `BankTransaction` (`ABankInfo.ToBankTransaction`, `PrivatHelper.ToBankTransaction`) |
+| `...ABank` / `...Pumb` / `...Pireus` | `ABankHelper` / `PumbHelper` / `PireusHelper` (Pdf) : `BankPdfHelperBase` (project `Financisto.BankHelpers.Pdf`) | PDF tables via Tabula (+PdfPig) → CSV → row model |
+| `...Pko` | `PkoHelper` (Pdf) | PDF text via Tabula, parsed with regexes (Polish markers such as `Saldo końcowe`) |
 
-`BankTransaction` (Monobank's row layout) is the common output. Amounts are `double` in currency units; the wizard converts to minor units.
+`BankTransaction` (`Financisto.BankHelpers`, Monobank's row layout) is the common output. Amounts are `double` in currency units; the wizard converts to minor units. Bank titles come from the plugins (`BankHelperBase.Localized(...)` picks the Ukrainian name for the `uk` UI language); `BankImportItem` re-reads them on a culture change.
 
 ### Wizard framework
 
@@ -312,7 +318,7 @@ Ported from the Financier WPF repo (xunit v3, AutoFixture, Moq). In `Financisto.
 
 - `Financisto.Tests.Common`: shared fixtures (`AutoMoqData`, `PredefinedData`, `JsonDeserializer` for backup-style JSON rows).
 - `Financisto.Adapter.Tests`, `Financisto.DataAccess.Tests` (in-memory SQLite through `FinancistoDatabase`), `Financisto.Common.Test` (assembly `Financisto.Converters.Tests`: converter tests; the visibility converters return `bool` for `IsVisible`).
-- `Financisto.Desktop.Tests`: VMs (`DashboardPageVMTests` runs the net worth chart on a real in-memory database with only some rates stored), wizards, `Integration/MinBackupIntegrationTests` (imports `Assets/min.backup` into the real in-memory DB and checks that `RebuildAccountBalanceAsync` reproduces the backup's account totals and that open→save writes the same text back, modulo location `0`→`0.0` and exchange-rate row order), bank parsers (`Assets/` statements copied to the output dir), `ExchangeRatesService`. It `ProjectReference`s the self-contained win-x64 `Financisto.Desktop` exe, so it has to be `SelfContained` + `win-x64` too (NETSDK1151).
+- `Financisto.Desktop.Tests`: VMs (`DashboardPageVMTests` runs the net worth chart on a real in-memory database with only some rates stored), wizards, `Integration/MinBackupIntegrationTests` (imports `Assets/min.backup` into the real in-memory DB and checks that `RebuildAccountBalanceAsync` reproduces the backup's account totals and that open→save writes the same text back, modulo location `0`→`0.0` and exchange-rate row order), bank parsers (`Assets/` statements copied to the output dir; the test project `ProjectReference`s every plugin project), `Plugins/PluginBankHelperProviderTest` (copies single plugin DLLs into a scratch folder and loads them through `PluginBankHelperProvider`, which proves that each DLL carries its own dependencies), `ExchangeRatesService`. It `ProjectReference`s the self-contained win-x64 `Financisto.Desktop` exe, so it has to be `SelfContained` + `win-x64` too (NETSDK1151).
 - `Financisto.Reports.Tests`: the report VMs, `ReportsControlVM` and the chart helpers (234 tests, see `reports_architecture.md`, "Tests").
 
 **Running:** `dotnet test` doesn't work here (Microsoft.Testing.Platform reports "Zero tests ran", also in the WPF repo). Build, then run the xunit exe: `src/Tests/<project>/bin/Debug/net10.0[/win-x64]/<AssemblyName>.exe`, optionally `-class Financisto.Desktop.Tests.Pages.BlotterVMIntegrationTests`.

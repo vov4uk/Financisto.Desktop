@@ -1,0 +1,43 @@
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using CsvHelper.Configuration.Attributes;
+
+namespace Financisto.BankHelpers.Pumb
+{
+    [ExcludeFromCodeCoverage]
+    public class PumbRow
+    {
+        [Index(0)]
+        public DateTime Date { get; set; }
+
+        [Index(1)]
+        public string OperationAmount { get; set; }
+
+
+        [Index(2)]
+        public string ProcessingDate { get; set; }
+
+        [Index(3)]
+        public string CardCurrenyAmount { get; set; }
+
+
+        [Index(4)]
+        public string CommisionAmount { get; set; }
+
+
+        [Index(5)]
+        public string CardNumber { get; set; }
+
+        [Index(6)]
+        public string Details { get; set; }
+
+        [Index(7)]
+        public string TransactionType { get; set; }
+
+        public override string ToString()
+        {
+            return System.Text.Json.JsonSerializer.Serialize(this);
+        }
+
+    }
+}

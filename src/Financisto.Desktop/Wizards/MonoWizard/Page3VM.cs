@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Financisto.BankHelpers;
 using Financisto.Common;
 using Financisto.Common.Entities;
 using Financisto.Common.Localization;

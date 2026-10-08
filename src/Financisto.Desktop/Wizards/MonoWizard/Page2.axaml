@@ -7,7 +7,7 @@
     xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:Financisto.Desktop.Wizards.MonoWizard.ViewModel"
-    xmlns:wizards="using:Financisto.Desktop.Wizards"
+    xmlns:bank="using:Financisto.BankHelpers"
     d:DesignHeight="300"
     d:DesignWidth="900"
     x:DataType="vm:Page2VM"
@@ -78,14 +78,14 @@
                 <DataGridTextColumn Binding="{Binding Date, StringFormat='yyyy.MM.dd HH:mm:ss', Mode=OneWay}" Header="{loc:Translate Key=date}" />
                 <DataGridTemplateColumn Header="{loc:Translate Key=amount}">
                     <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate x:DataType="wizards:BankTransaction">
+                        <DataTemplate x:DataType="bank:BankTransaction">
                             <TextBlock Classes="number" Text="{Binding CardCurrencyAmount, StringFormat=F2}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTemplateColumn Header="{loc:Translate Key=operation_amount}">
                     <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate x:DataType="wizards:BankTransaction">
+                        <DataTemplate x:DataType="bank:BankTransaction">
                             <TextBlock Classes="number">
                                 <TextBlock.Text>
                                     <MultiBinding StringFormat="{}{0:F2} {1}">
@@ -99,28 +99,28 @@
                 </DataGridTemplateColumn>
                 <DataGridTemplateColumn Header="{loc:Translate Key=exchange_rate}">
                     <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate x:DataType="wizards:BankTransaction">
+                        <DataTemplate x:DataType="bank:BankTransaction">
                             <TextBlock Classes="number" Text="{Binding ExchangeRate, StringFormat=F2}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTemplateColumn Header="{loc:Translate Key=commission}">
                     <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate x:DataType="wizards:BankTransaction">
+                        <DataTemplate x:DataType="bank:BankTransaction">
                             <TextBlock Classes="number" Text="{Binding Commission, StringFormat=F2}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTemplateColumn Header="{loc:Translate Key=cashback}">
                     <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate x:DataType="wizards:BankTransaction">
+                        <DataTemplate x:DataType="bank:BankTransaction">
                             <TextBlock Classes="number" Text="{Binding Cashback, StringFormat=F2}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTemplateColumn Header="{loc:Translate Key=balance}">
                     <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate x:DataType="wizards:BankTransaction">
+                        <DataTemplate x:DataType="bank:BankTransaction">
                             <TextBlock Classes="number" Text="{Binding Balance, StringFormat=F2}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>

@@ -1,11 +1,16 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Data;
 using Avalonia.Interactivity;
+using Avalonia.Media.Imaging;
 using Financisto.Adapter;
+using Financisto.BankHelpers;
 using Financisto.Common.Entities;
 using Financisto.Common.Localization;
 using Financisto.DataAccess;
@@ -28,13 +33,72 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        var banksProvider = new PluginBankHelperProvider(StartOptions.Current.PluginsPath);
 
-        this.ViewModel = new MainWindowVM(new DialogWrapper(), new FinancistoDatabaseFactory(), new EntityReader(), new BackupWriter(), notificator, new BankHelperFactory(), new UpdateService());
+        this.ViewModel = new MainWindowVM(new DialogWrapper(), new FinancistoDatabaseFactory(), new EntityReader(), new BackupWriter(), notificator, banksProvider, new UpdateService());
 
         DataContext = ViewModel;
+        PopulateImportMenu(banksProvider);
         var version = typeof(MainWindow).Assembly.GetName().Version;
         Title = $"Financisto Desktop v.{version?.ToString(3)}";
         Logger.Info("App started");
+    }
+
+    /// <summary>Fills the Import menu from the bank helper plugins: one entry per helper, a separator between statement formats.</summary>
+    private void PopulateImportMenu(IBankHelperProvider bankHelperProvider)
+    {
+        var banks = bankHelperProvider.BankHelpers
+                    .Select(x => new BankImportItem(x))
+                    .GroupBy(x => x.Helper.ReportType)
+                    .OrderBy(x => x.Key)
+                    .Select(x => (IReadOnlyList<BankImportItem>)x.OrderBy(i => i.Title, StringComparer.CurrentCultureIgnoreCase).ToList())
+                    .ToList();
+
+        var entries = new List<Control>();
+        foreach (var group in banks)
+        {
+            if (entries.Count > 0)
+            {
+                entries.Add(new Separator());
+            }
+
+            entries.AddRange(group.Select(CreateImportMenuItem));
+        }
+
+        ImportMenu.ItemsSource = entries;
+        ImportMenu.IsEnabled = entries.Count > 0;
+    }
+
+    private MenuItem CreateImportMenuItem(BankImportItem item)
+    {
+        var menuItem = new MenuItem
+        {
+            Classes = { "bankImport" },
+            Command = (ICommand)ViewModel.ImportCommand,
+            CommandParameter = item.Helper,
+            Tag = item.ReportTypeLabel,
+            Icon = CreateIcon(item),
+        };
+        menuItem.Bind(MenuItem.HeaderProperty, new Binding(nameof(BankImportItem.Title)) { Source = item });
+        return menuItem;
+    }
+
+    private static Image? CreateIcon(BankImportItem item)
+    {
+        try
+        {
+            var bytes = item.Icon;
+            if (bytes is { Length: > 0 })
+            {
+                return new Image { Source = new Bitmap(new MemoryStream(bytes)) };
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Warn(ex, $"The icon of {item.Helper.GetType().Name} could not be read");
+        }
+
+        return null;
     }
 
     private async void MainWindow_Loaded(object? sender, RoutedEventArgs e)

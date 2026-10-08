@@ -1,0 +1,24 @@
+<Project>
+    <!--
+        A plugin is one DLL: its dependencies (NuGet packages, shared plugin libraries) are embedded into it as
+        resources named "embedded-dependencies/<assembly>.dll", and the app's PluginLoadContext loads them from there.
+        The assemblies the app and the plugin must share are left out (the app supplies them):
+        keep this list in step with PluginLoadContext.HostProvidedAssemblies in Financisto.Desktop.
+    -->
+    <ItemGroup>
+        <HostProvidedAssembly Include="Financisto.BankHelpers.Abstractions.dll;NLog.dll" />
+    </ItemGroup>
+
+    <!-- The bank's logo: icon.png in the project folder is the "icon.png" resource that BankHelperBase.Icon reads. -->
+    <ItemGroup Condition="Exists('$(MSBuildProjectDirectory)/icon.png')">
+        <EmbeddedResource Include="icon.png" LogicalName="icon.png" />
+    </ItemGroup>
+
+    <Target Name="EmbedPluginDependencies" BeforeTargets="AssignTargetPaths" DependsOnTargets="ResolveReferences">
+        <ItemGroup>
+            <_PluginDependency Include="@(ReferenceCopyLocalPaths)" Condition="'%(Extension)' == '.dll'" />
+            <_PluginDependency Remove="@(HostProvidedAssembly)" MatchOnMetadata="Filename" MatchOnMetadataOptions="CaseInsensitive" />
+            <EmbeddedResource Include="@(_PluginDependency)" LogicalName="embedded-dependencies/%(Filename)%(Extension)" WithCulture="false" />
+        </ItemGroup>
+    </Target>
+</Project>

@@ -6,6 +6,7 @@
     using System.Data;
     using System.Linq;
     using System.Threading.Tasks;
+    using Financisto.BankHelpers;
     using Financisto.Common.Entities;
     using Financisto.Common.Localization;
     using Financisto.Common.Model;

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <!-- Base class for the plugins that read a PDF table (Tabula + PdfPig). It is not a plugin itself:
+         each PDF plugin embeds it into its own DLL. -->
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <RootNamespace>Financisto.BankHelpers.Pdf</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="CsvHelper" />
+        <PackageReference Include="Tabula" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Financisto.BankHelpers.Abstractions\Financisto.BankHelpers.Abstractions.csproj" />
+    </ItemGroup>
+</Project>

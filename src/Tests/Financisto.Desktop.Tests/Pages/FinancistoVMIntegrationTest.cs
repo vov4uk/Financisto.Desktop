@@ -4,6 +4,7 @@
     using System.IO;
     using System.Threading.Tasks;
     using Financisto.Adapter;
+    using Financisto.BankHelpers;
     using Financisto.Common.Localization;
     using Financisto.DataAccess;
     using Financisto.Desktop.Helpers;
@@ -24,7 +25,7 @@
             var dialogMock = new Mock<IDialogWrapper>();
             dialogMock.Setup(x => x.ShowMessageBoxAsync(It.IsAny<string>(), "Success", false)).ReturnsAsync(true);
             var backupPath = Path.Combine(Environment.CurrentDirectory, "Assets", "min.backup");
-            var vm = new MainWindowVM(dialogMock.Object, new FinancistoDatabaseFactory(), new EntityReader(), null, null, null, null);
+            var vm = new MainWindowVM(dialogMock.Object, new FinancistoDatabaseFactory(), new EntityReader(), null, null, Mock.Of<IBankHelperProvider>(x => x.BankHelpers == Array.Empty<IBankHelper>()), null);
 
             await vm.OpenBackup(backupPath);
 
@@ -38,7 +39,7 @@
             var dialogMock = new Mock<IDialogWrapper>();
             dialogMock.Setup(x => x.ShowMessageBoxAsync(It.IsAny<string>(), "Success", false)).ReturnsAsync(true);
             var backupPath = Path.Combine(Environment.CurrentDirectory, "Assets", "min.backup");
-            var vm = new MainWindowVM(dialogMock.Object, new FinancistoDatabaseFactory(), new EntityReader(), new BackupWriter(), null, new BankHelperFactory(), null);
+            var vm = new MainWindowVM(dialogMock.Object, new FinancistoDatabaseFactory(), new EntityReader(), new BackupWriter(), null, Mock.Of<IBankHelperProvider>(x => x.BankHelpers == Array.Empty<IBankHelper>()), null);
 
             await vm.OpenBackup(backupPath);
 

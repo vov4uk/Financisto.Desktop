@@ -102,6 +102,11 @@
     </ItemGroup>
 
     <ItemGroup>
+      <!-- The bank helper plugins: the parser tests use them directly, the plugin loader tests copy their DLLs into a plugins folder -->
+      <ProjectReference Include="..\..\BankHelpers\Plugins\*\*.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
       <ProjectReference Include="..\..\Financisto.DataAccess\Financisto.DataAccess.csproj" />
       <ProjectReference Include="..\..\Financisto.Desktop\Financisto.Desktop.csproj" />
       <ProjectReference Include="..\Financisto.Tests.Common\Financisto.Tests.Common.csproj" />

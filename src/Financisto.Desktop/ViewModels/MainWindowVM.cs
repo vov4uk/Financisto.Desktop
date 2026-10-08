@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using Financisto.Adapter;
+using Financisto.BankHelpers;
 using Financisto.Common;
 using Financisto.Common.Entities;
 using Financisto.Common.Localization;
@@ -34,7 +35,6 @@ namespace Financisto.Desktop.ViewModels
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private readonly ConcurrentDictionary<Type, BindableBase> _pages = new ConcurrentDictionary<Type, BindableBase>();
         private readonly IBackupWriter backupWriter;
-        private readonly IBankHelperFactory bankFactory;
         private readonly IFinancistoDatabaseFactory dbFactory;
         private readonly IDialogWrapper dialogWrapper;
         private readonly IEntityReader entityReader;
@@ -43,7 +43,7 @@ namespace Financisto.Desktop.ViewModels
         private readonly UpdateService updateService;
         private BackupVersion _backupVersion;
         private Dictionary<string, List<string>> _entityColumnsOrder;
-        private IAsyncCommand<WizardTypes> _importCommand;
+        private IAsyncCommand<IBankHelper> _importCommand;
         private IAsyncCommand<Type> _menuNavigateCommand;
         private IAsyncCommand _openBackupCommand;
         private IAsyncCommand _openPanelCommand;
@@ -61,7 +61,7 @@ namespace Financisto.Desktop.ViewModels
             IEntityReader entityReader,
             IBackupWriter backupWriter,
             IToastNotifierWrapper notifier,
-            IBankHelperFactory bankFactory,
+            IBankHelperProvider bankHelpers,
             UpdateService updateService)
         {
             this.dialogWrapper = dialogWrapper;
@@ -69,7 +69,6 @@ namespace Financisto.Desktop.ViewModels
             this.entityReader = entityReader;
             this.backupWriter = backupWriter;
             this.notifier = notifier;
-            this.bankFactory = bankFactory;
             this.updateService = updateService;
             db = dbFactory.CreateDatabase();
         }
@@ -117,7 +116,7 @@ namespace Financisto.Desktop.ViewModels
             new(typeof(ReportsControlVM), () => LocalizationService.Instance.reports, "IconChartBar"),
         };
 
-        public IAsyncCommand<WizardTypes> ImportCommand => _importCommand ??= new AsyncCommand<WizardTypes>(OpenImportWizardAsync, _ => IsBackupLoaded);
+        public IAsyncCommand<IBankHelper> ImportCommand => _importCommand ??= new AsyncCommand<IBankHelper>(OpenImportWizardAsync, _ => IsBackupLoaded);
 
         public IAsyncCommand<Type> MenuNavigateCommand => _menuNavigateCommand ??= new AsyncCommand<Type>(NavigateToType);
 
@@ -348,9 +347,9 @@ namespace Financisto.Desktop.ViewModels
             }
         }
 
-        private async Task OpenImportWizardAsync(WizardTypes bankType)
+        private async Task OpenImportWizardAsync(IBankHelper importHelper)
         {
-            var fileExtension = bankType.GetEnumDescription();
+            var fileExtension = importHelper.ReportType.GetFileExtension();
             var fileName = await dialogWrapper.OpenFileDialogAsync(fileExtension);
             Logger.Info($"{fileExtension} fileName -> {fileName}");
             if (string.IsNullOrEmpty(fileName))
@@ -358,7 +357,6 @@ namespace Financisto.Desktop.ViewModels
                 return;
             }
 
-            var importHelper = bankFactory.CreateBankHelper(bankType);
             List<BankTransaction> sourceData;
             try
             {
@@ -366,7 +364,7 @@ namespace Financisto.Desktop.ViewModels
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, $"{bankType} statement {fileName} could not be parsed");
+                Logger.Error(ex, $"{importHelper.BankTitle} statement {fileName} could not be parsed");
                 notifier.ShowWarning(string.Format(LocalizationService.Instance.import_failed, importHelper.BankTitle));
                 return;
             }

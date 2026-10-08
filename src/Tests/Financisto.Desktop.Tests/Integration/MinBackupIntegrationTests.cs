@@ -8,10 +8,12 @@ namespace Financisto.Desktop.Tests.Integration
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
     using Financisto.Adapter;
+    using Financisto.BankHelpers;
     using Financisto.Common.Entities;
     using Financisto.DataAccess;
     using Financisto.DataAccess.Abstractions;
     using Financisto.DataAccess.Data;
+    using Financisto.Desktop.Helpers.BankHelper;
     using Financisto.Desktop.ViewModels;
     using Moq;
     using Xunit;
@@ -125,7 +127,7 @@ namespace Financisto.Desktop.Tests.Integration
                 new EntityReader(),
                 new BackupWriter(),
                 null,
-                null,
+                Mock.Of<IBankHelperProvider>(x => x.BankHelpers == Array.Empty<IBankHelper>()),
                 null);
             try
             {
