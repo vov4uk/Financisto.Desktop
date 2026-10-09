@@ -220,6 +220,13 @@ namespace Financisto.Desktop.ViewModels
                 Logger.Info($"Backup loaded in {stopwatch.ElapsedMilliseconds} ms. Backup version : {_backupVersion}. Entities count : {entitiesCount}");
 
                 await NavigateToType(typeof(BlotterModel));
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    selectedItemBottom = null;
+                    RaisePropertyChanged(nameof(SelectedItemBottom));
+                    selectedItemTop = ItemsTop.First(x => x.ModelType == typeof(BlotterModel));
+                    RaisePropertyChanged(nameof(SelectedItemTop));
+                });
 
                 IsLoading = false;
 

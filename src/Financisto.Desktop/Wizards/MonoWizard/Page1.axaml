@@ -8,6 +8,7 @@
     xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:model="using:Financisto.Common.Model"
+    xmlns:utils="using:Financisto.Common.Utils"
     xmlns:vm="using:Financisto.Desktop.Wizards.MonoWizard.ViewModel"
     d:DesignHeight="300"
     d:DesignWidth="600"
@@ -47,6 +48,7 @@
                                     <MultiBinding Converter="{StaticResource AccountTypeConverter}">
                                         <Binding Path="Type" />
                                         <Binding Path="CardIssuer" />
+                                        <Binding Source="{x:Static utils:IconSettings.Instance}" Path="IconSet" />
                                     </MultiBinding>
                                 </Image.Source>
                             </Image>

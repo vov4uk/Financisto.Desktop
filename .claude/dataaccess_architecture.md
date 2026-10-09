@@ -68,6 +68,8 @@ public interface IFinancistoDatabase : IUnitOfWorkFactory, IDisposable
     Task ImportEntitiesAsync(IEnumerable<Entity> entities);
     Task RebuildAccountBalanceAsync(int accountId);
     Task<Dictionary<int, long>> GetLastRunningBalancesAsync();    // account id -> balance of its latest running_balance row
+    Task DeleteAccountAsync(int accountId);                          // Android deleteAccount
+    Task PurgeAccountAsync(int accountId, long date, string previousPeriodPayeeTitle);   // Android purgeAccountAtDate
     Task AddTransactionsAsync(IEnumerable<Transaction> transactions);
     Task<T> GetOrCreateAsync<T>(int id) where T : class, IIdentity, new();
     Task<List<T>> ExecuteQuery<T>(string query) where T : class, new();
@@ -90,6 +92,8 @@ Semantics that matter:
   3. Runs `Backup.RESTORE_SCRIPTS` (Android's post-import fix-ups: account types, template splits, electronic account type) after the insert.
   4. Calls `RebuildAccountBalanceAsync` for every imported account.
 - **`RebuildAccountBalanceAsync(accountId)`** deletes that account's `running_balance` rows and walks `v_blotter_for_account_with_splits` ordered by `datetime, _id` (Android's `rebuildRunningBalanceForAccount` order) and stores each row's `datetime`, so the latest row by `(datetime, transaction_id)` holds the account total. It skips split rows with `ParentId > 0 && IsTransfer >= 0` (only the `is_transfer = -1` half of a split transfer counts) and self-transfers. It accumulates `FromAmount`, writes `RunningBalance` rows, and updates `Account.TotalAmount`, `LastTransactionDate` and `LastTransactionId`. **Call it for every affected account** (from and to) after writing transactions.
+- **`DeleteAccountAsync(id)`** (Android's `deleteAccount`, in one DB transaction): a transfer into the account becomes an expense of the other account and a transfer out of it an income of the other account (`BreakTransfersAsync`: `to_account_id = 0`, or the sides swapped), so the other account's balance stays; then the account's transactions, its `running_balance` rows and the account row go. A split part stored on another account whose parent just went away is detached (`parent_id = 0`). It doesn't rebuild anything; the callers reset `DbManual.Account`.
+- **`PurgeAccountAsync(id, date, payeeTitle)`** (Android's `purgeAccountAtDate`, one DB transaction, then `RebuildAccountBalanceAsync`): everything of the account up to the end of `date`'s local day (`AtDayEnd`) is deleted (templates stay) after the same transfer breaking, and one transaction (status `CL`, payee found or created by title, dated the end of the day of the last older row) carries the balance at that point, so the total is unchanged. **Differs from Android:** the balance and date come from the account's latest `running_balance` row up to the cut, not from `v_blotter` by `from_account_id`, because that misses an incoming transfer as the last row before the cut and the balance would lose it. Android also deletes the `transaction_attribute` rows of every account's old transactions; that isn't done here (the table is never filled, attributes live in the keyless entities). Nothing happens when the account has nothing that old.
 - **`GetLastRunningBalancesAsync()`** is Android's `getLastRunningBalanceForAccount` (`order by datetime desc, transaction_id desc limit 1`) for all accounts in one `ROW_NUMBER()` query. It equals `account.total_amount`; accounts without transactions are missing (balance 0).
 
 ## Repository / Unit of Work

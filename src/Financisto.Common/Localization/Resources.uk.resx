@@ -993,6 +993,15 @@
   <data name="app_theme_dark" xml:space="preserve">
     <value>Темна</value>
   </data>
+  <data name="icon_set" xml:space="preserve">
+    <value>Набір іконок</value>
+  </data>
+  <data name="icon_set_default" xml:space="preserve">
+    <value>Типовий</value>
+  </data>
+  <data name="icon_set_monocolor" xml:space="preserve">
+    <value>Монохромний</value>
+  </data>
   <data name="sms_templates" xml:space="preserve">
     <value>Шаблони SMS</value>
   </data>

@@ -8,6 +8,7 @@
     xmlns:helpers="using:Financisto.Desktop.Helpers"
     xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:utils="using:Financisto.Common.Utils"
     xmlns:vm="using:Financisto.Desktop.ViewModels.Dialogs"
     d:DesignHeight="800"
     d:DesignWidth="800"
@@ -73,13 +74,13 @@
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
                                     <Image
-                                        Width="24"
-                                        Height="16"
-                                        Margin="0,0,6,0">
+                                        Height="24"
+                                        Margin="1">
                                         <Image.Source>
                                             <MultiBinding Converter="{StaticResource AccountTypeConverter}">
                                                 <Binding />
                                                 <Binding />
+                                                <Binding Source="{x:Static utils:IconSettings.Instance}" Path="IconSet" />
                                             </MultiBinding>
                                         </Image.Source>
                                     </Image>
@@ -138,13 +139,13 @@
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
                                     <Image
-                                        Width="24"
-                                        Height="16"
-                                        Margin="0,0,6,0">
+                                        Height="24"
+                                        Margin="1">
                                         <Image.Source>
                                             <MultiBinding Converter="{StaticResource AccountTypeConverter}">
                                                 <Binding Source="CREDIT_CARD" />
                                                 <Binding />
+                                                <Binding Source="{x:Static utils:IconSettings.Instance}" Path="IconSet" />
                                             </MultiBinding>
                                         </Image.Source>
                                     </Image>
@@ -172,13 +173,13 @@
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
                                     <Image
-                                        Width="24"
-                                        Height="16"
-                                        Margin="0,0,6,0">
+                                        Height="24"
+                                        Margin="1">
                                         <Image.Source>
                                             <MultiBinding Converter="{StaticResource AccountTypeConverter}">
                                                 <Binding Source="ELECTRONIC" />
                                                 <Binding />
+                                                <Binding Source="{x:Static utils:IconSettings.Instance}" Path="IconSet" />
                                             </MultiBinding>
                                         </Image.Source>
                                     </Image>
@@ -296,8 +297,8 @@
                             Grid.Column="1"
                             Margin="4,0,0,0"
                             VerticalAlignment="Stretch"
-                            Color="{Binding SelectedAccentColor, Mode=TwoWay}"
-                            SelectedIndex="{x:Static helpers:AccentColorPalette.PaletteTab}">
+                            SelectedIndex="{x:Static helpers:AccentColorPalette.PaletteTab}"
+                            Color="{Binding SelectedAccentColor, Mode=TwoWay}">
                             <ColorPicker.Palette>
                                 <helpers:AccentColorPalette />
                             </ColorPicker.Palette>

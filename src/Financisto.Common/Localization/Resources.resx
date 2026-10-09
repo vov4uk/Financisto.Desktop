@@ -993,6 +993,15 @@
   <data name="app_theme_dark" xml:space="preserve">
     <value>Dark</value>
   </data>
+  <data name="icon_set" xml:space="preserve">
+    <value>Icon set</value>
+  </data>
+  <data name="icon_set_default" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="icon_set_monocolor" xml:space="preserve">
+    <value>Monocolor</value>
+  </data>
   <data name="sms_templates" xml:space="preserve">
     <value>SMS templates</value>
   </data>

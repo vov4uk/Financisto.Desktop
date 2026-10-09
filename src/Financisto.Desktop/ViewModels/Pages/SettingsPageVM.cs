@@ -5,6 +5,7 @@ using Avalonia;
 using Financisto.Common;
 using Financisto.Common.Entities;
 using Financisto.Common.Localization;
+using Financisto.Common.Utils;
 using Financisto.DataAccess.Abstractions;
 using Financisto.Desktop.Data;
 using Financisto.Desktop.Helpers;
@@ -123,6 +124,9 @@ namespace Financisto.Desktop.ViewModels.Pages
             {
                 Application.Current.RequestedThemeVariant = Entity.General.ThemeVariant;
             }
+
+            // Every account icon binding observes this, so the UI redraws its icons right away.
+            IconSettings.Instance.IconSet = Entity.General.IconSet;
 
             notifier?.ShowMessage(string.Format(LocalizationService.Instance.saved_message, LocalizationService.Instance.settings));
         }
