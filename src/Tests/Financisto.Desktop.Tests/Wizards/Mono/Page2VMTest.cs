@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using Financisto.BankHelpers;
     using Financisto.Common.Model;
     using Financisto.Desktop.Wizards;
     using Financisto.Desktop.Wizards.MonoWizard.ViewModel;

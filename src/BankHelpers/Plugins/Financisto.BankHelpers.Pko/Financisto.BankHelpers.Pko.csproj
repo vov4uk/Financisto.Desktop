@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <RootNamespace>Financisto.BankHelpers.Pko</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Tabula" />
+        <PackageReference Include="NLog" />
+    </ItemGroup>
+</Project>

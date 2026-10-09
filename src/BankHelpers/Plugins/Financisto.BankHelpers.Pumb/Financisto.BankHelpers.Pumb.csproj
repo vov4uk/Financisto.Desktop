@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <RootNamespace>Financisto.BankHelpers.Pumb</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="CsvHelper" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Financisto.BankHelpers.Pdf\Financisto.BankHelpers.Pdf.csproj" />
+    </ItemGroup>
+</Project>

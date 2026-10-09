@@ -4,6 +4,8 @@ namespace Financisto.Desktop.Tests.Wizards.Mono.Revolut
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using Financisto.BankHelpers;
+    using Financisto.BankHelpers.Revolut;
     using Financisto.Desktop.Helpers.BankHelper;
     using Financisto.Desktop.Wizards;
     using Xunit;

@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <!-- The contract between Financisto.Desktop and the bank statement plugins in <app>/plugins.
+         The app and every plugin load this one assembly, so keep it free of dependencies. -->
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <RootNamespace>Financisto.BankHelpers</RootNamespace>
+    </PropertyGroup>
+</Project>

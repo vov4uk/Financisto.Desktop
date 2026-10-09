@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <RootNamespace>Financisto.BankHelpers.Erste</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="CsvHelper" />
+    </ItemGroup>
+</Project>

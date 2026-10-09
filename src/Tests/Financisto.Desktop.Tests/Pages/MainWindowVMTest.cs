@@ -5,6 +5,7 @@
     using System.Linq;
     using System.Linq.Expressions;
     using System.Threading.Tasks;
+    using Financisto.BankHelpers;
     using Financisto.Adapter;
     using Financisto.Common.Entities;
     using Financisto.Common.Localization;
@@ -14,7 +15,6 @@
     using Financisto.DataAccess.View;
     using Financisto.Desktop.Data;
     using Financisto.Desktop.Helpers;
-    using Financisto.Desktop.Helpers.BankHelper;
     using Financisto.Desktop.Services;
     using Financisto.Desktop.ViewModels;
     using Financisto.Desktop.ViewModels.Dialogs;
@@ -32,7 +32,6 @@
     {
         private readonly Mock<IBaseRepository<Account>> accountsRepo;
         private readonly Mock<IBackupWriter> backupWriterMock;
-        private readonly Mock<IBankHelperFactory> bankMock;
         private readonly Mock<IBaseRepository<Category>> categoriesRepo;
         private readonly Mock<IBankHelper> csvMock;
         private readonly Mock<IFinancistoDatabaseFactory> dbFactoryMock;
@@ -58,7 +57,6 @@
 
         public MainWindowVMTest()
         {
-            this.bankMock = new (MockBehavior.Strict);
             this.csvMock = new (MockBehavior.Strict);
             this.dialogMock = new (MockBehavior.Strict);
             this.dbFactoryMock = new (MockBehavior.Strict);
@@ -74,8 +72,6 @@
 
             this.dbFactoryMock.Setup(x => x.CreateDatabase())
                 .Returns(this.dbMock.Object);
-            this.bankMock.Setup(x => x.CreateBankHelper(It.IsAny<WizardTypes>()))
-                .Returns(this.csvMock.Object);
         }
 
         [Fact]
@@ -84,12 +80,13 @@
             await this.SetupDbManual();
 
             var path = Path.Combine(Environment.CurrentDirectory, "Assets", "abank.pdf");
+            this.csvMock.SetupGet(x => x.ReportType).Returns(ReportType.Pdf);
             this.dialogMock.Setup(x => x.OpenFileDialogAsync("pdf")).ReturnsAsync(path);
 
             SetupImportWizard(path);
 
             var vm = await this.GetLoadedFinancistoVM();
-            await vm.ImportCommand.ExecuteAsync(WizardTypes.ABank);
+            await vm.ImportCommand.ExecuteAsync(this.csvMock.Object);
 
             this.trMock.VerifyAll();
             this.dbMock.Verify();
@@ -252,12 +249,13 @@
             await this.SetupDbManual();
 
             var csvPath = Path.Combine(Environment.CurrentDirectory, "Assets", "mono.ukr.csv");
+            this.csvMock.SetupGet(x => x.ReportType).Returns(ReportType.Csv);
             this.dialogMock.Setup(x => x.OpenFileDialogAsync("csv")).ReturnsAsync(csvPath);
 
             SetupImportWizard(csvPath, wizardOutput: null);
 
             var vm = await this.GetLoadedFinancistoVM();
-            await vm.ImportCommand.ExecuteAsync(WizardTypes.Monobank);
+            await vm.ImportCommand.ExecuteAsync(this.csvMock.Object);
 
             this.dbMock.Verify(x => x.AddTransactionsAsync(It.IsAny<List<Transaction>>()), Times.Never);
             this.toastNotifierMock.Verify(x => x.ShowMessage(It.Is<string>(m => m.StartsWith("Imported"))), Times.Never);
@@ -280,12 +278,13 @@
             var findManyOutput = new List<Transaction> { outputTransaction };
 
             var csvPath = Path.Combine(Environment.CurrentDirectory, "Assets", "mono.ukr.csv");
+            this.csvMock.SetupGet(x => x.ReportType).Returns(ReportType.Csv);
             this.dialogMock.Setup(x => x.OpenFileDialogAsync("csv")).ReturnsAsync(csvPath);
 
             SetupImportWizard(csvPath, wizardOutput: findManyOutput, existingTransactions: findManyOutput);
 
             var vm = await this.GetLoadedFinancistoVM();
-            await vm.ImportCommand.ExecuteAsync(WizardTypes.Monobank);
+            await vm.ImportCommand.ExecuteAsync(this.csvMock.Object);
 
             this.trMock.VerifyAll();
             this.dbMock.Verify(x => x.AddTransactionsAsync(It.Is<List<Transaction>>(t => t.Count == 0)), Times.Once);
@@ -298,12 +297,13 @@
             await this.SetupDbManual();
 
             var path = Path.Combine(Environment.CurrentDirectory, "Assets", "mono.ukr.csv");
+            this.csvMock.SetupGet(x => x.ReportType).Returns(ReportType.Csv);
             this.dialogMock.Setup(x => x.OpenFileDialogAsync("csv")).ReturnsAsync(path);
 
             SetupImportWizard(path);
 
             var vm = await this.GetLoadedFinancistoVM();
-            await vm.ImportCommand.ExecuteAsync(WizardTypes.Monobank);
+            await vm.ImportCommand.ExecuteAsync(this.csvMock.Object);
 
             this.trMock.VerifyAll();
             this.dbMock.Verify();
@@ -552,12 +552,13 @@
             await this.SetupDbManual();
 
             var path = Path.Combine(Environment.CurrentDirectory, "Assets", "pumb.pdf");
+            this.csvMock.SetupGet(x => x.ReportType).Returns(ReportType.Pdf);
             this.dialogMock.Setup(x => x.OpenFileDialogAsync("pdf")).ReturnsAsync(path);
 
             SetupImportWizard(path);
 
             var vm = await this.GetLoadedFinancistoVM();
-            await vm.ImportCommand.ExecuteAsync(WizardTypes.Pumb);
+            await vm.ImportCommand.ExecuteAsync(this.csvMock.Object);
 
             this.trMock.VerifyAll();
             this.dbMock.Verify();
@@ -709,6 +710,8 @@
         [Fact]
         public async Task MenuNavigateCommand_SmsTemplateModel_SetsCurrentPage()
         {
+            // The page refresh sets DbManual up, which is static: don't depend on an earlier test having done it.
+            await this.SetupDbManual();
             var smsRepo = new Mock<IBaseRepository<SmsTemplate>>();
             smsRepo.Setup(x => x.GetAllAsync()).ReturnsAsync(new List<SmsTemplate>());
             this.dbMock.Setup(x => x.CreateUnitOfWork()).Returns(this.uowMock.Object);
@@ -750,7 +753,7 @@
             return vm;
         }
 
-        private MainWindowVM GetFinancistoVM() => new MainWindowVM(this.dialogMock.Object, this.dbFactoryMock.Object, this.entityReaderMock.Object, this.backupWriterMock.Object, this.toastNotifierMock.Object, this.bankMock.Object, null);
+        private MainWindowVM GetFinancistoVM() => new MainWindowVM(this.dialogMock.Object, this.dbFactoryMock.Object, this.entityReaderMock.Object, this.backupWriterMock.Object, this.toastNotifierMock.Object, null);
 
         private async Task SetupDbManual()
         {

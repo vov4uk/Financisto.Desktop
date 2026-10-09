@@ -122,14 +122,6 @@ public sealed class LocalizationService : INotifyPropertyChanged
     public string assets => Get();
     public string liabilities => Get();
     public string all_currencies => Get();
-    public string pumb => Get();
-    public string privat => Get();
-    public string pko => Get();
-    public string pireus => Get();
-    public string monobank => Get();
-    public string revolut => Get();
-    public string erste => Get();
-    public string a_bank => Get();
     public string import => Get();
     public string settings => Get();
     public string delete => Get();

@@ -1,4 +1,18 @@
 <Solution>
+  <Folder Name="/BankHelpers/">
+    <Project Path="src/BankHelpers/Financisto.BankHelpers.Abstractions/Financisto.BankHelpers.Abstractions.csproj" />
+    <Project Path="src/BankHelpers/Financisto.BankHelpers.Pdf/Financisto.BankHelpers.Pdf.csproj" />
+  </Folder>
+  <Folder Name="/BankHelpers/Plugins/">
+    <Project Path="src/BankHelpers/Plugins/Financisto.BankHelpers.ABank/Financisto.BankHelpers.ABank.csproj" />
+    <Project Path="src/BankHelpers/Plugins/Financisto.BankHelpers.Erste/Financisto.BankHelpers.Erste.csproj" />
+    <Project Path="src/BankHelpers/Plugins/Financisto.BankHelpers.Monobank/Financisto.BankHelpers.Monobank.csproj" />
+    <Project Path="src/BankHelpers/Plugins/Financisto.BankHelpers.Pireus/Financisto.BankHelpers.Pireus.csproj" />
+    <Project Path="src/BankHelpers/Plugins/Financisto.BankHelpers.Pko/Financisto.BankHelpers.Pko.csproj" />
+    <Project Path="src/BankHelpers/Plugins/Financisto.BankHelpers.Privat/Financisto.BankHelpers.Privat.csproj" />
+    <Project Path="src/BankHelpers/Plugins/Financisto.BankHelpers.Pumb/Financisto.BankHelpers.Pumb.csproj" />
+    <Project Path="src/BankHelpers/Plugins/Financisto.BankHelpers.Revolut/Financisto.BankHelpers.Revolut.csproj" />
+  </Folder>
   <Folder Name="/CustomControls/">
     <Project Path="src/CustomControls/AvaloniaSearchableComboBox/AvaloniaSearchableComboBox.csproj" />
     <Project Path="src/CustomControls/Message.Avalonia/Message.Avalonia.csproj" />

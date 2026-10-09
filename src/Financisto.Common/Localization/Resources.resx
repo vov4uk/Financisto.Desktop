@@ -183,36 +183,6 @@
   <data name="import" xml:space="preserve">
     <value>Import</value>
   </data>
-  <data name="monobank" xml:space="preserve">
-    <value>Monobank</value>
-  </data>
-  <data name="a_bank" xml:space="preserve">
-    <value>A Bank</value>
-  </data>
-  <data name="pdf" xml:space="preserve">
-    <value>PDF</value>
-  </data>
-  <data name="xlsx" xml:space="preserve">
-    <value>XLSX</value>
-  </data>
-  <data name="pumb" xml:space="preserve">
-    <value>PUMB</value>
-  </data>
-  <data name="pireus" xml:space="preserve">
-    <value>Pireus</value>
-  </data>
-  <data name="privat" xml:space="preserve">
-    <value>Privat</value>
-  </data>
-  <data name="pko" xml:space="preserve">
-    <value>PKO</value>
-  </data>
-  <data name="erste" xml:space="preserve">
-    <value>Erste</value>
-  </data>
-  <data name="revolut" xml:space="preserve">
-    <value>Revolut</value>
-  </data>
   <data name="transaction" xml:space="preserve">
     <value>Transaction</value>
   </data>
@@ -641,9 +611,6 @@
   </data>
   <data name="dynamics" xml:space="preserve">
     <value>Dynamics</value>
-  </data>
-  <data name="csv" xml:space="preserve">
-    <value>CSV</value>
   </data>
   <data name="reports_income_expense_for_period" xml:space="preserve">
     <value>Income / expense for the period</value>

@@ -95,8 +95,12 @@ namespace Financisto.Desktop.Services
                         {
                             var fromCurrency = pair.Key;
                             var toCurrency = pair.Value;
-                            double fromToUsd = 1.0 / exchangeRates.rates.FirstOrDefault(r => r.Key == fromCurrency.Name).Value;
-                            double usdTo = exchangeRates.rates.FirstOrDefault(r => r.Key == toCurrency.Name).Value;
+                            var fromRate = fromCurrency.Name == "USD" ? 1.0 : exchangeRates.rates.FirstOrDefault(r => r.Key == fromCurrency.Name).Value;
+                            var toRate = toCurrency.Name == "USD" ? 1.0 : exchangeRates.rates.FirstOrDefault(r => r.Key == toCurrency.Name).Value;
+                            if (fromRate <= 0 || toRate <= 0)
+                                continue;
+                            double fromToUsd = 1.0 / fromRate;
+                            double usdTo = toRate;
 
                             result.Add(new CurrencyExchangeRate
                             {
@@ -241,10 +245,20 @@ namespace Financisto.Desktop.Services
                         !AlphaToNumeric.TryGetValue(toCurrency.Name, out var toCode))
                         continue;
 
-                    if (!rateIndex.TryGetValue((fromCode, toCode), out var rate))
+                    double exchangeRate;
+                    if (rateIndex.TryGetValue((fromCode, toCode), out var rate))
+                    {
+                        exchangeRate = rate.RateBuy > 0 ? rate.RateBuy : rate.RateCross;
+                    }
+                    else if (rateIndex.TryGetValue((toCode, fromCode), out rate))
+                    {
+                        var reverse = rate.RateBuy > 0 ? rate.RateBuy : rate.RateCross;
+                        if (reverse <= 0)
+                            continue;
+                        exchangeRate = 1.0 / reverse;
+                    }
+                    else
                         continue;
-
-                    var exchangeRate = rate.RateBuy > 0 ? rate.RateBuy : rate.RateCross;
 
                     result.Add(new CurrencyExchangeRate
                     {

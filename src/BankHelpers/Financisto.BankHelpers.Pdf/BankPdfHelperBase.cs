@@ -1,0 +1,92 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using CsvHelper;
+using CsvHelper.Configuration;
+using Tabula;
+using UglyToad.PdfPig;
+using Tabula.Extractors;
+
+namespace Financisto.BankHelpers.Pdf
+{
+    /// <summary>Reads a statement whose pages hold a table: each page's biggest table is turned into CSV text for <see cref="ParseTransactionsTable"/>.</summary>
+    public abstract class BankPdfHelperBase : BankHelperBase
+    {
+        protected const string Space = " ";
+
+        /// <summary>A new configuration on every access: helpers live for the whole run, so nothing (the culture) is captured when they are created.</summary>
+        protected CsvConfiguration DefaultCsvReaderConfig => new CsvConfiguration(CultureInfo.CurrentCulture)
+        {
+            HasHeaderRecord = true,
+            Delimiter = ";",
+            IgnoreBlankLines = true,
+            MissingFieldFound = null
+        };
+
+
+        public sealed override ReportType ReportType => ReportType.Pdf;
+
+        public override IEnumerable<BankTransaction> ParseReport(string filePath)
+        {
+            if (File.Exists(filePath))
+            {
+                List<string> pages = new List<string>();
+
+                using (PdfDocument document = PdfDocument.Open(filePath, new ParsingOptions() { ClipPaths = true }))
+                {
+                    for (int i = 0; i < document.NumberOfPages; i++)
+                    {
+                        PageArea page = ObjectExtractor.Extract(document, i + 1);
+
+                        IExtractionAlgorithm ea = new SpreadsheetExtractionAlgorithm();
+
+                        var pageTables = ea.Extract(page);
+                        if (!pageTables.Any())
+                        {
+                            continue;
+                        }
+
+                        Table table = pageTables.OrderBy(x => x.Cells.Count).Last();
+
+                        using (var stream = new MemoryStream())
+                        using (var sb = new StreamWriter(stream) { AutoFlush = true })
+                        {
+                            CsvWriter csvWriter = new CsvWriter(sb, DefaultCsvReaderConfig);
+
+                            foreach (IReadOnlyList<Cell> row in table.Rows)
+                            {
+
+                                var allEmpty = row.All(x => string.IsNullOrEmpty(x.GetText()));
+                                if (!allEmpty)
+                                {
+                                    foreach (Cell item in row)
+                                    {
+                                        csvWriter.WriteField(item.GetText().Replace("\r", " ").Trim());
+                                    }
+
+                                    csvWriter.NextRecord();
+                                }
+                            }
+
+                            var reader = new StreamReader(stream);
+                            stream.Position = 0;
+
+
+                            var data = reader.ReadToEnd().Trim();
+
+                            pages.Add(data);
+                        }
+                    }
+                }
+
+                return ParseTransactionsTable(pages);
+
+            }
+            return Array.Empty<BankTransaction>();
+        }
+
+        protected abstract IEnumerable<BankTransaction> ParseTransactionsTable(IEnumerable<string> pages);
+    }
+}

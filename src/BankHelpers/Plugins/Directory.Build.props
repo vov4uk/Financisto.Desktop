@@ -1,0 +1,15 @@
+<Project>
+    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+    <!-- Every project under Plugins builds one bank helper plugin: a single DLL for <app>/plugins. -->
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <!-- A class library does not copy its NuGet packages next to its output, but the plugin build embeds them. -->
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="$(MSBuildThisFileDirectory)..\Financisto.BankHelpers.Abstractions\Financisto.BankHelpers.Abstractions.csproj" />
+    </ItemGroup>
+</Project>

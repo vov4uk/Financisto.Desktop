@@ -4,6 +4,8 @@ namespace Financisto.Desktop.Tests.Wizards.Mono.Erste
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using Financisto.BankHelpers;
+    using Financisto.BankHelpers.Erste;
     using Financisto.Desktop.Helpers.BankHelper;
     using Financisto.Desktop.Wizards;
     using Xunit;
@@ -183,12 +185,13 @@ namespace Financisto.Desktop.Tests.Wizards.Mono.Erste
         }
 
         [Fact]
-        public void BankHelperFactory_Erste_CreatesErsteHelper()
+        public void ErsteHelper_DescribesItself()
         {
-            var helper = new BankHelperFactory().CreateBankHelper(WizardTypes.Erste);
+            IBankHelper helper = new ErsteHelper();
 
-            Assert.IsType<ErsteHelper>(helper);
             Assert.Equal("Erste", helper.BankTitle);
+            Assert.Equal(ReportType.Csv, helper.ReportType);
+            Assert.NotEmpty(helper.Icon!);
         }
 
         private static List<BankTransaction> ParseSample()

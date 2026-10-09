@@ -4,6 +4,13 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using Financisto.BankHelpers;
+    using Financisto.BankHelpers.ABank;
+    using Financisto.BankHelpers.Monobank;
+    using Financisto.BankHelpers.Pireus;
+    using Financisto.BankHelpers.Pko;
+    using Financisto.BankHelpers.Privat;
+    using Financisto.BankHelpers.Pumb;
     using Financisto.Common.Entities;
     using Financisto.Common.Model;
     using Financisto.DataAccess.Data;
@@ -95,7 +102,7 @@
             };
 
             var path = Path.Combine(Environment.CurrentDirectory, "Assets", "abank.xlsx");
-            IEnumerable<BankTransaction> abank = new Helpers.BankHelper.AbankExcelHelper().ParseReport(path);
+            IEnumerable<BankTransaction> abank = new AbankExcelHelper().ParseReport(path);
 
             Assert.Equal(17, abank.Count());
             Assert.Equal(JsonConvert.SerializeObject(first), JsonConvert.SerializeObject(abank.First()));
@@ -132,7 +139,7 @@
             };
 
             var path = Path.Combine(Environment.CurrentDirectory, "Assets", "abank_3_pages.pdf");
-            IEnumerable<BankTransaction> abank = new Helpers.BankHelper.ABankHelper().ParseReport(path);
+            IEnumerable<BankTransaction> abank = new ABankPDFHelper().ParseReport(path);
 
             Assert.Equal(17, abank.Count());
             Assert.Equal(JsonConvert.SerializeObject(first), JsonConvert.SerializeObject(abank.First()));
@@ -144,7 +151,7 @@
         {
             DbManual.SetupTests(new List<AccountFilterModel>());
             var csvPath = Path.Combine(Environment.CurrentDirectory, "Assets", "mono.eng.csv");
-            IEnumerable<BankTransaction> mono = new Helpers.BankHelper.MonobankHelper().ParseReport(csvPath);
+            IEnumerable<BankTransaction> mono = new MonobankHelper().ParseReport(csvPath);
             var vm = new MonoWizardVM("Monobank", mono, new Dictionary<int, BlotterModel>(), new Mock<IDialogWrapper>().Object);
 
             Assert.Single(((Page2VM)vm.Pages[1]).GetMonoTransactions());
@@ -156,7 +163,7 @@
         public void LoadTransactions_Monobank_EmptyList()
         {
             var csvPath = Path.Combine(Environment.CurrentDirectory, "Assets", Guid.NewGuid().ToString());
-            IEnumerable<BankTransaction> mono = new Helpers.BankHelper.MonobankHelper().ParseReport(csvPath);
+            IEnumerable<BankTransaction> mono = new MonobankHelper().ParseReport(csvPath);
 
             Assert.Empty(mono);
         }
@@ -179,7 +186,7 @@
             };
 
             var csvPath = Path.Combine(Environment.CurrentDirectory, "Assets", "mono.eng.csv");
-            IEnumerable<BankTransaction> mono = new Helpers.BankHelper.MonobankHelper().ParseReport(csvPath);
+            IEnumerable<BankTransaction> mono = new MonobankHelper().ParseReport(csvPath);
 
             Assert.Equal(JsonConvert.SerializeObject(expected), JsonConvert.SerializeObject(mono.ToList()));
         }
@@ -359,7 +366,7 @@
         public void LoadTransactions_UkrHeaders_TransactionsLoaded()
         {
             var csvPath = Path.Combine(Environment.CurrentDirectory, "Assets", "mono.ukr.csv");
-            var mono = new Helpers.BankHelper.MonobankHelper().ParseReport(csvPath);
+            var mono = new MonobankHelper().ParseReport(csvPath);
             var vm = new MonoWizardVM("Monobank", mono, new Dictionary<int, BlotterModel>(), new Mock<IDialogWrapper>().Object);
 
             Assert.Equal(46, mono.Count());

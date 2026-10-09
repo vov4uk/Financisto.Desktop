@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <RootNamespace>Financisto.BankHelpers.Monobank</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="CsvHelper" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Include="..\Shared\DateTimeConvert.cs" Link="DateTimeConvert.cs" />
+    </ItemGroup>
+</Project>

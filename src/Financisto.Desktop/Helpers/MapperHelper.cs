@@ -1,7 +1,6 @@
 using Financisto.Converters;
 using Financisto.DataAccess.Data;
 using Financisto.Desktop.Data;
-using Financisto.Desktop.Helpers.BankHelper.Model;
 using Financisto.Desktop.Wizards;
 using System;
 using System.Globalization;
@@ -85,55 +84,5 @@ public static class MapperHelper
         tr.Tags = dto.SelectedTags?.Count > 0 ? string.Join(TransactionDto.TagsDelimiter, dto.SelectedTags.Select(t => t.Title)) : null;
         tr.DateTime = UnixTimeConverter.ConvertBack(dto.DateTime);
         tr.LastRecurrence = UnixTimeConverter.ConvertBack(DateTime.Now);
-    }
-
-    public static BankTransaction ToBankTransaction(AbankRow item)
-    {
-        var operationCurrency = item.OperationCurrency;
-        var operationAmount = GetDouble(item.OperationAmount);
-        var cardCurrencyAmount = GetDouble(item.CardCurrencyAmount);
-
-        return new BankTransaction
-        {
-            Balance = GetDouble(item.Balance),
-            Cashback = GetDouble(item.Cashback),
-            Commission = GetDouble(item.Commision),
-            ExchangeRate = GetDouble(item.ExchangeRate),
-            OperationCurrency = DoubleNotEqual(operationAmount, cardCurrencyAmount) ? operationCurrency : null,
-            OperationAmount = operationAmount,
-            CardCurrencyAmount = cardCurrencyAmount,
-            MCC = item.MCC,
-            Description = item.Details,
-            Date = ParseDateTime(item.Date)
-        };
-    }
-
-    public static BankTransaction ToBankTransaction(PrivatRow item)
-    {
-        var operationCurrency = item.OperationCurrency;
-        var operationAmount = GetDouble(item.OperationAmount);
-        var cardCurrencyAmount = GetDouble(item.CardCurrencyAmount);
-        if (cardCurrencyAmount < 0)
-        {
-            operationAmount = -1 * Math.Abs(operationAmount);
-        }
-
-        return new BankTransaction
-        {
-            Balance = GetDouble(item.Balance),
-            OperationCurrency = DoubleNotEqual(Math.Abs(operationAmount), Math.Abs(cardCurrencyAmount)) ? operationCurrency : null,
-            OperationAmount = operationAmount,
-            CardCurrencyAmount = cardCurrencyAmount,
-            Description = $"{item.Category} : {item.Details}",
-            Date = ParseDateTime(item.Date)
-        };
-    }
-
-    public static DateTime ParseDateTime(string dateTime)
-    {
-        var formats = new[] { "dd.MM.yyyy H:mm:ss", "dd.MM.yyyy H:mm" };
-        DateTime.TryParseExact(dateTime.Replace(": ", ":"), formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt);
-
-        return dt;
     }
 }

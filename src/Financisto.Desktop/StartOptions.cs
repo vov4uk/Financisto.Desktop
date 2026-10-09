@@ -6,6 +6,9 @@ namespace Financisto.Desktop
     public partial class StartOptions
     {
         public required string SettingsPath { get; init; }
+
+        /// <summary>The folder with the bank helper plugins (DLLs); see <see cref="Helpers.BankHelper.PluginBankHelperProvider"/>.</summary>
+        public required string PluginsPath { get; init; }
     }
 
     public partial class StartOptions
@@ -19,7 +22,12 @@ namespace Financisto.Desktop
                         ? Path.EndsInDirectorySeparator(path) || Directory.Exists(path)
                             ? Path.Combine(path, "Settings.dat")
                             : path
-                        : Path.Combine(AppContext.BaseDirectory, "Settings.dat")
+                        : Path.Combine(AppContext.BaseDirectory, "Settings.dat"),
+                PluginsPath =
+                    Environment.GetEnvironmentVariable("FINANCISTO_PLUGINS_PATH") is { } pluginsPath
+                    && !string.IsNullOrWhiteSpace(pluginsPath)
+                        ? pluginsPath
+                        : Path.Combine(AppContext.BaseDirectory, "plugins")
             };
     }
 }

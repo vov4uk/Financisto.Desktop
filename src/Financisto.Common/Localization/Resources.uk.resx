@@ -183,36 +183,6 @@
   <data name="import" xml:space="preserve">
     <value>Імпорт</value>
   </data>
-  <data name="monobank" xml:space="preserve">
-    <value>Монобанк</value>
-  </data>
-  <data name="a_bank" xml:space="preserve">
-    <value>А Банк</value>
-  </data>
-  <data name="pdf" xml:space="preserve">
-    <value>PDF</value>
-  </data>
-  <data name="xlsx" xml:space="preserve">
-    <value>XLSX</value>
-  </data>
-  <data name="pumb" xml:space="preserve">
-    <value>ПУМБ</value>
-  </data>
-  <data name="pireus" xml:space="preserve">
-    <value>Піреус</value>
-  </data>
-  <data name="privat" xml:space="preserve">
-    <value>Приват</value>
-  </data>
-  <data name="pko" xml:space="preserve">
-    <value>PKO</value>
-  </data>
-  <data name="erste" xml:space="preserve">
-    <value>Erste</value>
-  </data>
-  <data name="revolut" xml:space="preserve">
-    <value>Revolut</value>
-  </data>
   <data name="transaction" xml:space="preserve">
     <value>Операція</value>
   </data>
@@ -641,9 +611,6 @@
   </data>
   <data name="dynamics" xml:space="preserve">
     <value>Динаміка</value>
-  </data>
-  <data name="csv" xml:space="preserve">
-    <value>CSV</value>
   </data>
   <data name="reports_income_expense_for_period" xml:space="preserve">
     <value>Доходи/витрати за період</value>

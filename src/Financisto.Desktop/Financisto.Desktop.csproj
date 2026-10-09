@@ -47,16 +47,13 @@
         <PackageReference Include="AvaloniaWASM.Storage" />
         <PackageReference Include="Cogwheel" />
         <PackageReference Include="CommunityToolkit.Mvvm" />
-        <PackageReference Include="CsvHelper" />
         <PackageReference Include="LiveChartsCore" />
         <PackageReference Include="LiveChartsCore.SkiaSharpView" />
         <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" />
         <PackageReference Include="MacBundle" />
-        <PackageReference Include="MiniExcel" />
         <PackageReference Include="Onova" />
         <PackageReference Include="Optris.LoadingIndicators.Avalonia" />
         <PackageReference Include="System.Security.Cryptography.ProtectedData" />
-        <PackageReference Include="Tabula" />
     </ItemGroup>
 
     <ItemGroup>
@@ -70,8 +67,45 @@
         <ProjectReference Include="..\Financisto.DataAccess\Financisto.DataAccess.csproj" />
         <ProjectReference Include="..\Financisto.Adapter\Financisto.Adapter.csproj" />
         <ProjectReference Include="..\Financisto.Reports\Financisto.Reports.csproj" />
+        <ProjectReference Include="..\BankHelpers\Financisto.BankHelpers.Abstractions\Financisto.BankHelpers.Abstractions.csproj" />
         <ProjectReference Include="..\CustomControls\AvaloniaSearchableComboBox\AvaloniaSearchableComboBox.csproj" />
         <ProjectReference Include="..\CustomControls\Message.Avalonia\Message.Avalonia.csproj" />
     </ItemGroup>
+
+
+    <!--
+        Bank helper plugins (src/BankHelpers/Plugins/*): each project builds one DLL. The app doesn't reference them; it finds the DLLs in
+        <app>/plugins at startup (PluginBankHelperProvider). They are built before the app and copied to plugins/ in the build output and in the
+        publish folder (next to the single-file exe). To add a bank, add a project under Plugins, or just drop its DLL into the plugins folder.
+    -->
+    <ItemGroup>
+        <BankHelperPlugin Include="..\BankHelpers\Plugins\*\*.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="@(BankHelperPlugin)" ReferenceOutputAssembly="false" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- The assemblies shared with the plugins; the plugin build reads the same file (see PluginLoadContext) -->
+        <EmbeddedResource Include="..\BankHelpers\Plugins\HostProvidedAssemblies.txt" LogicalName="HostProvidedAssemblies.txt" />
+    </ItemGroup>
+
+    <Target Name="GetBankHelperPluginOutputs">
+        <!-- The plugins are plain net10.0 libraries, built without the app's runtime (the SDK drops these properties for a library reference too) -->
+        <MSBuild Projects="@(BankHelperPlugin)" Targets="GetTargetPath" RemoveProperties="RuntimeIdentifier;SelfContained">
+            <Output TaskParameter="TargetOutputs" ItemName="BankHelperPluginOutput" />
+        </MSBuild>
+    </Target>
+
+    <Target Name="CopyBankHelperPlugins" AfterTargets="CopyFilesToOutputDirectory" DependsOnTargets="GetBankHelperPluginOutputs">
+        <Copy SourceFiles="@(BankHelperPluginOutput)" DestinationFolder="$(OutDir)plugins" SkipUnchangedFiles="true" />
+    </Target>
+
+    <Target Name="PublishBankHelperPlugins" BeforeTargets="ComputeResolvedFilesToPublishList" DependsOnTargets="GetBankHelperPluginOutputs">
+        <ItemGroup>
+            <ResolvedFileToPublish Include="@(BankHelperPluginOutput)" RelativePath="plugins/%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+        </ItemGroup>
+    </Target>
 
 </Project>

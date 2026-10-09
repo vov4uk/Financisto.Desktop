@@ -46,6 +46,10 @@ A full-featured desktop companion for [Financisto](https://github.com/dsolonenko
 - **Tags**
 - Manage **Exchange Rates** (manual entry + auto-download)
 
+### Bank statement import
+The **Import** menu lists the banks found in the `plugins` folder next to the app: each bank is a single DLL, so a bank can be added or removed by copying its file (restart the app to pick it up). Included: Monobank, Revolut, Erste (CSV), A Bank, Privat (XLSX), A Bank, PUMB, Pireus, PKO (PDF).
+To write a plugin, see `src/BankHelpers` (`IBankHelper`: title, icon, report type, parser).
+
 ### Reports
 Each report opens in its own tab and can be shown as a chart or as a table:
 - Income and expense by month

@@ -114,17 +114,23 @@ using System.Linq;
             var json = File.ReadAllText(Path.Combine("Assets", "mono.json"));
 
             // USD (840) → UAH (980) is in mono.json with rateBuy = 44.61
-            // UAH → USD has no entry in the index, so it is skipped
+            // UAH → USD has no entry of its own, so it is the inverse of the USD → UAH rate
             var currencies = new[] { MakeCurrency(840, "USD"), MakeCurrency(980, "UAH") };
             var service = new ExchangeRatesService(CreateHttpClient(json), () => currencies);
 
             var result = await service.LoadMonobankRates();
 
-            Assert.Single(result);
-            Assert.Equal(840, result[0].FromCurrencyId);
-            Assert.Equal(980, result[0].ToCurrencyId);
-            Assert.Equal(44.61, (double)result[0].Rate, 2);
-            Assert.Equal(1782994573L * 1000L, result[0].Date);
+            Assert.Equal(2, result.Count);
+
+            var direct = Assert.Single(result, x => x.FromCurrencyId == 840);
+            Assert.Equal(980, direct.ToCurrencyId);
+            Assert.Equal(44.61, (double)direct.Rate, 2);
+            Assert.Equal(1782994573L * 1000L, direct.Date);
+
+            var reverse = Assert.Single(result, x => x.FromCurrencyId == 980);
+            Assert.Equal(840, reverse.ToCurrencyId);
+            Assert.Equal(1.0 / 44.61, (double)reverse.Rate, 6);
+            Assert.Equal(1782994573L * 1000L, reverse.Date);
         }
 
         [Fact]

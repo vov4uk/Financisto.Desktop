@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using Financisto.BankHelpers;
 using Financisto.Common.Model;
 using Financisto.DataAccess.Data;
 using Financisto.Desktop.Helpers;
