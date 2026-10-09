@@ -15,16 +15,12 @@ using Financisto.DataAccess.Abstractions;
 using Financisto.DataAccess.Data;
 using Financisto.DataAccess.Utils;
 using Financisto.DataAccess.View;
-using Financisto.Desktop.Data;
 using Financisto.Desktop.Helpers;
-using Financisto.Desktop.ViewModels.Dialogs;
-using Financisto.Desktop.Views.Dialogs;
 
 namespace Financisto.Desktop.ViewModels.Pages
 {
     public class BlotterPageVM : EntityBaseVM<BlotterModel>
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private IAsyncCommand _addTemplateCommand;
         private IAsyncCommand _addTransferCommand;
         private IAsyncCommand _duplicateCommand;
@@ -41,6 +37,7 @@ namespace Financisto.Desktop.ViewModels.Pages
         private ProjectModel _project;
         private LocationModel _location;
         private ObservableCollection<TagModel> _tags = new ObservableCollection<TagModel>();
+        private TransactionEditor _editor;
 
         public BlotterPageVM(IFinancistoDatabase db, IDialogWrapper dialogWrapper)
             : base(db, dialogWrapper)
@@ -92,6 +89,8 @@ namespace Financisto.Desktop.ViewModels.Pages
                 RaisePropertyChanged(nameof(SelectedAccounts));
             }
         }
+
+        private TransactionEditor Editor => _editor ??= new TransactionEditor(db, dialogWrapper);
 
         // the account new transactions default to: only when exactly one account is filtered
         private int? SingleAccountId => SelectedAccounts.Count == 1 ? SelectedAccounts[0]?.Id : null;
@@ -190,6 +189,19 @@ namespace Financisto.Desktop.ViewModels.Pages
 
         private async Task ClearFilters()
         {
+            ResetFilters();
+            await RefreshDataCommand.ExecuteAsync();
+        }
+
+        /// <summary>Android's account "Blotter" command: only this account's transactions. The page refreshes when it is navigated to.</summary>
+        internal void ShowAccount(AccountFilterModel account)
+        {
+            ResetFilters();
+            SelectedAccounts = new ObservableCollection<AccountFilterModel> { account };
+        }
+
+        private void ResetFilters()
+        {
             PeriodType = PeriodType.AllTime;
             // through the properties, so the period filter's date pickers clear too, also when the type was already AllTime
             From = null;
@@ -200,7 +212,6 @@ namespace Financisto.Desktop.ViewModels.Pages
             Project = default!;
             Location = default!;
             Tags = new ObservableCollection<TagModel>();
-            await RefreshDataCommand.ExecuteAsync();
         }
 
         protected override async Task OnDelete(BlotterModel item)
@@ -208,7 +219,7 @@ namespace Financisto.Desktop.ViewModels.Pages
             if (await this.dialogWrapper.ShowMessageBoxAsync(LocalizationService.Instance.confirm_delete_transaction, LocalizationService.Instance.delete, true))
             {
                 var subTransactions = await db.GetSubTransactionsAsync(item.Id);
-                await DeleteTransaction(item.Id);
+                await Editor.DeleteTransactionAsync(item.Id);
 
                 // An incoming split transfer has the other account on its "from" side.
                 var accounts = subTransactions.SelectMany(x => new[] { x.FromAccountId, x.ToAccountId })
@@ -225,34 +236,17 @@ namespace Financisto.Desktop.ViewModels.Pages
             }
         }
 
-        private async Task DeleteTransaction(int id)
-        {
-            // id 0 would match every top-level transaction through parent_id below.
-            if (id <= 0)
-            {
-                return;
-            }
-
-            Logger.Info($"On Transaction delete id : {id}");
-            using (var uow = db.CreateUnitOfWork())
-            {
-                // Split parts point to their parent via parent_id; delete them together so none are left orphaned.
-                await uow.GetRepository<Transaction>().DeleteAsync(x => x.Id == id || x.ParentId == id);
-                await uow.SaveChangesAsync();
-            }
-        }
-
         protected override async Task OnEdit(BlotterModel item)
         {
             if (item.Type == "Transfer")
             {
                 var transfer = await GetTransfer(item.Id);
-                await OpenTransferDialogAsync(transfer);
+                await EditTransferAsync(transfer);
             }
             else
             {
                 var t = await GetTransaction(item.Id);
-                await OpenTransactionDialogAsync(t.transaction, t.subTransactions);
+                await EditTransactionAsync(t.transaction, t.subTransactions);
             }
         }
 
@@ -263,7 +257,7 @@ namespace Financisto.Desktop.ViewModels.Pages
             {
                 transfer.FromAccountId = SingleAccountId.Value;
             }
-            await OpenTransferDialogAsync(transfer);
+            await EditTransferAsync(transfer);
         }
 
         private async Task OnDuplicate(BlotterModel item)
@@ -271,12 +265,12 @@ namespace Financisto.Desktop.ViewModels.Pages
             if (item.Type == "Transfer")
             {
                 var transfer = await GetTransfer(item.Id, true);
-                await OpenTransferDialogAsync(transfer);
+                await EditTransferAsync(transfer);
             }
             else
             {
                 var t = await GetTransaction(item.Id, true);
-                await OpenTransactionDialogAsync(t.transaction, t.subTransactions);
+                await EditTransactionAsync(t.transaction, t.subTransactions);
             }
         }
 
@@ -296,23 +290,21 @@ namespace Financisto.Desktop.ViewModels.Pages
                 transaction.FromAccountId = SingleAccountId.Value;
             }
 
-            await OpenTransactionDialogAsync(transaction, subTransactions);
+            await EditTransactionAsync(transaction, subTransactions);
         }
 
-        private async Task OpenTransferDialogAsync(Transaction transfer)
+        private async Task EditTransferAsync(Transaction transfer)
         {
-            TransferDialogVM dialogVm = new TransferDialogVM(new TransferDto(transfer), await db.GetLastRunningBalancesAsync());
-
-            var result = await dialogWrapper.ShowDialogAsync<TransferDialog>(dialogVm, 480, 440, LocalizationService.Instance.transfer);
-
-            var output = result as TransferDto;
-            if (output != null)
+            if (await Editor.EditTransferAsync(transfer))
             {
-                MapperHelper.MapTransfer(output, transfer);
-                await db.InsertOrUpdateAsync(new[] { transfer });
+                await RefreshData();
+            }
+        }
 
-                await db.RebuildAccountBalanceAsync(transfer.FromAccountId);
-                await db.RebuildAccountBalanceAsync(transfer.ToAccountId);
+        private async Task EditTransactionAsync(Transaction transaction, IEnumerable<Transaction> subTransactions)
+        {
+            if (await Editor.EditTransactionAsync(transaction, subTransactions))
+            {
                 await RefreshData();
             }
         }
@@ -347,128 +339,6 @@ namespace Financisto.Desktop.ViewModels.Pages
             }
 
             return (transaction, subTransactions);
-        }
-
-        private async Task OpenTransactionDialogAsync(Transaction transaction, IEnumerable<Transaction> subTransactions)
-        {
-            var transactionDto = new TransactionDto(transaction, subTransactions);
-
-            TransactionDialogVM dialogVm = new TransactionDialogVM(transactionDto, dialogWrapper, await db.GetLastRunningBalancesAsync());
-
-            var result = await dialogWrapper.ShowDialogAsync<TransactionDialog>(dialogVm, 640, 440, LocalizationService.Instance.transaction);
-            var resultVm = result as TransactionDto;
-            if (resultVm != null)
-            {
-                await SaveTransactionResult(transaction, subTransactions, resultVm);
-            }
-        }
-
-        private async Task SaveTransactionResult(Transaction transaction, IEnumerable<Transaction> subTransactions, TransactionDto resultVm)
-        {
-            var resultTransactions = new List<Transaction>();
-
-            // Accounts the transaction touched before the edit also need their balance rebuilt,
-            // e.g. the other account of a split transfer that was removed or moved.
-            var previousAccounts = subTransactions
-                .SelectMany(x => new[] { x.FromAccountId, x.ToAccountId })
-                .Append(transaction.FromAccountId)
-                .ToList();
-
-            MapperHelper.MapTransaction(resultVm, transaction);
-            long totalFromAmountHomeCurrency = transaction.FromAmount;
-            resultTransactions.Add(transaction);
-            if (resultVm.SubTransactions?.Any() == true)
-            {
-                foreach (var subTransactionDto in resultVm.SubTransactions.OfType<TransactionDto>())
-                {
-                    Transaction subTransaction = await GetSubTransaction(transaction, resultVm, subTransactionDto);
-
-                    //Set FromAmount in home currency
-                    if (resultVm.IsOriginalFromAmountVisible)
-                    {
-                        var originalFromAmount = (subTransactionDto).RealFromAmount;
-                        subTransaction.FromAmount = (long)(originalFromAmount * resultVm.Rate);
-                        subTransaction.OriginalFromAmount = originalFromAmount;
-                        totalFromAmountHomeCurrency -= subTransaction.FromAmount;
-                    }
-
-                    resultTransactions.Add(subTransaction);
-                }
-
-                if (!resultVm.IsOriginalFromAmountVisible)
-                {
-                    foreach (var subTranfer in resultVm.SubTransactions.OfType<TransferDto>())
-                    {
-                        Transaction subTransaction = await GetSubTransfer(transaction, resultVm, subTranfer);
-                        resultTransactions.Add(subTransaction);
-                    }
-                }
-
-                // check if sum of all subtransaction == parentTransaction.FromAmount
-                // if not - add diference to last transaction
-                if (resultVm.IsOriginalFromAmountVisible && totalFromAmountHomeCurrency != 0)
-                {
-                    resultTransactions[resultTransactions.Count -1].FromAmount += totalFromAmountHomeCurrency;
-                }
-            }
-
-            await db.InsertOrUpdateAsync(resultTransactions);
-
-            await ProcessDeletedTransactions(subTransactions, resultTransactions);
-
-            // An incoming split transfer has the other account on its "from" side, so rebuild both sides.
-            var accounts = resultTransactions
-                .SelectMany(x => new[] { x.FromAccountId, x.ToAccountId })
-                .Concat(previousAccounts)
-                .Where(x => x > 0)
-                .Distinct()
-                .ToList();
-            foreach (var account in accounts)
-            {
-                await db.RebuildAccountBalanceAsync(account);
-            }
-            await RefreshData();
-        }
-
-        private async Task ProcessDeletedTransactions(IEnumerable<Transaction> subTransactions, List<Transaction> resultTransactions)
-        {
-            var transactionsIds = resultTransactions.Select(x => x.Id).Distinct().ToList();
-            var deletedSubTransaction = subTransactions.Select(x => x.Id).Where(x => x > 0 && !transactionsIds.Contains(x));
-            foreach (var t in deletedSubTransaction)
-            {
-                await DeleteTransaction(t);
-            }
-        }
-
-        private async Task<Transaction> GetSubTransfer(Transaction transaction, TransactionDto resultVm, TransferDto subTranfer)
-        {
-            var subTransaction = await db.GetOrCreateAsync<Transaction>(subTranfer.Id);
-
-            subTranfer.Date = resultVm.Date;
-            subTranfer.Time = resultVm.Time;
-            // The parent account's side of the part follows the parent's account;
-            // MapTransfer then stores it as the "from" or the "to" side depending on the direction.
-            subTranfer.FromAccountId = transaction.FromAccountId;
-            subTranfer.FromAccount = resultVm.FromAccount;
-            MapperHelper.MapTransfer(subTranfer, subTransaction);
-            subTransaction.Parent = transaction;
-            subTransaction.ParentAccountId = transaction.FromAccountId;
-            return subTransaction;
-        }
-
-        private async Task<Transaction> GetSubTransaction(Transaction transaction, TransactionDto resultVm, TransactionDto subTransactionDto)
-        {
-            var subTransaction = await db.GetOrCreateAsync<Transaction>(subTransactionDto.Id);
-            subTransactionDto.Date = resultVm.Date;
-            subTransactionDto.Time = resultVm.Time;
-            MapperHelper.MapTransaction(subTransactionDto, subTransaction);
-            subTransaction.Parent = transaction;
-            subTransaction.FromAccountId = transaction.FromAccountId;
-            // Same as Android DatabaseAdapter.insertSplits: split parts carry the parent's account.
-            subTransaction.ParentAccountId = transaction.FromAccountId;
-            subTransaction.OriginalCurrencyId = transaction.OriginalCurrencyId ?? transaction.FromAccount.CurrencyId;
-            subTransaction.Category = default;
-            return subTransaction;
         }
 
         protected override async Task RefreshData()

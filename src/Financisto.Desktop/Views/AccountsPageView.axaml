@@ -65,6 +65,7 @@
                 Tag="{StaticResource IconTrash}" />
         </Grid>
         <DataGrid
+            x:Name="AccountsGrid"
             Grid.Row="1"
             Margin="5"
             VerticalAlignment="Stretch"
@@ -75,6 +76,72 @@
             IsReadOnly="True"
             ItemsSource="{Binding Path=Entities}"
             SelectedItem="{Binding SelectedValue, UpdateSourceTrigger=PropertyChanged}">
+            <!--  The same actions, in the same order, as Android's account quick actions; they act on the selected account  -->
+            <DataGrid.ContextMenu>
+                <ContextMenu Opening="OnContextMenuOpening">
+                    <MenuItem Command="{Binding ShowInfoCommand}" Header="{loc:Translate Key=info}">
+                        <MenuItem.Icon>
+                            <Image Source="{StaticResource IconCircleInfo}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Command="{Binding ShowBlotterCommand}" Header="{loc:Translate Key=blotter}">
+                        <MenuItem.Icon>
+                            <Image Source="{StaticResource IconReceipt}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Command="{Binding EditCommand}" Header="{loc:Translate Key=edit}">
+                        <MenuItem.Icon>
+                            <Image Source="{StaticResource IconPencil}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Command="{Binding AddTransactionCommand}" Header="{loc:Translate Key=transaction}">
+                        <MenuItem.Icon>
+                            <Image Source="{StaticResource IconPlus}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Command="{Binding AddTransferCommand}" Header="{loc:Translate Key=transfer}">
+                        <MenuItem.Icon>
+                            <Image Source="{StaticResource IconArrowRightArrowLeft}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Command="{Binding UpdateBalanceCommand}" Header="{loc:Translate Key=balance}">
+                        <MenuItem.Icon>
+                            <Image Source="{StaticResource IconCheck}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Command="{Binding DeleteOldTransactionsCommand}" Header="{loc:Translate Key=delete_old_transactions}">
+                        <MenuItem.Icon>
+                            <Image Source="{StaticResource IconDeleteFile}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem
+                        Command="{Binding CloseAccountCommand}"
+                        Header="{loc:Translate Key=close_account}"
+                        IsVisible="{Binding SelectedValue.IsActive}">
+                        <MenuItem.Icon>
+                            <Image Source="{StaticResource IconCloseAccount}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem
+                        Command="{Binding ReopenAccountCommand}"
+                        Header="{loc:Translate Key=reopen_account}"
+                        IsVisible="{Binding !SelectedValue.IsActive}">
+                        <MenuItem.Icon>
+                            <Image Source="{StaticResource IconOpenAccount}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Command="{Binding DeleteCommand}" Header="{loc:Translate Key=delete_account}">
+                        <MenuItem.Icon>
+                            <Image Source="{StaticResource IconTrash}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Command="{Binding TransferCurrentBalanceCommand}" Header="{loc:Translate Key=transfer_current_balance}">
+                        <MenuItem.Icon>
+                            <Image Source="{StaticResource IconArrowRightArrowLeft2}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </ContextMenu>
+            </DataGrid.ContextMenu>
             <DataGrid.Columns>
                 <DataGridTemplateColumn Header="">
                     <DataGridTemplateColumn.CellTemplate>

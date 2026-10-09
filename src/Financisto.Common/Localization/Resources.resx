@@ -1095,4 +1095,58 @@
   <data name="sms_sender_required" xml:space="preserve">
     <value>Sender and template are required</value>
   </data>
+  <data name="delete_old_transactions" xml:space="preserve">
+    <value>Delete old transactions</value>
+  </data>
+  <data name="close_account" xml:space="preserve">
+    <value>Close account</value>
+  </data>
+  <data name="close_account_confirm" xml:space="preserve">
+    <value>Close account?</value>
+  </data>
+  <data name="reopen_account" xml:space="preserve">
+    <value>Re-open account</value>
+  </data>
+  <data name="delete_account" xml:space="preserve">
+    <value>Delete account</value>
+  </data>
+  <data name="delete_account_confirm" xml:space="preserve">
+    <value>Delete account?</value>
+  </data>
+  <data name="transfer_current_balance" xml:space="preserve">
+    <value>Transfer current balance</value>
+  </data>
+  <data name="update_balance" xml:space="preserve">
+    <value>Update balance</value>
+  </data>
+  <data name="difference" xml:space="preserve">
+    <value>Difference</value>
+  </data>
+  <data name="purge_account_date_summary" xml:space="preserve">
+    <value>Delete transactions prior to AND including the specified date. Account balance will not be affected.</value>
+  </data>
+  <data name="purge_account_confirm_message" xml:space="preserve">
+    <value>Delete transactions from account {0} prior to AND including {1}.</value>
+  </data>
+  <data name="purge_account_payee" xml:space="preserve">
+    <value>Previous period</value>
+  </data>
+  <data name="warning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+  <data name="close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="confirm" xml:space="preserve">
+    <value>Confirm</value>
+  </data>
+  <data name="yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="no" xml:space="preserve">
+    <value>No</value>
+  </data>
 </root>

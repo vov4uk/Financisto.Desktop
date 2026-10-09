@@ -1,0 +1,71 @@
+<UserControl
+    x:Class="Financisto.Desktop.Views.Dialogs.PurgeAccountDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:conv="using:Financisto.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:Financisto.Desktop.ViewModels.Dialogs"
+    d:DesignHeight="300"
+    d:DesignWidth="420"
+    x:DataType="vm:PurgeAccountDialogVM"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <conv:DateTimeToDateTimeOffsetConverter x:Key="DateTimeToDateTimeOffsetConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <GroupBox
+        Margin="5"
+        FontSize="14"
+        Header="{loc:Translate Key=delete_old_transactions}">
+        <Grid Margin="4" RowDefinitions="Auto,Auto,Auto,Auto,*,Auto">
+            <TextBlock Grid.Row="0" Text="{loc:Translate Key=account}" />
+            <TextBlock
+                Grid.Row="1"
+                Margin="0,0,0,10"
+                FontWeight="Bold"
+                Text="{Binding AccountTitle}" />
+
+            <TextBlock Grid.Row="2" Text="{loc:Translate Key=warning}" />
+            <TextBlock
+                Grid.Row="3"
+                Margin="0,0,0,10"
+                Text="{Binding Warning}"
+                TextWrapping="Wrap" />
+
+            <StackPanel Grid.Row="4">
+                <TextBlock Text="{loc:Translate Key=date}" />
+                <DatePicker
+                    MinWidth="150"
+                    Margin="0,2,0,0"
+                    DayFormat="dd"
+                    MonthFormat="MM"
+                    SelectedDate="{Binding Date, Converter={StaticResource DateTimeToDateTimeOffsetConverter}}"
+                    YearFormat="yyyy" />
+            </StackPanel>
+
+            <!--  OK / Cancel  -->
+            <Grid
+                Grid.Row="5"
+                Margin="0,8,0,0"
+                ColumnDefinitions="*,*">
+                <Button
+                    Grid.Column="0"
+                    Margin="2"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding SaveCommand}"
+                    Content="{loc:Translate Key=ok}" />
+                <Button
+                    Grid.Column="1"
+                    Margin="2"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding CancelCommand}"
+                    Content="{loc:Translate Key=cancel}" />
+            </Grid>
+        </Grid>
+    </GroupBox>
+</UserControl>

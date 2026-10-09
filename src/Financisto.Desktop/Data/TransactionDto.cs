@@ -18,10 +18,12 @@ namespace Financisto.Desktop.Data
         private CategoryModel category;
         private int? categoryId;
         private CurrencyModel currency;
+        private long currentBalance;
         private AccountFilterModel fromAccount;
         private int fromAccountId;
         private long fromAmount;
         private bool isAmountNegative;
+        private bool isUpdateBalance;
         private int? locationId;
         private int? originalCurrencyId;
         private long? originalFromAmount;
@@ -150,6 +152,7 @@ namespace Financisto.Desktop.Data
                 if (SetProperty(ref fromAmount, value))
                 {
                     RaisePropertyChanged(nameof(FromAmount));
+                    RaisePropertyChanged(nameof(BalanceDifference));
                     RecalculateRate();
                     RecalculateUnSplitAmount();
                 }
@@ -164,9 +167,63 @@ namespace Financisto.Desktop.Data
                 if (SetProperty(ref isAmountNegative, value))
                 {
                     RaisePropertyChanged(nameof(IsAmountNegative));
+                    RaisePropertyChanged(nameof(BalanceDifference));
                     RecalculateUnSplitAmount();
                 }
             }
+        }
+
+        /// <summary>
+        /// Android's "update balance" mode (<c>TransactionActivity.isUpdateBalanceMode</c>): the amount is the account's new balance
+        /// and the saved transaction records only the difference to <see cref="CurrentBalance"/>.
+        /// </summary>
+        public bool IsUpdateBalance
+        {
+            get => isUpdateBalance;
+            private set
+            {
+                if (SetProperty(ref isUpdateBalance, value))
+                {
+                    RaisePropertyChanged(nameof(IsUpdateBalance));
+                    RecalculateUnSplitAmount();
+                }
+            }
+        }
+
+        /// <summary>The balance of <see cref="FromAccount"/> that the entered amount replaces; only used in update balance mode.</summary>
+        public long CurrentBalance
+        {
+            get => currentBalance;
+            set
+            {
+                if (SetProperty(ref currentBalance, value))
+                {
+                    RaisePropertyChanged(nameof(CurrentBalance));
+                    RaisePropertyChanged(nameof(BalanceDifference));
+                    RecalculateUnSplitAmount();
+                }
+            }
+        }
+
+        /// <summary>What an update balance transaction records: the entered new balance minus <see cref="CurrentBalance"/>.</summary>
+        public long BalanceDifference => RealFromAmount - CurrentBalance;
+
+        /// <summary>Switches to update balance mode; the amount starts at the current balance, positive as an income like Android.</summary>
+        public void StartBalanceUpdate(long balance)
+        {
+            IsUpdateBalance = true;
+            CurrentBalance = balance;
+            IsAmountNegative = balance <= 0;
+            FromAmount = Math.Abs(balance);
+        }
+
+        /// <summary>Turns the entered new balance into the transaction to save: the difference to the balance it replaces.</summary>
+        public void ApplyBalanceDifference()
+        {
+            var difference = BalanceDifference;
+            IsUpdateBalance = false;
+            IsAmountNegative = difference < 0;
+            FromAmount = Math.Abs(difference);
         }
 
         public bool IsOriginalFromAmountVisible => OriginalCurrency != null && OriginalCurrency.Id != null && FromAccount != null && OriginalCurrency.Id != FromAccount.CurrencyId;
@@ -283,7 +340,10 @@ namespace Financisto.Desktop.Data
 
         public void RecalculateUnSplitAmount()
         {
-            UnsplitAmount = !IsSubTransaction ? RealFromAmount - SplitAmount : ParentTransactionUnSplitAmount - RealFromAmount;
+            // In update balance mode the parts divide the difference, not the entered balance (Android calculateUnsplitAmount).
+            UnsplitAmount = !IsSubTransaction
+                ? RealFromAmount - (IsUpdateBalance ? CurrentBalance : 0) - SplitAmount
+                : ParentTransactionUnSplitAmount - RealFromAmount;
         }
 
         internal void RecalculateRate()

@@ -232,4 +232,17 @@ public sealed class LocalizationService : INotifyPropertyChanged
     public string tpl_failed_to_parse => Get();
     public string no_account => Get();
     public string sms_sender_required => Get();
+
+    // Account context menu (Android's account quick actions)
+    public string info => Get();
+    public string update_balance => Get();
+    public string close_account => Get();
+    public string close_account_confirm => Get();
+    public string delete_account => Get();
+    public string delete_account_confirm => Get();
+    public string delete_old_transactions => Get();
+    public string purge_account_confirm_message => Get();
+    public string purge_account_date_summary => Get();
+    public string purge_account_payee => Get();
+    public string confirm => Get();
 }

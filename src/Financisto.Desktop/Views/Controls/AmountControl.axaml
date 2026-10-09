@@ -99,10 +99,25 @@
             x:Name="FromAmountBlock"
             Grid.Row="2"
             Grid.Column="0"
-            Grid.ColumnSpan="3">
+            Grid.ColumnSpan="3"
+            IsVisible="{Binding !Transaction.IsUpdateBalance}">
             <TextBlock.Text>
                 <MultiBinding Converter="{StaticResource localizedFormatConverter}">
                     <Binding Path="[amount]" Source="{x:Static loc:LocalizationService.Instance}" />
+                    <Binding Path="Transaction.FromAccountCurrency?.Name" />
+                </MultiBinding>
+            </TextBlock.Text>
+        </TextBlock>
+        <!--  Update balance mode: the amount is the account's new balance  -->
+        <TextBlock
+            x:Name="BalanceBlock"
+            Grid.Row="2"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
+            IsVisible="{Binding Transaction.IsUpdateBalance}">
+            <TextBlock.Text>
+                <MultiBinding Converter="{StaticResource localizedFormatConverter}">
+                    <Binding Path="[balance]" Source="{x:Static loc:LocalizationService.Instance}" />
                     <Binding Path="Transaction.FromAccountCurrency?.Name" />
                 </MultiBinding>
             </TextBlock.Text>
