@@ -110,7 +110,7 @@ namespace Financisto.Desktop.ViewModels
             new(typeof(ProjectModel), () => LocalizationService.Instance.projects, "IconListCheck"),
             new(typeof(PayeeModel), () => LocalizationService.Instance.payees, "IconAddressBook"),
             new(typeof(LocationModel), () => LocalizationService.Instance.locations, "IconMap"),
-            new(typeof(ExchangeRateModel), () => LocalizationService.Instance.exchange_rates, "IconArrowTrendUp"),
+            new(typeof(ExchangeRateModel), () => LocalizationService.Instance.exchange_rates, "IconDollarEuro"),
             new(typeof(BlotterModel), () => LocalizationService.Instance.blotter, "IconReceipt"),
             new(typeof(ReportsControlVM), () => LocalizationService.Instance.reports, "IconChartBar"),
         };

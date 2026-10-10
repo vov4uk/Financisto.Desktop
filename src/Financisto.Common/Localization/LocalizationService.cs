@@ -165,6 +165,7 @@ public sealed class LocalizationService : INotifyPropertyChanged
 
     // Delete Confirmation Messages
     public string confirm_delete_transaction => Get();
+    public string delete_transaction_parent_confirm => Get();
     public string confirm_delete_currency => Get();
     public string currency_is_used => Get();
 

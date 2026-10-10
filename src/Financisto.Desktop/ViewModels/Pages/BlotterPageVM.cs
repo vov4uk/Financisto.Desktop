@@ -216,15 +216,21 @@ namespace Financisto.Desktop.ViewModels.Pages
 
         protected override async Task OnDelete(BlotterModel item)
         {
-            if (await this.dialogWrapper.ShowMessageBoxAsync(LocalizationService.Instance.confirm_delete_transaction, LocalizationService.Instance.delete, true))
+            // Like Android's BlotterOperations, a part of a split stands for its parent: that is what gets deleted (after saying so).
+            var message = item.IsSplitPart ? LocalizationService.Instance.delete_transaction_parent_confirm : LocalizationService.Instance.confirm_delete_transaction;
+            if (await this.dialogWrapper.ShowMessageBoxAsync(message, LocalizationService.Instance.delete, true))
             {
-                var subTransactions = await db.GetSubTransactionsAsync(item.Id);
-                await Editor.DeleteTransactionAsync(item.Id);
+                var targetId = TargetId(item);
+                var parent = item.IsSplitPart ? await db.GetOrCreateTransactionAsync(targetId) : null;
+                var subTransactions = await db.GetSubTransactionsAsync(targetId);
+                await Editor.DeleteTransactionAsync(targetId);
 
                 // An incoming split transfer has the other account on its "from" side.
                 var accounts = subTransactions.SelectMany(x => new[] { x.FromAccountId, x.ToAccountId })
                     .Append(item.FromAccountId)
                     .Append(item.ToAccountId ?? 0)
+                    .Append(parent?.FromAccountId ?? 0)
+                    .Append(parent?.ToAccountId ?? 0)
                     .Where(x => x > 0)
                     .Distinct()
                     .ToList();
@@ -238,17 +244,21 @@ namespace Financisto.Desktop.ViewModels.Pages
 
         protected override async Task OnEdit(BlotterModel item)
         {
-            if (item.Type == "Transfer")
+            if (item.Type == "Transfer" && !item.IsSplitPart)
             {
                 var transfer = await GetTransfer(item.Id);
                 await EditTransferAsync(transfer);
             }
             else
             {
-                var t = await GetTransaction(item.Id);
+                // A part of a split opens its parent, which is never a transfer.
+                var t = await GetTransaction(TargetId(item));
                 await EditTransactionAsync(t.transaction, t.subTransactions);
             }
         }
+
+        /// <summary>The transaction an operation on a blotter row is about: the parent for a part of a split, else the row itself.</summary>
+        private static int TargetId(BlotterModel item) => item.IsSplitPart ? item.ParentId : item.Id;
 
         private async Task AddTransfer()
         {
@@ -262,14 +272,14 @@ namespace Financisto.Desktop.ViewModels.Pages
 
         private async Task OnDuplicate(BlotterModel item)
         {
-            if (item.Type == "Transfer")
+            if (item.Type == "Transfer" && !item.IsSplitPart)
             {
                 var transfer = await GetTransfer(item.Id, true);
                 await EditTransferAsync(transfer);
             }
             else
             {
-                var t = await GetTransaction(item.Id, true);
+                var t = await GetTransaction(TargetId(item), true);
                 await EditTransactionAsync(t.transaction, t.subTransactions);
             }
         }
@@ -343,16 +353,41 @@ namespace Financisto.Desktop.ViewModels.Pages
 
         protected override async Task RefreshData()
         {
+            var accountIds = SelectedAccounts.Where(a => a?.Id != null).Select(a => a.Id.Value).ToList();
+
+            List<BlotterModel> items;
+            if (accountIds.Count > 0)
+            {
+                // Android's account blotter (getBlotterForAccount, v_blotter_for_account_with_splits): every row is seen from one of the accounts,
+                // so a transfer into an account is a row of its own, and so is a part of another account's split that moved money into it.
+                // A transaction still shows once: a split part is left out when its parent's account is shown (the parent stands for it),
+                // and the "to" side of a transfer is left out when the account it came from is shown too.
+                var predicate = BuildFilter<BlotterTransactionsForAccountWithSplits>().And(
+                    x => accountIds.Contains(x.FromAccountId)
+                        && (x.ParentId == 0 || !accountIds.Contains(x.ParentAccountId))
+                        && !(x.IsTransfer == -1 && x.ToAccountId != null && accountIds.Contains(x.ToAccountId.Value)));
+                items = await QueryAsync(db, predicate);
+                items?.ForEach(x => x.IsAccountPerspective = true);
+            }
+            else
+            {
+                items = await QueryAsync(db, BuildFilter<BlotterTransactions>());
+            }
+
+            if (items != null)
+            {
+                Entities = new ObservableCollection<BlotterModel>(items.OrderByDescending(x => x.Datetime).ThenByDescending(x => x.Id));
+            }
+        }
+
+        /// <summary>The period, category, project, payee, location and tag filters, for either of the blotter views.</summary>
+        private Expression<Func<T, bool>> BuildFilter<T>()
+            where T : TransactionsView
+        {
             var fromUnix = UnixTimeConverter.ConvertBack(From ?? DateTime.MinValue.ToLocalTime());
             var toUnix = UnixTimeConverter.ConvertBack(To ?? DateTime.MaxValue.ToLocalTime());
 
-            Expression<Func<BlotterTransactions, bool>> predicate = x => x.DateTime >= fromUnix && x.DateTime <= toUnix;
-
-            var accountIds = SelectedAccounts.Where(a => a?.Id != null).Select(a => a.Id.Value).ToList();
-            if (accountIds.Count > 0)
-            {
-                predicate = predicate.And(x => accountIds.Contains(x.FromAccountId) || (x.ToAccountId != null && accountIds.Contains(x.ToAccountId.Value)));
-            }
+            Expression<Func<T, bool>> predicate = x => x.DateTime >= fromUnix && x.DateTime <= toUnix;
 
             if (Category?.Id != null)
             {
@@ -377,34 +412,35 @@ namespace Financisto.Desktop.ViewModels.Pages
             var tagTitles = Tags.Where(t => !string.IsNullOrWhiteSpace(t?.Title)).Select(t => t.Title).ToList();
             if (tagTitles.Count > 0)
             {
-                Expression<Func<BlotterTransactions, bool>> tagsPredicate = null;
+                Expression<Func<T, bool>> tagsPredicate = null;
                 foreach (var title in tagTitles)
                 {
-                    Expression<Func<BlotterTransactions, bool>> hasTag = x => x.Tags != null && x.Tags.Contains(title);
+                    Expression<Func<T, bool>> hasTag = x => x.Tags != null && x.Tags.Contains(title);
                     tagsPredicate = tagsPredicate == null ? hasTag : tagsPredicate.Or(hasTag);
                 }
 
                 predicate = predicate.And(tagsPredicate);
             }
 
-            var items = await QueryAsync(db, predicate);
-
-            if (items != null)
-            {
-                Entities = new ObservableCollection<BlotterModel>(items.OrderByDescending(x => x.Datetime).ThenByDescending(x => x.Id));
-            }
+            return predicate;
         }
 
         /// <summary>Blotter rows (the <c>v_blotter</c> view) matching <paramref name="predicate"/>, unordered.</summary>
-        internal static async Task<List<BlotterModel>> QueryAsync(IFinancistoDatabase db, Expression<Func<BlotterTransactions, bool>> predicate)
+        internal static Task<List<BlotterModel>> QueryAsync(IFinancistoDatabase db, Expression<Func<BlotterTransactions, bool>> predicate) =>
+            QueryAsync<BlotterTransactions>(db, predicate);
+
+        private static async Task<List<BlotterModel>> QueryAsync<T>(IFinancistoDatabase db, Expression<Func<T, bool>> predicate)
+            where T : TransactionsView
         {
             using var uow = db.CreateUnitOfWork();
-            var repo = uow.GetRepository<BlotterTransactions>();
+            var repo = uow.GetRepository<T>();
             return await repo.FindManyAndProjectAsync(
                 predicate: predicate,
                 projection: x => new BlotterModel
                 {
                     Id = x.Id,
+                    ParentId = x.ParentId,
+                    IsTransfer = x.IsTransfer,
                     FromAccountId  = x.FromAccountId,
                     FromAccountTitle = x.FromAccountTitle,
                     ToAccountId = x.ToAccountId,

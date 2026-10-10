@@ -1158,4 +1158,7 @@
   <data name="no" xml:space="preserve">
     <value>Ні</value>
   </data>
+  <data name="delete_transaction_parent_confirm" xml:space="preserve">
+    <value>Ця транзакція є частиною розділеної транзакції. Ви справді хочете видалити батьківську транзакцію?</value>
+  </data>
 </root>

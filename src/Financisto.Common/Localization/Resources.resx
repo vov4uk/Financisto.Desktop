@@ -1158,4 +1158,7 @@
   <data name="no" xml:space="preserve">
     <value>No</value>
   </data>
+  <data name="delete_transaction_parent_confirm" xml:space="preserve">
+    <value>This transaction is a part of split. Do you want to delete the parent transaction?</value>
+  </data>
 </root>

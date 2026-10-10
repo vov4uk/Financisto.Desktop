@@ -1158,4 +1158,7 @@
   <data name="no" xml:space="preserve">
     <value>Nie</value>
   </data>
+  <data name="delete_transaction_parent_confirm" xml:space="preserve">
+    <value>Ta transakcja jest częścią innej. Czy chcesz usunąć transakcję nadrzędną?</value>
+  </data>
 </root>

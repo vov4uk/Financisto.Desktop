@@ -341,6 +341,7 @@
         public async Task OpenTransaction_Cancel_NoUpdateTransaction(BlotterModel eventArgs, Transaction transaction)
         {
             eventArgs.CategoryId = -1;
+            eventArgs.ParentId = 0; // an ordinary row, not a part of a split
             await this.SetupDbManual();
             this.SetupWizardRepos();
             this.SetupRepo(new Mock<IBaseRepository<Payee>>());
@@ -370,6 +371,7 @@
             IEnumerable<Transaction> subTransactions)
         {
             eventArgs.CategoryId = -1;
+            eventArgs.ParentId = 0; // an ordinary row, not a part of a split
             await this.SetupDbManual();
             var output = new TransactionDto(transaction, subTransactions);
             output.FromAccount = account;
@@ -411,6 +413,7 @@
             TransactionDto output)
         {
             eventArgs.CategoryId = -1;
+            eventArgs.ParentId = 0; // an ordinary row, not a part of a split
             eventArgs.ToAccountId = 0;
 
             await this.SetupDbManual();
@@ -449,6 +452,7 @@
             eventArgs.FromAccountId = 1;
             eventArgs.ToAccountId = 2;
             eventArgs.CategoryId = 0;
+            eventArgs.ParentId = 0; // an ordinary row, not a part of a split
 
             this.SetupRepo(new Mock<IBaseRepository<Account>>());
 
@@ -475,6 +479,7 @@
             eventArgs.FromAccountId = 1;
             eventArgs.ToAccountId = 2;
             eventArgs.CategoryId = 0;
+            eventArgs.ParentId = 0; // an ordinary row, not a part of a split
 
             await this.SetupDbManual();
 
