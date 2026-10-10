@@ -246,4 +246,11 @@ public sealed class LocalizationService : INotifyPropertyChanged
     public string purge_account_date_summary => Get();
     public string purge_account_payee => Get();
     public string confirm => Get();
+
+    // Transaction templates (Android's template list)
+    public string transaction_templates => Get();
+    public string transaction_template => Get();
+    public string transfer_template => Get();
+    public string delete_template_confirm => Get();
+    public string save_as_template_success => Get();
 }

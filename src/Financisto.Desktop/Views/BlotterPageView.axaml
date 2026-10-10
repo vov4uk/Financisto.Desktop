@@ -29,7 +29,7 @@
         <Grid
             Grid.Row="0"
             Margin="0,0,0,10"
-            ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto">
+            ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
             <TextBlock
                 Grid.Column="0"
                 VerticalAlignment="Center"
@@ -38,19 +38,27 @@
                 Text="{loc:Translate Key=blotter}" />
 
             <Button
-                Grid.Column="2"
+                Grid.Column="1"
                 Margin="4,2"
                 Classes="icon"
                 Command="{Binding AddCommand}"
                 Content="{loc:Translate Key=add_expense}"
                 Tag="{StaticResource IconPlus}" />
             <Button
-                Grid.Column="3"
+                Grid.Column="2"
                 Margin="4,2"
                 Classes="icon"
                 Command="{Binding AddTransferCommand}"
                 Content="{loc:Translate Key=add_transfer}"
                 Tag="{StaticResource IconArrowRightArrowLeft}" />
+            <!--  Android's Template button: a list of templates, then the transaction or transfer dialog filled from the chosen one  -->
+            <Button
+                Grid.Column="3"
+                Margin="4,2"
+                Classes="icon"
+                Command="{Binding TemplateCommand}"
+                Content="{loc:Translate Key=template}"
+                Tag="{StaticResource IconTemplate}" />
             <Button
                 Grid.Column="4"
                 Margin="4,2"
@@ -67,6 +75,13 @@
                 Tag="{StaticResource IconCopy}" />
             <Button
                 Grid.Column="6"
+                Margin="4,2"
+                Classes="icon"
+                Command="{Binding SaveAsTemplateCommand}"
+                Content="{loc:Translate Key=save_as_template}"
+                Tag="{StaticResource IconTemplateAdd}" />
+            <Button
+                Grid.Column="7"
                 Margin="4,2"
                 Classes="icon"
                 Command="{Binding DeleteCommand}"

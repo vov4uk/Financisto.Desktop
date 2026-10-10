@@ -57,4 +57,5 @@ FROM   transactions t
        LEFT JOIN account fc
               ON t.from_account_id = fc._id
        LEFT JOIN account tc
-              ON t.to_account_id = tc._id;
+              ON t.to_account_id = tc._id
+WHERE  t.is_template = 0;

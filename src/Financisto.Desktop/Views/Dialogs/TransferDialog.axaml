@@ -31,10 +31,21 @@
         Header="{loc:Translate Key=transfer_details}">
         <Grid>
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="32" />
             </Grid.RowDefinitions>
-            <Grid Margin="5">
+
+            <!--  Only a template has a name (Android's "Template name" field)  -->
+            <StackPanel
+                Grid.Row="0"
+                Margin="7,2,7,0"
+                IsVisible="{Binding Transfer.IsTemplate}">
+                <TextBlock Text="{loc:Translate Key=template_name}" />
+                <TextBox Text="{Binding Transfer.TemplateName, Mode=TwoWay}" />
+            </StackPanel>
+
+            <Grid Grid.Row="1" Margin="5">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="30" />
                     <!--  FromAccount (+ its balance)  -->
@@ -68,7 +79,7 @@
                     Grid.Row="0"
                     Grid.Column="0"
                     Grid.ColumnSpan="3"
-                    IsEnabled="{Binding Transfer.IsSubTransaction, Converter={StaticResource InverseBooleanConverter}}">
+                    IsEnabled="{Binding Transfer.IsDateTimeEditable}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="auto" />
@@ -285,7 +296,7 @@
                         Source="{StaticResource IconXmark}" />
                 </Button>
             </Grid>
-            <Grid Grid.Row="1">
+            <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
