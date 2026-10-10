@@ -42,13 +42,14 @@ namespace Financisto.Desktop.Data
             var list = new List<BaseTransactionDto>();
             foreach (var t in subTransactions)
             {
+                // The parts of a template are template rows too, but only the parent carries the name.
                 if (t.ToAccountId > 0 && t.CategoryId == 0 && t.FromAccountId > 0)
                 {
-                    list.Add(new TransferDto(t, fromAccountId));
+                    list.Add(new TransferDto(t, fromAccountId) { IsTemplate = false });
                 }
                 else
                 {
-                    var tr = new TransactionDto(t);
+                    var tr = new TransactionDto(t) { IsTemplate = false };
 
                     // if transaction not in home currency, replace FromAmount with OriginalFromAmount to show correct values
                     if (IsOriginalFromAmountVisible)
@@ -74,6 +75,8 @@ namespace Financisto.Desktop.Data
             locationId = transaction.LocationId;
             projectId = transaction.ProjectId;
             note = transaction.Note;
+            IsTemplate = transaction.IsTemplate == 1;
+            templateName = transaction.TemplateName;
             fromAmount = transaction.FromAmount;
             isAmountNegative = transaction.FromAmount <= 0;
             date = UnixTimeConverter.Convert(transaction.DateTime).Date;

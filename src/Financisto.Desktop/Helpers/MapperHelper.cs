@@ -35,6 +35,7 @@ public static class MapperHelper
         tr.FromAccount = null;
         tr.ToAccount = null;
         tr.Note = dto.Note;
+        MapTemplateName(dto, tr);
         tr.DateTime = UnixTimeConverter.ConvertBack(dto.DateTime);
         tr.LastRecurrence = UnixTimeConverter.ConvertBack(DateTime.Now);
 
@@ -82,7 +83,20 @@ public static class MapperHelper
         tr.ProjectId = dto.CategoryId == -1 ? 0 : (dto.ProjectId ?? 0); // parent transaction doesn't have a Project
         tr.Note = dto.Note;
         tr.Tags = dto.SelectedTags?.Count > 0 ? string.Join(TransactionDto.TagsDelimiter, dto.SelectedTags.Select(t => t.Title)) : null;
+        MapTemplateName(dto, tr);
         tr.DateTime = UnixTimeConverter.ConvertBack(dto.DateTime);
         tr.LastRecurrence = UnixTimeConverter.ConvertBack(DateTime.Now);
+    }
+
+    /// <summary>
+    /// Only the name travels with the DTO: whether the row is a template (<c>is_template</c>) stays what the entity already says,
+    /// so a scheduled row (2) isn't turned into something else by an edit.
+    /// </summary>
+    private static void MapTemplateName(BaseTransactionDto dto, Transaction tr)
+    {
+        if (dto.IsTemplate)
+        {
+            tr.TemplateName = dto.TemplateName?.Trim();
+        }
     }
 }

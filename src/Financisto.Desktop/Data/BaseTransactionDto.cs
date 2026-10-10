@@ -9,6 +9,7 @@ namespace Financisto.Desktop.Data
         protected DateTime time;
         protected int id;
         protected string note;
+        protected string templateName;
         protected double rate;
 
         public DateTime Date
@@ -65,6 +66,24 @@ namespace Financisto.Desktop.Data
         }
 
         public bool IsSubTransaction { get; set; }
+
+        /// <summary>The dialog edits a template (<c>is_template = 1</c>): it asks for a name and keeps no date of its own.</summary>
+        public bool IsTemplate { get; set; }
+
+        public string TemplateName
+        {
+            get => templateName;
+            set
+            {
+                if (SetProperty(ref templateName, value))
+                {
+                    RaisePropertyChanged(nameof(TemplateName));
+                }
+            }
+        }
+
+        /// <summary>Android disables the date and time of a template; the part of a split has the parent's.</summary>
+        public bool IsDateTimeEditable => !IsSubTransaction && !IsTemplate;
 
         public virtual long RealFromAmount { get; }
 

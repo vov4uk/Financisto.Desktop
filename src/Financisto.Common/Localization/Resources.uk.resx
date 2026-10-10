@@ -1161,4 +1161,40 @@
   <data name="delete_transaction_parent_confirm" xml:space="preserve">
     <value>Ця транзакція є частиною розділеної транзакції. Ви справді хочете видалити батьківську транзакцію?</value>
   </data>
+  <data name="template" xml:space="preserve">
+    <value>Шаблон</value>
+  </data>
+  <data name="transaction_templates" xml:space="preserve">
+    <value>Шаблони</value>
+  </data>
+  <data name="template_name" xml:space="preserve">
+    <value>Назва шаблону</value>
+  </data>
+  <data name="no_templates" xml:space="preserve">
+    <value>Немає шаблонів</value>
+  </data>
+  <data name="transaction_template" xml:space="preserve">
+    <value>Транзакція (Шаблон)</value>
+  </data>
+  <data name="transfer_template" xml:space="preserve">
+    <value>Переказ (Шаблон)</value>
+  </data>
+  <data name="delete_template_confirm" xml:space="preserve">
+    <value>Видалити шаблон?</value>
+  </data>
+  <data name="save_as_template" xml:space="preserve">
+    <value>Зберегти як шаблон</value>
+  </data>
+  <data name="save_as_template_success" xml:space="preserve">
+    <value>Транзакцію збережено як шаблон…</value>
+  </data>
+  <data name="edit_templates" xml:space="preserve">
+    <value>Редагувати шаблони</value>
+  </data>
+  <data name="select" xml:space="preserve">
+    <value>Вибрати</value>
+  </data>
+  <data name="search" xml:space="preserve">
+    <value>Пошук...</value>
+  </data>
 </root>

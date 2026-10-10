@@ -19,7 +19,7 @@ Entity (abstract, empty)                               Data/Entity.cs
 │        ├── Project
 │        └── Tag      (table "tag")
 ├── keyless / composite-key: CategoryAttribute, TransactionAttribute, CCardClosingDate, RunningBalance
-└── View/TransactionsView (abstract, no [Table]) → BlotterTransactions (v_blotter),
+└── View/TransactionsView (abstract, no [Table]) → AllTransactions (v_all_transactions: templates and split parts too), BlotterTransactions (v_blotter),
                                                 BlotterTransactionsForAccountWithSplits
 ```
 
@@ -47,6 +47,7 @@ Entity (abstract, empty)                               Data/Entity.cs
 | CategoryAttribute | `category_attribute` | keyless (`HasNoKey`) |
 | TransactionAttribute | `transaction_attribute` | not `IIdentity`, never imported into the DB |
 | CCardClosingDate | `ccard_closing_date` | not `IIdentity`, never imported into the DB |
+| AllTransactions | view `v_all_transactions` (the only view that has templates; the templates list reads it) | Id |
 | BlotterTransactions | view `v_blotter` | Id |
 | BlotterTransactionsForAccountWithSplits | view `v_blotter_for_account_with_splits` | Id |
 
@@ -56,7 +57,7 @@ Entity (abstract, empty)                               Data/Entity.cs
 - `CategoryId == -1` marks a split parent. `CategoryId == 0` means no category (or a transfer).
 - Transfer: `ToAccountId > 0 && CategoryId == 0`. `FromAmount < 0` is in the from-account currency and `ToAmount > 0` is in the to-account currency.
 - `OriginalCurrencyId` / `OriginalFromAmount` hold a foreign-currency amount (default `0`, not null).
-- `IsTemplate` is an **int** (0 = normal, 1 = template, 2 = scheduled). `Status` defaults to `"UR"`.
+- `IsTemplate` is an **int** (0 = normal, 1 = template, 2 = scheduled). A template's split parts carry the same value. Templates are in `v_all_transactions` only: `v_blotter*`, the running balances and `v_report_transactions` (`WHERE t.is_template = 0`, added with the templates feature; Android has no such view) leave them out. `Status` defaults to `"UR"`.
 - `Tags` is tag titles joined by the **two literal characters `\n`** (the backup's escaped form, never unescaped in memory). `Payee.Aliases` / `Location.Aliases` use the same form; use `Utils/BackupText` (`Escape`, `Unescape`, `SplitAliases`).
 - Default `Id` is `-1` on `Transaction` and `TagBase`. See the `InsertOrUpdateAsync` rule below.
 

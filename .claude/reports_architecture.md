@@ -50,7 +50,7 @@ protected abstract ReportChart GetChart(List<T>);
 protected string GetStandartTrnFilter();          // SQL condition from the year/month, date, payee, category (subtree), project, account filters
 ```
 
-The SQL templates use `string.Format` placeholders and read `v_report_transactions`, `running_balance` and `v_currency_exchange_rate`. **Every `[Column]` on a row model must be in the SELECT** (see Common docs); columns are shown in the table only if the property has `[DisplayName("localization key")]`.
+The SQL templates use `string.Format` placeholders and read `v_report_transactions` (which leaves out transaction templates, `is_template = 1`), `running_balance` and `v_currency_exchange_rate`. **Every `[Column]` on a row model must be in the SELECT** (see Common docs); columns are shown in the table only if the property has `[DisplayName("localization key")]`.
 
 | Report (tab title key) | VM / view | Filters | Row model | Charts |
 |---|---|---|---|---|

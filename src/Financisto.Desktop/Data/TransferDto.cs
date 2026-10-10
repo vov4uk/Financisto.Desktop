@@ -46,6 +46,8 @@ namespace Financisto.Desktop.Data
             fromAccountId = transaction.FromAccountId;
             toAccountId = transaction.ToAccountId;
             note = transaction.Note;
+            IsTemplate = transaction.IsTemplate == 1;
+            templateName = transaction.TemplateName;
             fromAmount = transaction.FromAmount;
             toAmount = transaction.ToAmount;
             date = UnixTimeConverter.Convert(transaction.DateTime).Date;

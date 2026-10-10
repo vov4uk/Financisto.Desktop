@@ -1,0 +1,184 @@
+<UserControl
+    x:Class="Financisto.Desktop.Views.Dialogs.TemplatesDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviors="using:Financisto.Common.Behaviors"
+    xmlns:conv="using:Financisto.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:Financisto.Desktop.ViewModels.Dialogs"
+    d:DesignHeight="560"
+    d:DesignWidth="760"
+    x:DataType="vm:TemplatesDialogVM"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <conv:TransactionTypeBrushConverter x:Key="TransactionTypeBrushConverter" />
+            <conv:TransactionTypeIconConverter x:Key="TransactionTypeIconConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <GroupBox
+        Margin="5"
+        FontSize="14"
+        Header="{loc:Translate Key=transaction_templates}">
+        <Grid Margin="8" RowDefinitions="Auto,*,Auto">
+
+            <!--  Android's search box: the template's name or its category  -->
+            <TextBox
+                x:Name="SearchBox"
+                Grid.Row="0"
+                Margin="0,0,0,8"
+                Text="{Binding SearchText, Mode=TwoWay}"
+                PlaceholderText="{loc:Translate Key=search}" />
+
+            <Grid Grid.Row="1">
+                <DataGrid
+                    behaviors:CommandBehavior.DoubleTappedCommand="{Binding ActivateCommand}"
+                    AutoGenerateColumns="False"
+                    FontSize="14"
+                    IsReadOnly="True"
+                    ItemsSource="{Binding Templates}"
+                    SelectedItem="{Binding SelectedTemplate, Mode=TwoWay}"
+                    SelectionMode="Single">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Image
+                                        Width="20"
+                                        Height="20"
+                                        Source="{Binding Path=Type, Converter={StaticResource TransactionTypeIconConverter}}" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn
+                            Width="160"
+                            Binding="{Binding Path=TemplateName}"
+                            Header="{loc:Translate Key=template_name}" />
+                        <DataGridTextColumn
+                            Width="150"
+                            Binding="{Binding Path=AccountTitle}"
+                            Header="{loc:Translate Key=account}" />
+                        <DataGridTextColumn
+                            Width="*"
+                            Binding="{Binding Path=TransactionTitle}"
+                            Header="{loc:Translate Key=title}" />
+                        <DataGridTemplateColumn Header="{loc:Translate Key=amount}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock
+                                        Margin="4,0,0,0"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        Foreground="{Binding Path=Type, Converter={StaticResource TransactionTypeBrushConverter}}"
+                                        Text="{Binding Path=AmountTitle}" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    IsHitTestVisible="False"
+                    IsVisible="{Binding HasNoTemplates}"
+                    Opacity="0.6"
+                    Text="{loc:Translate Key=no_templates}" />
+            </Grid>
+
+            <Grid Grid.Row="2" Margin="0,8,0,0">
+                <!--  Pick a template: Edit | - x1 + | Select, Cancel  -->
+                <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto" IsVisible="{Binding IsSelectMode}">
+                    <Button
+                        Grid.Column="0"
+                        Margin="2"
+                        Command="{Binding EditTemplatesCommand}"
+                        Content="{loc:Translate Key=edit_templates}" />
+                    <Button
+                        Grid.Column="1"
+                        Width="32"
+                        Height="32"
+                        Margin="12,2,2,2"
+                        Classes="icon"
+                        Command="{Binding DecrementMultiplierCommand}"
+                        Tag="{StaticResource IconMinus}" />
+                    <TextBlock
+                        Grid.Column="2"
+                        MinWidth="36"
+                        VerticalAlignment="Center"
+                        FontWeight="Bold"
+                        Text="{Binding MultiplierText}"
+                        TextAlignment="Center" />
+                    <Button
+                        Grid.Column="3"
+                        Width="32"
+                        Height="32"
+                        Margin="2"
+                        Classes="icon"
+                        Command="{Binding IncrementMultiplierCommand}"
+                        Tag="{StaticResource IconPlus}" />
+                    <Button
+                        Grid.Column="5"
+                        MinWidth="90"
+                        Margin="2"
+                        HorizontalContentAlignment="Center"
+                        Command="{Binding SaveCommand}"
+                        Content="{loc:Translate Key=select}"
+                        IsDefault="True" />
+                    <Button
+                        Grid.Column="6"
+                        MinWidth="90"
+                        Margin="2"
+                        HorizontalContentAlignment="Center"
+                        Command="{Binding CancelCommand}"
+                        Content="{loc:Translate Key=cancel}"
+                        IsCancel="True" />
+                </Grid>
+
+                <!--  Manage the templates: Android's template list with its add buttons  -->
+                <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto" IsVisible="{Binding IsManageMode}">
+                    <Button
+                        Grid.Column="0"
+                        Margin="2"
+                        Classes="icon"
+                        Command="{Binding AddTransactionCommand}"
+                        Content="{loc:Translate Key=add_expense}"
+                        Tag="{StaticResource IconPlus}" />
+                    <Button
+                        Grid.Column="1"
+                        Margin="2"
+                        Classes="icon"
+                        Command="{Binding AddTransferCommand}"
+                        Content="{loc:Translate Key=add_transfer}"
+                        Tag="{StaticResource IconArrowRightArrowLeft}" />
+                    <Button
+                        Grid.Column="2"
+                        Margin="2"
+                        Classes="icon"
+                        Command="{Binding EditCommand}"
+                        Content="{loc:Translate Key=edit}"
+                        Tag="{StaticResource IconPencil}" />
+                    <Button
+                        Grid.Column="3"
+                        Margin="2"
+                        Classes="icon"
+                        Command="{Binding DeleteCommand}"
+                        Content="{loc:Translate Key=delete}"
+                        Tag="{StaticResource IconTrash}" />
+                    <Button
+                        Grid.Column="5"
+                        MinWidth="90"
+                        Margin="2"
+                        HorizontalContentAlignment="Center"
+                        Command="{Binding CancelCommand}"
+                        Content="{loc:Translate Key=close}"
+                        IsCancel="True" />
+                </Grid>
+            </Grid>
+        </Grid>
+    </GroupBox>
+</UserControl>

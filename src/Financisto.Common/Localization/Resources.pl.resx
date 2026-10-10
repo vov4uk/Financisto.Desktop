@@ -1161,4 +1161,40 @@
   <data name="delete_transaction_parent_confirm" xml:space="preserve">
     <value>Ta transakcja jest częścią innej. Czy chcesz usunąć transakcję nadrzędną?</value>
   </data>
+  <data name="template" xml:space="preserve">
+    <value>Szablon</value>
+  </data>
+  <data name="transaction_templates" xml:space="preserve">
+    <value>Szablony</value>
+  </data>
+  <data name="template_name" xml:space="preserve">
+    <value>Nazwa szablonu</value>
+  </data>
+  <data name="no_templates" xml:space="preserve">
+    <value>Brak szablonów</value>
+  </data>
+  <data name="transaction_template" xml:space="preserve">
+    <value>Transakcja (Szablon)</value>
+  </data>
+  <data name="transfer_template" xml:space="preserve">
+    <value>Przelew (Szablon)</value>
+  </data>
+  <data name="delete_template_confirm" xml:space="preserve">
+    <value>Usunąć szablon?</value>
+  </data>
+  <data name="save_as_template" xml:space="preserve">
+    <value>Zapisz jako szablon</value>
+  </data>
+  <data name="save_as_template_success" xml:space="preserve">
+    <value>Transakcja zapisana jako szablon…</value>
+  </data>
+  <data name="edit_templates" xml:space="preserve">
+    <value>Edytuj szablony</value>
+  </data>
+  <data name="select" xml:space="preserve">
+    <value>Wybierz</value>
+  </data>
+  <data name="search" xml:space="preserve">
+    <value>Szukaj...</value>
+  </data>
 </root>
