@@ -993,6 +993,15 @@
   <data name="app_theme_dark" xml:space="preserve">
     <value>Ciemny</value>
   </data>
+  <data name="icon_set" xml:space="preserve">
+    <value>Zestaw ikon</value>
+  </data>
+  <data name="icon_set_default" xml:space="preserve">
+    <value>Domyślny</value>
+  </data>
+  <data name="icon_set_monocolor" xml:space="preserve">
+    <value>Monochromatyczny</value>
+  </data>
   <data name="sms_templates" xml:space="preserve">
     <value>Szablony SMS</value>
   </data>
@@ -1094,5 +1103,62 @@
   </data>
   <data name="sms_sender_required" xml:space="preserve">
     <value>Nadawca i szablon są wymagane</value>
+  </data>
+  <data name="delete_old_transactions" xml:space="preserve">
+    <value>Usuń stare transakcje</value>
+  </data>
+  <data name="close_account" xml:space="preserve">
+    <value>Zamknij rachunek</value>
+  </data>
+  <data name="close_account_confirm" xml:space="preserve">
+    <value>Zamknąć rachunek?</value>
+  </data>
+  <data name="reopen_account" xml:space="preserve">
+    <value>Otwórz ponownie rachunek</value>
+  </data>
+  <data name="delete_account" xml:space="preserve">
+    <value>Usuń rachunek</value>
+  </data>
+  <data name="delete_account_confirm" xml:space="preserve">
+    <value>Usunąć rachunek?</value>
+  </data>
+  <data name="transfer_current_balance" xml:space="preserve">
+    <value>Przelej bieżące saldo</value>
+  </data>
+  <data name="update_balance" xml:space="preserve">
+    <value>Aktualizacja salda</value>
+  </data>
+  <data name="difference" xml:space="preserve">
+    <value>Różnica</value>
+  </data>
+  <data name="purge_account_date_summary" xml:space="preserve">
+    <value>Usuń transakcje sprzed podanej daty włącznie z nią. Saldo rachunku nie ulegnie zmianie.</value>
+  </data>
+  <data name="purge_account_confirm_message" xml:space="preserve">
+    <value>Usuń transakcje z rachunku {0} do dnia {1} włącznie.</value>
+  </data>
+  <data name="purge_account_payee" xml:space="preserve">
+    <value>Poprzedni okres</value>
+  </data>
+  <data name="warning" xml:space="preserve">
+    <value>Ostrzeżenie</value>
+  </data>
+  <data name="close" xml:space="preserve">
+    <value>Zamknij</value>
+  </data>
+  <data name="ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="confirm" xml:space="preserve">
+    <value>Potwierdź</value>
+  </data>
+  <data name="yes" xml:space="preserve">
+    <value>Tak</value>
+  </data>
+  <data name="no" xml:space="preserve">
+    <value>Nie</value>
+  </data>
+  <data name="delete_transaction_parent_confirm" xml:space="preserve">
+    <value>Ta transakcja jest częścią innej. Czy chcesz usunąć transakcję nadrzędną?</value>
   </data>
 </root>

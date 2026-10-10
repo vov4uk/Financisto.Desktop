@@ -1,0 +1,158 @@
+<UserControl
+    x:Class="Financisto.Desktop.Views.Dialogs.AccountInfoDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:conv="using:Financisto.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:utils="using:Financisto.Common.Utils"
+    xmlns:vm="using:Financisto.Desktop.ViewModels.Dialogs"
+    d:DesignHeight="360"
+    d:DesignWidth="420"
+    x:DataType="vm:AccountInfoDialogVM"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <conv:AccountTypeConverter x:Key="AccountTypeConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <UserControl.Styles>
+        <Style Selector="TextBlock.infoLabel">
+            <Setter Property="Opacity" Value="0.7" />
+            <Setter Property="Margin" Value="0,0,12,0" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+        </Style>
+    </UserControl.Styles>
+    <GroupBox
+        Margin="5"
+        FontSize="14"
+        Header="{loc:Translate Key=information}">
+        <Grid Margin="4" RowDefinitions="Auto,*,Auto">
+            <!--  Title: type icon, account name and type  -->
+            <StackPanel
+                Grid.Row="0"
+                Margin="0,0,0,10"
+                Orientation="Horizontal"
+                Spacing="10">
+                <Image
+                    Width="48"
+                    Height="32"
+                    VerticalAlignment="Center">
+                    <Image.Source>
+                        <MultiBinding Converter="{StaticResource AccountTypeConverter}">
+                            <Binding Path="Type" />
+                            <Binding Path="CardIssuer" />
+                            <Binding Source="{x:Static utils:IconSettings.Instance}" Path="IconSet" />
+                        </MultiBinding>
+                    </Image.Source>
+                </Image>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="18"
+                        FontWeight="Bold"
+                        Text="{Binding Title}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock Opacity="0.7" Text="{Binding TypeTitle}" />
+                </StackPanel>
+            </StackPanel>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+                    <!--  Card issuer and number (card types only)  -->
+                    <TextBlock
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Classes="infoLabel"
+                        IsVisible="{Binding IsCard}"
+                        Text="{loc:Translate Key=issuer}" />
+                    <TextBlock
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Margin="0,0,0,6"
+                        IsVisible="{Binding IsCard}"
+                        Text="{Binding Issuer}"
+                        TextWrapping="Wrap" />
+
+                    <TextBlock
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Classes="infoLabel"
+                        Text="{loc:Translate Key=currency}" />
+                    <TextBlock
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Margin="0,0,0,6"
+                        Text="{Binding CurrencyTitle}"
+                        TextWrapping="Wrap" />
+
+                    <!--  A credit card with a limit shows the amount owed and, as the balance, what is left of the limit  -->
+                    <TextBlock
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        Classes="infoLabel"
+                        IsVisible="{Binding ShowAmount}"
+                        Text="{loc:Translate Key=amount}" />
+                    <TextBlock
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        Margin="0,0,0,6"
+                        Classes="balanceAmount"
+                        Classes.negative="{Binding IsAmountNegative}"
+                        IsVisible="{Binding ShowAmount}"
+                        Text="{Binding AmountText}" />
+
+                    <TextBlock
+                        Grid.Row="3"
+                        Grid.Column="0"
+                        Classes="infoLabel"
+                        Text="{loc:Translate Key=balance}" />
+                    <TextBlock
+                        Grid.Row="3"
+                        Grid.Column="1"
+                        Margin="0,0,0,6"
+                        Classes="balanceAmount"
+                        Classes.negative="{Binding IsBalanceNegative}"
+                        Text="{Binding BalanceText}" />
+
+                    <TextBlock
+                        Grid.Row="4"
+                        Grid.Column="0"
+                        Classes="infoLabel"
+                        IsVisible="{Binding HasNote}"
+                        Text="{loc:Translate Key=note}" />
+                    <TextBlock
+                        Grid.Row="4"
+                        Grid.Column="1"
+                        IsVisible="{Binding HasNote}"
+                        Text="{Binding Note}"
+                        TextWrapping="Wrap" />
+                </Grid>
+            </ScrollViewer>
+
+            <!--  Edit / Close  -->
+            <Grid
+                Grid.Row="2"
+                Margin="0,8,0,0"
+                ColumnDefinitions="*,*">
+                <Button
+                    Grid.Column="0"
+                    Margin="2"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding SaveCommand}"
+                    Content="{loc:Translate Key=edit}" />
+                <Button
+                    Grid.Column="1"
+                    Margin="2"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding CancelCommand}"
+                    Content="{loc:Translate Key=close}" />
+            </Grid>
+        </Grid>
+    </GroupBox>
+</UserControl>

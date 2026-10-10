@@ -110,7 +110,7 @@ namespace Financisto.Desktop.ViewModels
             new(typeof(ProjectModel), () => LocalizationService.Instance.projects, "IconListCheck"),
             new(typeof(PayeeModel), () => LocalizationService.Instance.payees, "IconAddressBook"),
             new(typeof(LocationModel), () => LocalizationService.Instance.locations, "IconMap"),
-            new(typeof(ExchangeRateModel), () => LocalizationService.Instance.exchange_rates, "IconArrowTrendUp"),
+            new(typeof(ExchangeRateModel), () => LocalizationService.Instance.exchange_rates, "IconDollarEuro"),
             new(typeof(BlotterModel), () => LocalizationService.Instance.blotter, "IconReceipt"),
             new(typeof(ReportsControlVM), () => LocalizationService.Instance.reports, "IconChartBar"),
         };
@@ -220,6 +220,13 @@ namespace Financisto.Desktop.ViewModels
                 Logger.Info($"Backup loaded in {stopwatch.ElapsedMilliseconds} ms. Backup version : {_backupVersion}. Entities count : {entitiesCount}");
 
                 await NavigateToType(typeof(BlotterModel));
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    selectedItemBottom = null;
+                    RaisePropertyChanged(nameof(SelectedItemBottom));
+                    selectedItemTop = ItemsTop.First(x => x.ModelType == typeof(BlotterModel));
+                    RaisePropertyChanged(nameof(SelectedItemTop));
+                });
 
                 IsLoading = false;
 
@@ -282,7 +289,7 @@ namespace Financisto.Desktop.ViewModels
             switch (type.Name)
             {
                 case nameof(AccountModel):
-                    return GetOrCreatePage<AccountModel, AccountsPageVM>();
+                    return _pages.GetOrAdd(type, _ => new AccountsPageVM(db, dialogWrapper) { ShowAccountTransactions = ShowAccountTransactionsAsync });
                 case nameof(CurrencyModel):
                     return GetOrCreatePage<CurrencyModel, CurrenciesPageVM>();
                 case nameof(ProjectModel):
@@ -318,6 +325,21 @@ namespace Financisto.Desktop.ViewModels
         {
             var type = typeof(TEntity);
             return (VMType)_pages.GetOrAdd(type, _ => Activator.CreateInstance(typeof(VMType), db, dialogWrapper) as VMType);
+        }
+
+        /// <summary>The accounts page's "Blotter" command (Android shows the account's transactions): opens the blotter with only that account.</summary>
+        private Task ShowAccountTransactionsAsync(int accountId)
+        {
+            var account = DbManual.Account.Find(x => x.Id == accountId);
+            if (account != null)
+            {
+                ((BlotterPageVM)GetOrCreatePage(typeof(BlotterModel))).ShowAccount(account);
+
+                // Selecting the sidebar entry navigates to the page, which refreshes it with the new filter.
+                SelectedItemTop = ItemsTop.First(x => x.ModelType == typeof(BlotterModel));
+            }
+
+            return Task.CompletedTask;
         }
 
         private void NavigateInBackground(Type type)

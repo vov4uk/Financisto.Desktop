@@ -3,6 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     MinWidth="300"
     MaxWidth="500"
@@ -22,17 +23,17 @@
             <Button
                 Name="YesButton"
                 Click="OnYesClick"
-                Content="Yes"
+                Content="{loc:Translate Key=yes}"
                 IsVisible="False" />
             <Button
                 Name="NoButton"
                 Click="OnNoClick"
-                Content="No"
+                Content="{loc:Translate Key=no}"
                 IsVisible="False" />
             <Button
                 Name="OkButton"
                 Click="OnOkClick"
-                Content="OK" />
+                Content="{loc:Translate Key=ok}" />
         </StackPanel>
     </StackPanel>
 </Window>

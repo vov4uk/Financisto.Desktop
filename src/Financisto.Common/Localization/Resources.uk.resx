@@ -993,6 +993,15 @@
   <data name="app_theme_dark" xml:space="preserve">
     <value>Темна</value>
   </data>
+  <data name="icon_set" xml:space="preserve">
+    <value>Набір іконок</value>
+  </data>
+  <data name="icon_set_default" xml:space="preserve">
+    <value>Типовий</value>
+  </data>
+  <data name="icon_set_monocolor" xml:space="preserve">
+    <value>Монохромний</value>
+  </data>
   <data name="sms_templates" xml:space="preserve">
     <value>Шаблони SMS</value>
   </data>
@@ -1094,5 +1103,62 @@
   </data>
   <data name="sms_sender_required" xml:space="preserve">
     <value>Відправник і шаблон обов'язкові</value>
+  </data>
+  <data name="delete_old_transactions" xml:space="preserve">
+    <value>Видалити старі транзакції</value>
+  </data>
+  <data name="close_account" xml:space="preserve">
+    <value>Закрити рахунок</value>
+  </data>
+  <data name="close_account_confirm" xml:space="preserve">
+    <value>Закрити рахунок?</value>
+  </data>
+  <data name="reopen_account" xml:space="preserve">
+    <value>Перевідкрити рахунок</value>
+  </data>
+  <data name="delete_account" xml:space="preserve">
+    <value>Видалити рахунок</value>
+  </data>
+  <data name="delete_account_confirm" xml:space="preserve">
+    <value>Видалити рахунок?</value>
+  </data>
+  <data name="transfer_current_balance" xml:space="preserve">
+    <value>Переказ поточного балансу</value>
+  </data>
+  <data name="update_balance" xml:space="preserve">
+    <value>Оновити баланс</value>
+  </data>
+  <data name="difference" xml:space="preserve">
+    <value>Різниця</value>
+  </data>
+  <data name="purge_account_date_summary" xml:space="preserve">
+    <value>Видалити транзакції до і включно по вказану дату. Баланс рахунку не зміниться.</value>
+  </data>
+  <data name="purge_account_confirm_message" xml:space="preserve">
+    <value>Видалити транзакції з рахунку {0} до і включно {1}.</value>
+  </data>
+  <data name="purge_account_payee" xml:space="preserve">
+    <value>Попередній період</value>
+  </data>
+  <data name="warning" xml:space="preserve">
+    <value>Увага</value>
+  </data>
+  <data name="close" xml:space="preserve">
+    <value>Закрити</value>
+  </data>
+  <data name="ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="confirm" xml:space="preserve">
+    <value>Підтвердити</value>
+  </data>
+  <data name="yes" xml:space="preserve">
+    <value>Так</value>
+  </data>
+  <data name="no" xml:space="preserve">
+    <value>Ні</value>
+  </data>
+  <data name="delete_transaction_parent_confirm" xml:space="preserve">
+    <value>Ця транзакція є частиною розділеної транзакції. Ви справді хочете видалити батьківську транзакцію?</value>
   </data>
 </root>

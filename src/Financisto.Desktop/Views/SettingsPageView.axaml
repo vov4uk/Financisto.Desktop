@@ -72,6 +72,19 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
                     </GroupBox>
+                    <GroupBox BorderThickness="0" Header="{loc:Translate Key=icon_set}">
+                        <ComboBox
+                            Width="140"
+                            VerticalAlignment="Center"
+                            ItemsSource="{Binding Source={loc:EnumBinding {x:Type ent:IconSetType}}}"
+                            SelectedItem="{Binding Entity.General.IconSet, Mode=TwoWay}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={StaticResource EnumDescriptionConverter}}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </GroupBox>
                     <GroupBox BorderThickness="0" Header="{loc:Translate Key=default_backup_directory}">
                         <Grid ColumnDefinitions="400,Auto">
                             <TextBox

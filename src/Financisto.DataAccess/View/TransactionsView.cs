@@ -112,10 +112,10 @@ namespace Financisto.DataAccess.View
         public string AttachedPicture { get; set; }
 
         [Column("from_account_balance")]
-        public int? FromAccountBalance { get; set; }
+        public long? FromAccountBalance { get; set; }
 
         [Column("to_account_balance")]
-        public int? ToAccountBalance { get; set; }
+        public long? ToAccountBalance { get; set; }
 
         [Column("is_transfer")]
         public long IsTransfer { get; set; }

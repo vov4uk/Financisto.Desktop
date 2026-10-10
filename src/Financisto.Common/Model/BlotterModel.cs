@@ -13,7 +13,10 @@ namespace Financisto.Common.Model
             {
                 if (ToAccountId > 0)
                 {
-                    return $"{FromAccountTitle}{BlotterUtils.TRANSFER_DELIMITER}{ToAccountTitle}";
+                    // An incoming row has the viewed account on its "from" side; the title reads in the direction the money went.
+                    return IsIncomingTransfer
+                        ? $"{ToAccountTitle}{BlotterUtils.TRANSFER_DELIMITER}{FromAccountTitle}"
+                        : $"{FromAccountTitle}{BlotterUtils.TRANSFER_DELIMITER}{ToAccountTitle}";
                 }
                 return FromAccountTitle;
             }
@@ -25,7 +28,10 @@ namespace Financisto.Common.Model
             {
                 if (ToAccountId > 0)
                 {
-                    return BlotterUtils.GetTransferAmountText(FromAccountCurrency, FromAmount, ToAccountCurrency, ToAmount);
+                    // Seen from an account (Android's account blotter) a transfer is just the amount that moved in or out of it.
+                    return IsAccountPerspective
+                        ? BlotterUtils.SetAmountText(FromAccountCurrency, FromAmount, true)
+                        : BlotterUtils.GetTransferAmountText(FromAccountCurrency, FromAmount, ToAccountCurrency, ToAmount);
                 }
 
                 if (OriginalCurrencyId > 0)
@@ -48,7 +54,7 @@ namespace Financisto.Common.Model
         {
             get
             {
-                if (ToAccountId > 0)
+                if (ToAccountId > 0 && !IsAccountPerspective)
                 {
                     return BlotterUtils.SetTransferBalanceText(FromAccountCurrency, FromAccountBalance, ToAccountCurrency, ToAccountBalance);
                 }
@@ -61,13 +67,31 @@ namespace Financisto.Common.Model
         public int? CategoryId { get; set; }
         public string CategoryTitle { get; set; }
         public long Datetime { get; set; }
-        public int? FromAccountBalance { get; set; }
+        public long? FromAccountBalance { get; set; }
         public CurrencyModel FromAccountCurrency { get; set; }
         public int FromAccountCurrencyId { get; set; }
         public int FromAccountId { get; set; }
         public string FromAccountTitle { get; set; }
         public long FromAmount { get; set; }
         public int Id { get; set; }
+
+        /// <summary>The split parent when this row is a part of a split (shown for an account the parent isn't on), else 0.</summary>
+        public int ParentId { get; set; }
+
+        /// <summary>The <c>is_transfer</c> column: -1 for the "to" side of a transfer, as the account view returns it (the accounts are swapped).</summary>
+        public long IsTransfer { get; set; }
+
+        /// <summary>
+        /// The row comes from the account view (<c>v_blotter_for_account_with_splits</c>): it is seen from <see cref="FromAccountId"/>,
+        /// whose running balance <see cref="FromAccountBalance"/> is.
+        /// </summary>
+        public bool IsAccountPerspective { get; set; }
+
+        /// <summary>A transfer row seen from the account it went into.</summary>
+        public bool IsIncomingTransfer => IsTransfer == -1;
+
+        public bool IsSplitPart => ParentId > 0;
+
         public string Location { get; set; }
         public int? LocationId { get; set; }
         public ProjectModel Project { get; set; }
@@ -77,7 +101,7 @@ namespace Financisto.Common.Model
         public long OriginalFromAmount { get; set; }
         public string Payee { get; set; }
         public string Tags { get; set; }
-        public int? ToAccountBalance { get; set; }
+        public long? ToAccountBalance { get; set; }
         public CurrencyModel ToAccountCurrency { get; set; }
         public int? ToAccountCurrencyId { get; set; }
         public int? ToAccountId { get; set; }

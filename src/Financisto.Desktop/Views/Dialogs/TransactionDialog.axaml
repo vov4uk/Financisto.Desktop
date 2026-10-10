@@ -61,9 +61,9 @@
                         <!--  Category  -->
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="32" />
-                        <!--  Currenct  -->
+                        <!--  Currenct (auto height, so the row collapses in update balance mode)  -->
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="32" />
+                        <RowDefinition Height="Auto" />
                         <!--  amount  -->
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
@@ -222,10 +222,12 @@
                         </Button>
                     </Grid>
 
+                    <!--  The balance update is always in the account's currency (Android hides the original currency there)  -->
                     <TextBlock
                         Grid.Row="7"
                         Grid.Column="0"
                         Grid.ColumnSpan="2"
+                        IsVisible="{Binding !IsUpdateBalanceMode}"
                         Text="{loc:Translate Key=currency}" />
 
                     <sc:SearchableComboBox
@@ -233,17 +235,32 @@
                         Grid.Column="0"
                         Grid.ColumnSpan="2"
                         HorizontalAlignment="Stretch"
+                        IsVisible="{Binding !IsUpdateBalanceMode}"
                         TextPath="Title"
                         ItemsSource="{x:Static entities:DbManual.Currencies}"
                         SelectedItem="{Binding Transaction.OriginalCurrency}"
                         SelectedValue="{Binding Transaction.OriginalCurrencyId}"
                         SelectedValueBinding="{Binding Id}" />
 
-                    <dialogs:AmountControl
+                    <StackPanel
                         Grid.Row="10"
                         Grid.Column="0"
-                        Grid.ColumnSpan="2"
-                        DataContext="{Binding}" />
+                        Grid.ColumnSpan="2">
+                        <dialogs:AmountControl DataContext="{Binding}" />
+                        <!--  Update balance mode: the amount above is the new balance, this is what the transaction records  -->
+                        <StackPanel
+                            Margin="2,4,0,0"
+                            Classes="accountBalance"
+                            IsVisible="{Binding IsUpdateBalanceMode}"
+                            Orientation="Horizontal">
+                            <TextBlock Text="{loc:Translate Key=difference}" />
+                            <TextBlock Text=": " />
+                            <TextBlock
+                                Classes="balanceAmount"
+                                Classes.negative="{Binding IsBalanceDifferenceNegative}"
+                                Text="{Binding BalanceDifferenceText}" />
+                        </StackPanel>
+                    </StackPanel>
 
                     <Border
                         Grid.Row="11"

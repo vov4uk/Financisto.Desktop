@@ -172,6 +172,115 @@ namespace Financisto.DataAccess
             }
         }
 
+        public async Task DeleteAccountAsync(int accountId)
+        {
+            if (accountId <= 0)
+            {
+                return;
+            }
+
+            await using var context = new FinancistoDataContext(ContextOptions);
+            await using var dbTransaction = await context.Database.BeginTransactionAsync();
+
+            await BreakTransfersAsync(context, accountId, null);
+            await context.Database.ExecuteSqlRawAsync("delete from transactions where from_account_id=@p0", accountId);
+            await context.Database.ExecuteSqlRawAsync("delete from running_balance where account_id=@p0", accountId);
+            await DetachOrphanSplitPartsAsync(context);
+            await context.Database.ExecuteSqlRawAsync("delete from account where _id=@p0", accountId);
+
+            await dbTransaction.CommitAsync();
+        }
+
+        public async Task PurgeAccountAsync(int accountId, long date, string previousPeriodPayeeTitle)
+        {
+            if (accountId <= 0)
+            {
+                return;
+            }
+
+            var dayEnd = AtDayEnd(date);
+            await using (var context = new FinancistoDataContext(ContextOptions))
+            {
+                // The account's balance after its latest row up to the cut; incoming transfers have a row here too,
+                // which Android's lookup in v_blotter by from_account_id would miss.
+                var last = await context.RunningBalance
+                    .Where(x => x.AccountId == accountId && x.Datetime <= dayEnd)
+                    .OrderByDescending(x => x.Datetime).ThenByDescending(x => x.TransactionId)
+                    .FirstOrDefaultAsync();
+                if (last == null)
+                {
+                    return;
+                }
+
+                await using var dbTransaction = await context.Database.BeginTransactionAsync();
+
+                var now = new DateTimeOffset(DateTime.Now).ToUnixTimeMilliseconds();
+                var payee = await context.Payees.FirstOrDefaultAsync(x => x.Title == previousPeriodPayeeTitle);
+                if (payee == null)
+                {
+                    payee = new Payee { Id = 0, Title = previousPeriodPayeeTitle, IsActive = true, UpdatedOn = now };
+                    context.Payees.Add(payee);
+                    await context.SaveChangesAsync();
+                }
+
+                await BreakTransfersAsync(context, accountId, dayEnd);
+                await context.Database.ExecuteSqlRawAsync(
+                    "delete from transactions where from_account_id=@p0 and datetime<=@p1 and is_template=0", accountId, dayEnd);
+                await context.Database.ExecuteSqlRawAsync(
+                    "delete from running_balance where account_id=@p0 and datetime<=@p1", accountId, dayEnd);
+                await DetachOrphanSplitPartsAsync(context);
+
+                context.Transactions.Add(new Transaction
+                {
+                    Id = 0,
+                    FromAccountId = accountId,
+                    DateTime = AtDayEnd(last.Datetime),
+                    FromAmount = last.Balance,
+                    PayeeId = payee.Id,
+                    Status = "CL",
+                    UpdatedOn = now,
+                });
+                await context.SaveChangesAsync();
+
+                await dbTransaction.CommitAsync();
+            }
+
+            // Same total as before; this also rebuilds the running balance and the account's last transaction.
+            await RebuildAccountBalanceAsync(accountId);
+        }
+
+        /// <summary>
+        /// Android's UPDATE_ORPHAN_TRANSACTIONS_1/2: a transfer to the account becomes an expense of the other account, a transfer from
+        /// it becomes an income of the other account. Limited to the transactions up to <paramref name="untilDate"/> when it is given.
+        /// </summary>
+        private static async Task BreakTransfersAsync(FinancistoDataContext context, int accountId, long? untilDate)
+        {
+            var dateFilter = untilDate == null ? string.Empty : " and datetime<=@p1 and is_template=0";
+            var parameters = untilDate == null ? new object[] { accountId } : new object[] { accountId, untilDate.Value };
+
+            await context.Database.ExecuteSqlRawAsync(
+                "update transactions set to_account_id=0, to_amount=0 where to_account_id=@p0" + dateFilter, parameters);
+            await context.Database.ExecuteSqlRawAsync(
+                "update transactions set from_account_id=to_account_id, from_amount=to_amount, to_account_id=0, to_amount=0, " +
+                "parent_id=0, parent_account_id=0 where from_account_id=@p0 and to_account_id>0" + dateFilter, parameters);
+        }
+
+        /// <summary>
+        /// A split part that moved money into the deleted parent's account is stored on the other account, so it survives its parent;
+        /// it becomes a plain transaction of that account.
+        /// </summary>
+        private static Task DetachOrphanSplitPartsAsync(FinancistoDataContext context) =>
+            context.Database.ExecuteSqlRawAsync(
+                "update transactions set parent_id=0, parent_account_id=0 where parent_id>0 and parent_id not in (select _id from transactions)");
+
+        /// <summary>Android's <c>DateUtils.atDayEnd</c>: 23:59:59.999 of the local day.</summary>
+        private static long AtDayEnd(long unixMilliseconds)
+        {
+            var local = DateTimeOffset.FromUnixTimeMilliseconds(unixMilliseconds).ToLocalTime();
+            var end = new DateTime(local.Year, local.Month, local.Day, 23, 59, 59, 999, DateTimeKind.Local);
+            return new DateTimeOffset(end).ToUnixTimeMilliseconds();
+        }
+
         public async Task<Dictionary<int, long>> GetLastRunningBalancesAsync()
         {
             // Android's getLastRunningBalanceForAccount ("order by datetime desc, transaction_id desc limit 1") for every account at once.

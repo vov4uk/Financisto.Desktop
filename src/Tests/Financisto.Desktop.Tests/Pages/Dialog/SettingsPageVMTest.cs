@@ -5,6 +5,7 @@ namespace Financisto.Desktop.Tests.Pages.Dialog
     using Financisto.Common.Entities;
     using Financisto.Common.Localization;
     using Financisto.Common.Model;
+    using Financisto.Common.Utils;
     using Financisto.DataAccess.Abstractions;
     using Financisto.DataAccess.Data;
     using Financisto.Desktop.Data;
@@ -167,6 +168,61 @@ namespace Financisto.Desktop.Tests.Pages.Dialog
             notifierMock.Verify(x => x.ShowMessage(It.IsAny<string>()), Times.Once);
         }
 
+        [Theory]
+        [InlineData(IconSetType.Default)]
+        [InlineData(IconSetType.Monocolor)]
+        public async Task RefreshData_LoadsIconSet_FromSettings(IconSetType iconSet)
+        {
+            var vm = await CreateRefreshedVm(CreateEntity(iconSet: iconSet));
+
+            Assert.Equal(iconSet, vm.Entity.General.IconSet);
+        }
+
+        [Theory]
+        [InlineData(IconSetType.Default, IconSetType.Monocolor)]
+        [InlineData(IconSetType.Monocolor, IconSetType.Default)]
+        public async Task Save_ChangedIconSet_IsStoredAndAppliedToIconSettings(IconSetType before, IconSetType after)
+        {
+            IconSettings.Instance.IconSet = before;
+            try
+            {
+                var vm = await CreateRefreshedVm(CreateEntity(iconSet: before));
+                var raised = new List<string>();
+                IconSettings.Instance.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+                vm.Entity.General.IconSet = after;
+
+                await vm.SaveCommand.ExecuteAsync();
+
+                Assert.Equal(after, SettingsService.Current.Settings.General.IconSet);
+                Assert.Equal(after, IconSettings.Instance.IconSet);
+                Assert.Contains(nameof(IconSettings.IconSet), raised);
+            }
+            finally
+            {
+                IconSettings.Instance.IconSet = IconSetType.Default;
+            }
+        }
+
+        [Fact]
+        public async Task Save_UnchangedIconSet_DoesNotRaiseIconSettingsChanged()
+        {
+            IconSettings.Instance.IconSet = IconSetType.Monocolor;
+            try
+            {
+                var vm = await CreateRefreshedVm(CreateEntity(iconSet: IconSetType.Monocolor));
+                var raised = new List<string>();
+                IconSettings.Instance.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+
+                await vm.SaveCommand.ExecuteAsync();
+
+                Assert.Empty(raised);
+            }
+            finally
+            {
+                IconSettings.Instance.IconSet = IconSetType.Default;
+            }
+        }
+
         [Fact]
         public async Task Save_SameLanguage_DbManualNotRefreshed()
         {
@@ -304,10 +360,11 @@ namespace Financisto.Desktop.Tests.Pages.Dialog
         private static SettingsDto CreateEntity(
             ExchangeRatesProviders provider = ExchangeRatesProviders.None,
             string appId = "",
-            Language language = Language.English) =>
+            Language language = Language.English,
+            IconSetType iconSet = IconSetType.Default) =>
             new SettingsDto
             {
-                General = new SettingsGeneralDto { Language = language },
+                General = new SettingsGeneralDto { Language = language, IconSet = iconSet },
                 ExchangeRates = new SettingsExchangeRates
                 {
                     Provider = provider,

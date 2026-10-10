@@ -174,11 +174,19 @@
                 <DataGridTemplateColumn ClipboardContentBinding="{Binding Path=Type}" Header="">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Image
-                                Name="MyImage"
-                                Width="20"
-                                Height="20"
-                                Source="{Binding Path=Type, Converter={StaticResource TransactionTypeIconConverter}}" />
+                            <StackPanel Orientation="Horizontal" Spacing="2">
+                                <Image
+                                    Name="MyImage"
+                                    Width="20"
+                                    Height="20"
+                                    Source="{Binding Path=Type, Converter={StaticResource TransactionTypeIconConverter}}" />
+                                <!--  A part of another account's split (Android's second icon): the row stands for money that moved within that split  -->
+                                <Image
+                                    Width="20"
+                                    Height="20"
+                                    IsVisible="{Binding IsSplitPart}"
+                                    Source="{StaticResource IconShareNodesRed}" />
+                            </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

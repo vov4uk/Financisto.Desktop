@@ -44,9 +44,29 @@ public class TransactionDialogVM : SubTransactionDialogVM
             {
                 OnPropertyChanged(nameof(FromAccountBalance));
                 OnPropertyChanged(nameof(IsFromAccountBalanceNegative));
+
+                // Android selectAccount: the difference is against the balance of the account selected now.
+                if (Transaction.IsUpdateBalance && FromAccountBalanceValue is long balance)
+                {
+                    Transaction.CurrentBalance = balance;
+                }
+            }
+            else if (e.PropertyName == nameof(TransactionDto.BalanceDifference))
+            {
+                OnPropertyChanged(nameof(BalanceDifferenceText));
+                OnPropertyChanged(nameof(IsBalanceDifferenceNegative));
+                SaveCommand.NotifyCanExecuteChanged();
             }
         };
     }
+
+    /// <summary>True for the account's "Balance" command: the amount is the new balance and only the difference is saved.</summary>
+    public bool IsUpdateBalanceMode => Transaction.IsUpdateBalance;
+
+    /// <summary>What the transaction records in update balance mode, formatted like the accounts grid (with a plus sign).</summary>
+    public string BalanceDifferenceText => BlotterUtils.SetAmountText(Transaction.FromAccountCurrency, Transaction.BalanceDifference, true);
+
+    public bool IsBalanceDifferenceNegative => Transaction.BalanceDifference < 0;
 
     /// <summary>The selected account's current balance, formatted like the accounts grid (AccountModel.AmountTitle).</summary>
     public string FromAccountBalance =>
@@ -77,7 +97,10 @@ public class TransactionDialogVM : SubTransactionDialogVM
     public Common.IAsyncCommand OpenRecipesDialogCommand => _openRecipesDialogCommand ??= new AsyncCommand(ShowRecipesDialog);
 
     // Only a split must be fully distributed among its parts; a regular transaction has no parts, so its UnsplitAmount is the whole amount.
-    protected override bool CanSaveCommandExecute() => Transaction.FromAccount != null && Transaction.FromAmount != 0 && base.CanSaveCommandExecute();
+    protected override bool CanSaveCommandExecute() =>
+        Transaction.FromAccount != null
+        && (Transaction.IsUpdateBalance ? Transaction.BalanceDifference != 0 : Transaction.FromAmount != 0)
+        && base.CanSaveCommandExecute();
 
     private static void CopySubTransaction(TransactionDto original, TransactionDto modifiedCopy)
     {

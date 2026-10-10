@@ -52,7 +52,7 @@ namespace Financisto.Common.Utils
             return AmountToString(sb, c, amount, addPlus).ToString();
         }
 
-        public static string SetTransferBalanceText(CurrencyModel fromCurrency, int? fromBalance, CurrencyModel toCurrency, int? toBalance)
+        public static string SetTransferBalanceText(CurrencyModel fromCurrency, long? fromBalance, CurrencyModel toCurrency, long? toBalance)
         {
             var sb = new StringBuilder();
             AmountToString(sb, fromCurrency, fromBalance ?? 0, false).Append(TRANSFER_DELIMITER);
