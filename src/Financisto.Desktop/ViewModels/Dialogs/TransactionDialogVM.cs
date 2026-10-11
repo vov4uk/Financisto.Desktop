@@ -51,6 +51,10 @@ public class TransactionDialogVM : SubTransactionDialogVM
                     Transaction.CurrentBalance = balance;
                 }
             }
+            else if (e.PropertyName == nameof(TransactionDto.TemplateName))
+            {
+                SaveCommand.NotifyCanExecuteChanged();
+            }
             else if (e.PropertyName == nameof(TransactionDto.BalanceDifference))
             {
                 OnPropertyChanged(nameof(BalanceDifferenceText));
@@ -99,7 +103,10 @@ public class TransactionDialogVM : SubTransactionDialogVM
     // Only a split must be fully distributed among its parts; a regular transaction has no parts, so its UnsplitAmount is the whole amount.
     protected override bool CanSaveCommandExecute() =>
         Transaction.FromAccount != null
-        && (Transaction.IsUpdateBalance ? Transaction.BalanceDifference != 0 : Transaction.FromAmount != 0)
+        // A template may have no amount (Android then opens the calculator when it is used), but needs a name to be found by in the list.
+        && (Transaction.IsTemplate
+            ? !string.IsNullOrWhiteSpace(Transaction.TemplateName)
+            : Transaction.IsUpdateBalance ? Transaction.BalanceDifference != 0 : Transaction.FromAmount != 0)
         && base.CanSaveCommandExecute();
 
     private static void CopySubTransaction(TransactionDto original, TransactionDto modifiedCopy)

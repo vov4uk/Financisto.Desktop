@@ -101,6 +101,9 @@ namespace Financisto.Common.Model
         public long OriginalFromAmount { get; set; }
         public string Payee { get; set; }
         public string Tags { get; set; }
+
+        /// <summary>The name of a template row (<c>is_template = 1</c>); null for an ordinary transaction.</summary>
+        public string TemplateName { get; set; }
         public long? ToAccountBalance { get; set; }
         public CurrencyModel ToAccountCurrency { get; set; }
         public int? ToAccountCurrencyId { get; set; }

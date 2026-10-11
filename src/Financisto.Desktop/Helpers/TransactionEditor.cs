@@ -31,7 +31,10 @@ namespace Financisto.Desktop.Helpers
         {
             TransferDialogVM dialogVm = new TransferDialogVM(new TransferDto(transfer), await db.GetLastRunningBalancesAsync());
 
-            var result = await dialogWrapper.ShowDialogAsync<TransferDialog>(dialogVm, 480, 440, LocalizationService.Instance.transfer);
+            // a template has a name field on top
+            var isTemplate = transfer.IsTemplate == 1;
+            var title = isTemplate ? LocalizationService.Instance.transfer_template : LocalizationService.Instance.transfer;
+            var result = await dialogWrapper.ShowDialogAsync<TransferDialog>(dialogVm, isTemplate ? 540 : 480, 440, title);
 
             if (result is not TransferDto output)
             {
@@ -41,8 +44,13 @@ namespace Financisto.Desktop.Helpers
             MapperHelper.MapTransfer(output, transfer);
             await db.InsertOrUpdateAsync(new[] { transfer });
 
-            await db.RebuildAccountBalanceAsync(transfer.FromAccountId);
-            await db.RebuildAccountBalanceAsync(transfer.ToAccountId);
+            // a template doesn't move any money
+            if (!isTemplate)
+            {
+                await db.RebuildAccountBalanceAsync(transfer.FromAccountId);
+                await db.RebuildAccountBalanceAsync(transfer.ToAccountId);
+            }
+
             return true;
         }
 
@@ -61,7 +69,9 @@ namespace Financisto.Desktop.Helpers
 
             TransactionDialogVM dialogVm = new TransactionDialogVM(transactionDto, dialogWrapper, await db.GetLastRunningBalancesAsync());
 
-            var title = currentBalance == null ? LocalizationService.Instance.transaction : LocalizationService.Instance.update_balance;
+            var title = currentBalance != null
+                ? LocalizationService.Instance.update_balance
+                : transaction.IsTemplate == 1 ? LocalizationService.Instance.transaction_template : LocalizationService.Instance.transaction;
             var result = await dialogWrapper.ShowDialogAsync<TransactionDialog>(dialogVm, 640, 440, title);
             if (result is not TransactionDto resultVm)
             {
@@ -148,6 +158,12 @@ namespace Financisto.Desktop.Helpers
 
             await ProcessDeletedTransactions(subTransactions, resultTransactions);
 
+            // A template doesn't move any money.
+            if (transaction.IsTemplate != 0)
+            {
+                return;
+            }
+
             // An incoming split transfer has the other account on its "from" side, so rebuild both sides.
             var accounts = resultTransactions
                 .SelectMany(x => new[] { x.FromAccountId, x.ToAccountId })
@@ -182,6 +198,7 @@ namespace Financisto.Desktop.Helpers
             subTranfer.FromAccountId = transaction.FromAccountId;
             subTranfer.FromAccount = resultVm.FromAccount;
             MapperHelper.MapTransfer(subTranfer, subTransaction);
+            subTransaction.IsTemplate = transaction.IsTemplate;
             subTransaction.Parent = transaction;
             subTransaction.ParentAccountId = transaction.FromAccountId;
             return subTransaction;
@@ -193,6 +210,8 @@ namespace Financisto.Desktop.Helpers
             subTransactionDto.Date = resultVm.Date;
             subTransactionDto.Time = resultVm.Time;
             MapperHelper.MapTransaction(subTransactionDto, subTransaction);
+            // Same as Android DatabaseAdapter.insertSplits: the parts of a template are template rows.
+            subTransaction.IsTemplate = transaction.IsTemplate;
             subTransaction.Parent = transaction;
             subTransaction.FromAccountId = transaction.FromAccountId;
             // Same as Android DatabaseAdapter.insertSplits: split parts carry the parent's account.

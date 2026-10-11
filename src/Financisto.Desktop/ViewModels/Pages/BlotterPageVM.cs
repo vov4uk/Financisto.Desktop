@@ -16,12 +16,15 @@ using Financisto.DataAccess.Data;
 using Financisto.DataAccess.Utils;
 using Financisto.DataAccess.View;
 using Financisto.Desktop.Helpers;
+using Financisto.Desktop.ViewModels.Dialogs;
+using Financisto.Desktop.Views.Dialogs;
 
 namespace Financisto.Desktop.ViewModels.Pages
 {
     public class BlotterPageVM : EntityBaseVM<BlotterModel>
     {
-        private IAsyncCommand _addTemplateCommand;
+        private IAsyncCommand _templateCommand;
+        private IAsyncCommand _saveAsTemplateCommand;
         private IAsyncCommand _addTransferCommand;
         private IAsyncCommand _duplicateCommand;
         private IAsyncCommand _clearFiltersCommand;
@@ -38,6 +41,7 @@ namespace Financisto.Desktop.ViewModels.Pages
         private LocationModel _location;
         private ObservableCollection<TagModel> _tags = new ObservableCollection<TagModel>();
         private TransactionEditor _editor;
+        private TemplateStore _templates;
 
         public BlotterPageVM(IFinancistoDatabase db, IDialogWrapper dialogWrapper)
             : base(db, dialogWrapper)
@@ -92,6 +96,11 @@ namespace Financisto.Desktop.ViewModels.Pages
 
         private TransactionEditor Editor => _editor ??= new TransactionEditor(db, dialogWrapper);
 
+        private TemplateStore Templates => _templates ??= new TemplateStore(db);
+
+        /// <summary>Where "Save as template" reports success (Android's toast); set by <c>MainWindowVM</c>, nothing is shown without it.</summary>
+        public IToastNotifierWrapper Notifier { get; set; }
+
         // the account new transactions default to: only when exactly one account is filtered
         private int? SingleAccountId => SelectedAccounts.Count == 1 ? SelectedAccounts[0]?.Id : null;
 
@@ -145,7 +154,11 @@ namespace Financisto.Desktop.ViewModels.Pages
             }
         }
 
-        public IAsyncCommand AddTemplateCommand => _addTemplateCommand ??= new AsyncCommand(() => Task.CompletedTask, () => false);
+        /// <summary>Android's blotter "Template" button: pick a template, then the transaction or transfer dialog opens filled from it.</summary>
+        public IAsyncCommand TemplateCommand => _templateCommand ??= new AsyncCommand(OnTemplate);
+
+        /// <summary>Android's "Save as template" for the selected row.</summary>
+        public IAsyncCommand SaveAsTemplateCommand => _saveAsTemplateCommand ??= new AsyncCommand(() => OnSaveAsTemplate(SelectedValue), () => SelectedValue != null);
 
         public IAsyncCommand AddTransferCommand => _addTransferCommand ??= new AsyncCommand(AddTransfer);
 
@@ -284,9 +297,45 @@ namespace Financisto.Desktop.ViewModels.Pages
             }
         }
 
+        private async Task OnTemplate()
+        {
+            var dialog = await TemplatesDialogVM.CreateAsync(db, dialogWrapper);
+            var result = await dialogWrapper.ShowDialogAsync<TemplatesDialog>(dialog, 560, 760, LocalizationService.Instance.transaction_templates);
+            if (result is not TemplateSelection selection)
+            {
+                return;
+            }
+
+            var created = await Templates.CreateFromTemplateAsync(selection.TemplateId, selection.Multiplier);
+            if (created is not { } copy)
+            {
+                return;
+            }
+
+            // Nothing is stored until the dialog is saved, so cancelling leaves no half-made transaction behind.
+            if (TemplateStore.IsTransfer(copy.Transaction))
+            {
+                await EditTransferAsync(copy.Transaction);
+            }
+            else
+            {
+                await EditTransactionAsync(copy.Transaction, copy.SubTransactions);
+            }
+        }
+
+        private async Task OnSaveAsTemplate(BlotterModel item)
+        {
+            // like Android's BlotterOperations, a part of a split stands for its parent
+            if (await Templates.SaveAsTemplateAsync(TargetId(item)) > 0)
+            {
+                Notifier?.ShowMessage(LocalizationService.Instance.save_as_template_success);
+            }
+        }
+
         protected override void OnSelectedValueChanged()
         {
             DuplicateCommand.RaiseCanExecuteChanged();
+            SaveAsTemplateCommand.RaiseCanExecuteChanged();
             base.OnSelectedValueChanged();
         }
 
@@ -429,7 +478,7 @@ namespace Financisto.Desktop.ViewModels.Pages
         internal static Task<List<BlotterModel>> QueryAsync(IFinancistoDatabase db, Expression<Func<BlotterTransactions, bool>> predicate) =>
             QueryAsync<BlotterTransactions>(db, predicate);
 
-        private static async Task<List<BlotterModel>> QueryAsync<T>(IFinancistoDatabase db, Expression<Func<T, bool>> predicate)
+        internal static async Task<List<BlotterModel>> QueryAsync<T>(IFinancistoDatabase db, Expression<Func<T, bool>> predicate)
             where T : TransactionsView
         {
             using var uow = db.CreateUnitOfWork();
@@ -453,6 +502,7 @@ namespace Financisto.Desktop.ViewModels.Pages
                     Location = x.Location,
                     Payee = x.Payee,
                     Tags = x.Tags,
+                    TemplateName = x.TemplateName,
                     Note = x.Note,
                     FromAmount = x.FromAmount,
                     ToAmount = x.ToAmount,

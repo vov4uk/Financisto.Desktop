@@ -212,7 +212,7 @@ ORDER BY account_is_active DESC, sort_order ASC
             }
             else if (Range == ReportStructureSaldoRange.AllPeriods)
             {
-                var rows = await base.db.ExecuteQuery<FirstTransactionRawModel>("SELECT MIN(datetime) AS first_datetime FROM transactions");
+                var rows = await base.db.ExecuteQuery<FirstTransactionRawModel>("SELECT MIN(datetime) AS first_datetime FROM transactions WHERE is_template = 0");
                 var first = rows?.FirstOrDefault()?.FirstDateTime;
                 var firstDay = first.HasValue
                     ? DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(first.Value).LocalDateTime)

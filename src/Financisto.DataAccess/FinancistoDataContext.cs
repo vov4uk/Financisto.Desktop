@@ -18,6 +18,7 @@ namespace Financisto.DataAccess
             modelBuilder.Entity<CurrencyExchangeRate>().HasKey(x => new { x.FromCurrencyId, x.ToCurrencyId, x.Date });
             modelBuilder.Entity<RunningBalance>().HasKey(x => new { x.TransactionId, x.AccountId });
             modelBuilder.Entity<CategoryAttribute>().HasNoKey();
+            modelBuilder.Entity<AllTransactions>().ToView("v_all_transactions").HasKey(x => x.Id);
             modelBuilder.Entity<BlotterTransactions>().ToView("v_blotter").HasKey(x => x.Id);
             modelBuilder.Entity<BlotterTransactionsForAccountWithSplits>().ToView("v_blotter_for_account_with_splits").HasKey(x => x.Id);
         }
@@ -38,6 +39,7 @@ namespace Financisto.DataAccess
         public DbSet<SmsTemplate> SmsTemplates { get; set; }
         public DbSet<CurrencyExchangeRate> ExchangeRates { get; set; }
         public DbSet<RunningBalance> RunningBalance { get; set; }
+        public DbSet<AllTransactions> AllTransactions { get; set; }
         public DbSet<BlotterTransactions> BlotterTransactions { get; set; }
         public DbSet<BlotterTransactionsForAccountWithSplits> BlotterTransactionsForAccountWithSplits { get; set; }
     }

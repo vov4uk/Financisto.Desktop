@@ -301,7 +301,7 @@ namespace Financisto.Desktop.ViewModels
                 case nameof(TagModel):
                     return GetOrCreatePage<TagModel, TagsPageVM>();
                 case nameof(BlotterModel):
-                    return GetOrCreatePage<BlotterModel, BlotterPageVM>();
+                    return _pages.GetOrAdd(type, _ => new BlotterPageVM(db, dialogWrapper) { Notifier = notifier });
                 case nameof(CategoryTreeModel):
                     return GetOrCreatePage<CategoryTreeModel, CategoriesPageVM>();
                 case nameof(SmsTemplateModel):

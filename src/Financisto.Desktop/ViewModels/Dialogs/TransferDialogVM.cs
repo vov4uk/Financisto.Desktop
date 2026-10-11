@@ -13,6 +13,7 @@ namespace Financisto.Desktop.ViewModels.Dialogs
             nameof(TransferDto.FromAmount),
             nameof(TransferDto.ToAccount),
             nameof(TransferDto.FromAccount),
+            nameof(TransferDto.TemplateName),
         };
         private readonly IReadOnlyDictionary<int, long> accountBalances;
         private DelegateCommand _changeFromAmountSignCommand;
@@ -48,8 +49,10 @@ namespace Financisto.Desktop.ViewModels.Dialogs
 
         public override object OnRequestSave() => Transfer;
 
+        // A template needs a name to be found by in the list.
         protected override bool CanSaveCommandExecute()
-            => Transfer.FromAccount != null && Transfer.ToAccount != null && Transfer.FromAccountId != Transfer.ToAccountId;
+            => Transfer.FromAccount != null && Transfer.ToAccount != null && Transfer.FromAccountId != Transfer.ToAccountId
+               && (!Transfer.IsTemplate || !string.IsNullOrWhiteSpace(Transfer.TemplateName));
 
         private void TransferPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
