@@ -36,6 +36,8 @@ A full-featured desktop companion for [Financisto](https://github.com/dsolonenko
 - Add/edit/duplicate transactions and transfers
 - Split transactions (parse receipt text)
 
+![Alt text](dashboard.png?raw=true "UI example")
+
 ### Entities
 - **Accounts** (Cash, Bank, Credit/Debit Card, Asset, Liability, Electronic, Other)
 - **Categories** (hierarchical tree)
