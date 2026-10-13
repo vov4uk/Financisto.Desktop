@@ -19,6 +19,7 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
             this.memory = memory ?? new RecipeCategoryMemory(RecipeCategoryMemory.DefaultPath);
             this.memory.Load();
             TotalAmount = totalAmount;
+            Logger.Info($"[Recipes] wizard started, total {totalAmount:F2}, {this.memory.Categories.Count} remembered categories");
 #pragma warning disable S1699 // Constructors should only call non-overridable methods
             CreatePages();
 #pragma warning restore S1699 // Constructors should only call non-overridable methods
@@ -40,7 +41,7 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
             {
                 page1.CalculateCurrentAmount();
                 ((Page2VM)newValue).SetTransactions(page1.Amounts);
-                Logger.Info($"MonoTransactions count -> {page1.Amounts.Count}");
+                Logger.Info($"[Recipes] page 1 -> 2: {page1.Amounts.Count} rows, calculated {page1.CalculatedAmount:F2} of {TotalAmount:F2}");
             }
         }
 
@@ -72,6 +73,7 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
                 // what was chosen for these notes is kept for the next receipt (notes Clear notes already wiped were taken before)
                 memory.Remember(rows);
                 memory.Save();
+                Logger.Info($"[Recipes] saved: {rows.Count} rows, {rows.Count(row => row.CategoryId > 0)} with a category, {rows.Count(row => !string.IsNullOrWhiteSpace(row.Note))} with a note");
 
                 return rows.Select(TransformMonoTransaction).ToList();
             }

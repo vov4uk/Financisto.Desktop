@@ -23,6 +23,8 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
         private string text;
         private string? pdfStatus;
         private bool isPdfBusy;
+        private int rememberedHits;
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private readonly RecipeCategoryMemory? memory;
 
         /// <param name="memory">The categories chosen for these lines on earlier receipts; null = nothing remembered.</param>
@@ -84,9 +86,12 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
         {
             IsPdfBusy = true;
             PdfStatus = null;
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             try
             {
+                Logger.Info($"[Recipes] reading PDF {System.IO.Path.GetFileName(filePath)}, {new System.IO.FileInfo(filePath).Length} bytes");
                 var (extracted, ocrTried) = await Task.Run(() => ReadPdfAsync(filePath));
+                Logger.Info($"[Recipes] PDF read in {stopwatch.ElapsedMilliseconds} ms: {extracted.Length} characters, OCR used: {ocrTried}");
                 if (string.IsNullOrWhiteSpace(extracted))
                 {
                     PdfStatus = LocalizationService.Instance[ocrTried ? "pdf_ocr_empty" : "pdf_no_text"];
@@ -97,6 +102,7 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
             }
             catch (Exception ex)
             {
+                Logger.Error(ex, $"[Recipes] the PDF {System.IO.Path.GetFileName(filePath)} could not be read");
                 PdfStatus = string.Format(LocalizationService.Instance["pdf_read_error"], ex.Message);
             }
             finally
@@ -110,6 +116,7 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
             var text = PdfTextExtractor.ExtractText(filePath);
             if (!string.IsNullOrWhiteSpace(text))
             {
+                Logger.Info($"[Recipes] the PDF has a text layer ({text.Length} characters)");
                 return (text, false);
             }
 
@@ -117,11 +124,14 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
             var ocr = CreateOcr();
             if (ocr is null)
             {
+                Logger.Info("[Recipes] the PDF has no text layer and this system has no OCR");
                 return (string.Empty, false);
             }
 
+            var images = PdfTextExtractor.ExtractImages(filePath);
+            Logger.Info($"[Recipes] the PDF has no text layer: OCR of {images.Count} picture(s)");
             var pages = new List<string>();
-            foreach (var image in PdfTextExtractor.ExtractImages(filePath))
+            foreach (var image in images)
             {
                 pages.Add(await ocr.RecognizeAsync(image));
             }
@@ -132,6 +142,7 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
         public void CalculateCurrentAmount()
         {
             Amounts.Clear();
+            rememberedHits = 0;
 
             if (!string.IsNullOrEmpty(text))
             {
@@ -156,6 +167,7 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
 
                 // cents: a sum of doubles is off by 1e-13 (Diff would print as -0.00)
                 CalculatedAmount = Math.Round(Math.Abs(tmp), 2) * -1.0;
+                Logger.Info($"[Recipes] {lines.Count} lines -> {Amounts.Count} rows, {rememberedHits} categories from the remembered ones, sum {CalculatedAmount:F2}");
             }
         }
 
@@ -223,6 +235,7 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
             if (memory is not null && memory.TryGetCategoryId(transaction.Note, out var remembered))
             {
                 transaction.CategoryId = remembered;
+                rememberedHits++;
                 return;
             }
 

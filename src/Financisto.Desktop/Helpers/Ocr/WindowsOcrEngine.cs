@@ -32,6 +32,7 @@ internal sealed class WindowsOcrEngine : IOcrEngine
         var path = Path.Combine(folder, AssemblyFile);
         if (!OperatingSystem.IsWindows() || !File.Exists(path))
         {
+            Logger.Info($"[OCR] Windows OCR is off: {(OperatingSystem.IsWindows() ? $"{path} is missing" : "this is not Windows")}");
             return null;
         }
 
@@ -52,6 +53,7 @@ internal sealed class WindowsOcrEngine : IOcrEngine
                 return null;
             }
 
+            Logger.Info($"[OCR] Windows OCR library loaded from {path}");
             return new WindowsOcrEngine(method.CreateDelegate<Func<byte[], Task<string>>>());
         }
         catch (Exception ex)
@@ -61,5 +63,20 @@ internal sealed class WindowsOcrEngine : IOcrEngine
         }
     }
 
-    public Task<string> RecognizeAsync(byte[] image) => this.recognize(image);
+    public async Task<string> RecognizeAsync(byte[] image)
+    {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        Logger.Info($"[OCR] recognizing a picture of {image.Length} bytes");
+        try
+        {
+            var text = await this.recognize(image);
+            Logger.Info($"[OCR] recognized {text.Length} characters in {stopwatch.ElapsedMilliseconds} ms");
+            return text;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, $"[OCR] failed after {stopwatch.ElapsedMilliseconds} ms");
+            throw;
+        }
+    }
 }

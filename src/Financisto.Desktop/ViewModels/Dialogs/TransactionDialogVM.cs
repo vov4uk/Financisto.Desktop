@@ -17,6 +17,7 @@ namespace Financisto.Desktop.ViewModels.Dialogs;
 
 public class TransactionDialogVM : SubTransactionDialogVM
 {
+    private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
     private readonly IDialogWrapper dialogWrapper;
     private readonly IReadOnlyDictionary<int, long> accountBalances;
     private Common.IAsyncCommand _addSubTransactionCommand;
@@ -143,26 +144,42 @@ public class TransactionDialogVM : SubTransactionDialogVM
 
     private void GroupSubTransactions()
     {
+        var before = Transaction.SubTransactions.Count;
         Transaction.GroupSubTransactionsByCategory();
+        Logger.Info($"[Transaction] grouped by category: {before} parts -> {Transaction.SubTransactions.Count}");
         SaveCommand.NotifyCanExecuteChanged();
     }
 
     /// <summary>Recipes wizard: parses a pasted receipt into split parts of this transaction.</summary>
     private async Task ShowRecipesDialog()
     {
-        var vm = new RecipesVM(Transaction.RealFromAmount / 100.0);
-
-        var output = await dialogWrapper.ShowWizardAsync(vm);
-
-        if (output is List<TransactionDto> outputTransactions)
+        // The log shows how far the flow got: a crash of the process itself leaves no other trace
+        try
         {
-            foreach (var item in outputTransactions)
+            Logger.Info($"[Transaction] opening the recipes wizard, amount {Transaction.RealFromAmount / 100.0:F2}, {Transaction.SubTransactions.Count} parts already");
+            var vm = new RecipesVM(Transaction.RealFromAmount / 100.0);
+
+            var output = await dialogWrapper.ShowWizardAsync(vm);
+            Logger.Info($"[Transaction] the recipes wizard returned {(output is List<TransactionDto> list ? $"{list.Count} parts" : "nothing (cancelled)")}");
+
+            if (output is List<TransactionDto> outputTransactions)
             {
-                item.Category = DbManual.Category?.Find(x => x.Id == item.CategoryId)!;
-                Transaction.SubTransactions.Add(item);
+                foreach (var item in outputTransactions)
+                {
+                    item.Category = DbManual.Category?.Find(x => x.Id == item.CategoryId)!;
+                    Transaction.SubTransactions.Add(item);
+                }
+                Transaction.RecalculateUnSplitAmount();
+                SaveCommand.NotifyCanExecuteChanged();
+                Logger.Info($"[Transaction] {outputTransactions.Count} parts added, {Transaction.SubTransactions.Count} in all, unsplit {Transaction.UnsplitAmount / 100.0:F2}");
             }
-            Transaction.RecalculateUnSplitAmount();
-            SaveCommand.NotifyCanExecuteChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[Transaction] the recipes wizard failed");
+            await dialogWrapper.ShowMessageBoxAsync(
+                string.Format(LocalizationService.Instance["recipes_wizard_failed"], ex.Message),
+                LocalizationService.Instance["open_recipes_wizard"]);
         }
     }
 

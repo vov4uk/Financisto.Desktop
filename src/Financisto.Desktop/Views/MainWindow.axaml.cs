@@ -14,7 +14,6 @@ using Financisto.Adapter;
 using Financisto.BankHelpers;
 using Financisto.Common.Entities;
 using Financisto.Common.Localization;
-using Financisto.Common.Utils;
 using Financisto.DataAccess;
 using Financisto.Desktop.Data;
 using Financisto.Desktop.Helpers;
@@ -51,6 +50,19 @@ public partial class MainWindow : Window
         var version = typeof(MainWindow).Assembly.GetName().Version;
         Title = $"Financisto Desktop v.{version?.ToString(3)}";
         Logger.Info("App started");
+        foreach (var line in CrashDiagnostics.DescribeEnvironment())
+        {
+            Logger.Info(line);
+        }
+
+        // The native libraries (Skia, ANGLE, the graphics driver) load with the first frame
+        Opened += (_, _) => Dispatcher.UIThread.Post(() =>
+        {
+            foreach (var line in CrashDiagnostics.DescribeNativeModules())
+            {
+                Logger.Info(line);
+            }
+        }, DispatcherPriority.Background);
     }
 
     private async Task LoadBankHelpersAsync()
@@ -171,8 +183,6 @@ public partial class MainWindow : Window
         {
             Application.Current.RequestedThemeVariant = SettingsService.Current.Settings?.General.ThemeVariant;
         }
-
-        IconSettings.Instance.IconSet = SettingsService.Current.Settings?.General.IconSet ?? IconSetType.Default;
 
         LocalizationService.Instance.ApplyLanguage(SettingsService.Current.Settings?.General.Language ?? Language.English);
         var bakupFolder = !string.IsNullOrEmpty(SettingsService.Current.Settings?.General.DefaultBackupDir) ? SettingsService.Current.Settings.General.DefaultBackupDir : @$"C:\Users\{Environment.UserName}\Dropbox\apps\Financisto Holo";

@@ -46,6 +46,7 @@ public sealed class RecipeCategoryMemory
         categories.Clear();
         if (!File.Exists(path))
         {
+            Logger.Info($"[Recipes] no remembered categories yet ({path})");
             return;
         }
 
@@ -59,6 +60,8 @@ public sealed class RecipeCategoryMemory
                     categories[note.Trim()] = category.Trim();
                 }
             }
+
+            Logger.Info($"[Recipes] {categories.Count} remembered categories read from {path}");
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
         {
@@ -112,6 +115,7 @@ public sealed class RecipeCategoryMemory
             var temp = path + ".tmp";
             File.WriteAllText(temp, JsonSerializer.Serialize(categories.OrderBy(pair => pair.Key, StringComparer.OrdinalIgnoreCase).ToDictionary(pair => pair.Key, pair => pair.Value), JsonOptions));
             File.Move(temp, path, overwrite: true);
+            Logger.Info($"[Recipes] {categories.Count} remembered categories saved to {path}");
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {

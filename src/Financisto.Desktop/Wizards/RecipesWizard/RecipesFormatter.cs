@@ -40,8 +40,8 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.View
             var lines = RecipiesHelper.SplitLines(text);
             for (int l = 0; l < lines.Length; l++)
             {
-                // A row of a receipt table (and its Rabat line) is the amount as a whole
-                if (ReceiptRows.IsItemRow(lines[l]) || ReceiptRows.IsDiscountRow(lines[l]))
+                // A row of a receipt table (its Rabat line, and the name printed above a row that has none) is the amount as a whole
+                if (ReceiptRows.IsItemRow(lines[l]) || ReceiptRows.IsDiscountRow(lines[l]) || ReceiptRows.IsNameOfNextItemRow(lines, l))
                 {
                     inlines.Add(new Run(lines[l].Trim()) { Foreground = Brushes.DarkRed, Background = Brushes.Yellow });
                     if (l != lines.Length - 1)

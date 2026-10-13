@@ -93,6 +93,7 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
         {
             // the notes are what a category is remembered by: take them before they go (the file is written when the wizard is saved)
             memory?.Remember(FinancistoTransactions);
+            NLog.LogManager.GetCurrentClassLogger().Info($"[Recipes] notes cleared on {FinancistoTransactions.Count} rows");
             foreach (var item in FinancistoTransactions)
             {
                 item.Note = null;

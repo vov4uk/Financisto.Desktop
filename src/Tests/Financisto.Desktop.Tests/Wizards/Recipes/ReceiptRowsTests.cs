@@ -287,6 +287,161 @@ Numer transakcji 4667
             Assert.Equal(0.0, page2.Diff, 2);
         }
 
+        // ---- the layout with the name on one line and "quantity * price value TAX" on the next
+
+        /// <summary>A pasted receipt as it came, with the trailing spaces after the names and the numbers pushed to the right.</summary>
+        private static readonly string[] TwoLineLines =
+        {
+            "Płatki Lion, cini-m.          ",
+            "                     1 * 15.99 15.99 C",
+            "Krasnystaw Kefir 2%           ",
+            "                       2 * 2.89 5.78 C",
+            "Naleśniki                     ",
+            "                       1 * 6.69 6.69 C",
+            "Naleśniki 600g                ",
+            "                       1 * 8.99 8.99 C",
+            "Kajzerka wieloziar.1          ",
+            "                       2 * 0.49 0.98 C",
+        };
+
+        private static string TwoLineReceipt => string.Join(Environment.NewLine, TwoLineLines);
+
+        [Theory]
+        [InlineData("1 * 15.99 15.99 C")]
+        [InlineData("                       2 * 2.89 5.78 C  ")]
+        [InlineData("Krasnystaw Kefir 2% 2 * 2.89 5.78 C")]   // the name on the same line
+        [InlineData("0.435 * 39.90 17.36 c")]                 // a weight, the tax letter in lower case
+        [InlineData("2 x 2,89 5,78 B")]                       // x instead of *
+        [InlineData("Mleko B 2 * 2,89 5,78")]                 // the tax letter before the quantity takes a * too
+        public void IsItemRow_NameThenQuantityTimesPriceValueTax_True(string line)
+        {
+            Assert.True(ReceiptRows.IsItemRow(line));
+        }
+
+        [Theory]
+        [InlineData("Krasnystaw Kefir 2%           ")]
+        [InlineData("Płatki Lion, cini-m.")]
+        [InlineData("Kajzerka wieloziar.1")]
+        [InlineData("1 * 15.99 15.99")]                       // no tax letter: not a row
+        [InlineData("2 * 2.89")]
+        public void IsItemRow_NameOrIncompleteRow_False(string line)
+        {
+            Assert.False(ReceiptRows.IsItemRow(line));
+        }
+
+        [Fact]
+        public void IsNamelessItemRow_RowWithoutAName()
+        {
+            Assert.True(ReceiptRows.IsNamelessItemRow("                       2 * 2.89 5.78 C"));
+            Assert.False(ReceiptRows.IsNamelessItemRow("Kefir 2 * 2.89 5.78 C"));
+            Assert.False(ReceiptRows.IsNamelessItemRow("Kefir"));
+        }
+
+        [Fact]
+        public void Parse_NameLineThenNumbersLine_ItemPerPairWithTheNameAboveAndTheValue()
+        {
+            var items = ReceiptRows.Parse(TwoLineLines);
+
+            Assert.Equal(
+                new[]
+                {
+                    new ReceiptItem("Płatki Lion, cini-m.", 15.99),
+                    new ReceiptItem("Krasnystaw Kefir 2%", 5.78),
+                    new ReceiptItem("Naleśniki", 6.69),
+                    new ReceiptItem("Naleśniki 600g", 8.99),
+                    new ReceiptItem("Kajzerka wieloziar.1", 0.98),
+                },
+                items);
+            Assert.Equal(38.43, Math.Round(items.Sum(item => item.Amount), 2));
+        }
+
+        [Fact]
+        public void Parse_BothLayoutsInOneText_AllItemsFound()
+        {
+            var items = ReceiptRows.Parse(new[]
+            {
+                "Mleko UHT",
+                "1 * 3.50 3.50 C",
+                "SokJabtkRivPet11 c 6.000 x 2,99 17,94",
+                "Rabat -3,60",
+                "14,34",
+            });
+
+            Assert.Equal(new[] { new ReceiptItem("Mleko UHT", 3.5), new ReceiptItem("SokJabtkRivPet11", 14.34) }, items);
+        }
+
+        [Fact]
+        public void IsNameOfNextItemRow_TheLineAboveARowWithoutAName()
+        {
+            Assert.True(ReceiptRows.IsNameOfNextItemRow(TwoLineLines, 0));
+            Assert.False(ReceiptRows.IsNameOfNextItemRow(TwoLineLines, 1)); // the row itself
+            Assert.True(ReceiptRows.IsNameOfNextItemRow(TwoLineLines, 8));
+        }
+
+        [Fact]
+        public void IsNameOfNextItemRow_BlankLinesBetween_StillTheName()
+        {
+            var lines = new[] { "Kefir", "   ", "", "2 * 2.89 5.78 C" };
+
+            Assert.True(ReceiptRows.IsNameOfNextItemRow(lines, 0));
+            Assert.False(ReceiptRows.IsNameOfNextItemRow(lines, 1));
+        }
+
+        [Fact]
+        public void IsNameOfNextItemRow_NotBeforeARowWithoutAName_False()
+        {
+            var lines = new[] { "Header", "Kefir 2 * 2.89 5.78 C", "Rabat -1,00", "1,00", "Total" };
+
+            for (var i = 0; i < lines.Length; i++)
+            {
+                Assert.False(ReceiptRows.IsNameOfNextItemRow(lines, i), lines[i]);
+            }
+        }
+
+        [Fact]
+        public void CalculateCurrentAmount_NameAndNumbersOnTwoLines_PartPerItem()
+        {
+            DbManual.SetupTests(new List<Common.Model.CategoryModel>());
+            var vm = new Page1VM(-38.43) { Text = TwoLineReceipt };
+
+            vm.CalculateCurrentAmount();
+
+            Assert.Equal(new long[] { -1599, -578, -669, -899, -98 }, vm.Amounts.Select(part => part.FromAmount));
+            Assert.Equal(new[] { "Płatki Lion cini-m", "Krasnystaw Kefir", "Naleśniki", "Naleśniki 600g", "Kajzerka wieloziar1" }, vm.Amounts.Select(part => part.Note));
+            Assert.Equal(-38.43, vm.CalculatedAmount);
+            Assert.Equal(0.0, vm.Diff);
+        }
+
+        [Fact]
+        public void Highlight_NameAndNumbersOnTwoLines_TextKeptAndAmountCounted()
+        {
+            DbManual.SetupTests(new List<Common.Model.CategoryModel>());
+            var vm = new Page1VM(-38.43) { Text = TwoLineReceipt };
+
+            vm.HighlightCommand.Execute();
+
+            Assert.Equal(TwoLineReceipt, vm.Text);
+            Assert.Equal(-38.43, vm.CalculatedAmount);
+        }
+
+        [Fact]
+        public void FormatText_NameAndNumbersOnTwoLines_Unchanged()
+        {
+            Assert.Equal(TwoLineReceipt, RecipiesHelper.FormatText(TwoLineReceipt));
+        }
+
+        [Fact]
+        public void BuildInlines_NameAndNumbersOnTwoLines_BothLinesYellow()
+        {
+            var inlines = RecipesFormatter.BuildInlines("Header\r\nKefir\r\n 2 * 2.89 5.78 C\r\nTotal");
+
+            var runs = inlines.OfType<Run>().ToList();
+            Assert.Equal(Brushes.Yellow, runs.Single(run => run.Text == "Kefir").Background);
+            Assert.Equal(Brushes.Yellow, runs.Single(run => run.Text == "2 * 2.89 5.78 C").Background);
+            Assert.Null(runs.Single(run => run.Text == "Header").Background);
+            Assert.Null(runs.Single(run => run.Text == "Total").Background);
+        }
+
         [Fact]
         public void BuildInlines_ReceiptTable_RowsAndDiscountsYellowAsAWhole()
         {

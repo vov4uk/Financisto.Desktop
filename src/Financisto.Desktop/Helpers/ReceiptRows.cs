@@ -18,6 +18,11 @@ public readonly record struct ReceiptItem(string Name, double Amount);
 /// 14,34
 /// </code>
 /// The item costs value + discount; the line with the net amount only repeats it. The other lines (header, tax summary, payment) are not items.
+/// A second layout has the tax letter last and a <c>*</c> for the times, usually with the name alone on the line above:
+/// <code>
+/// Krasnystaw Kefir 2%
+///                        2 * 2.89 5.78 C
+/// </code>
 /// The marked-amount format ("12,50 A") is the other kind of receipt, see <see cref="Wizards.RecipesWizard.View.RecipesFormatter.Pattern"/>.
 /// </summary>
 public static class ReceiptRows
@@ -26,14 +31,42 @@ public static class ReceiptRows
     private const RegexOptions Options = RegexOptions.IgnoreCase | RegexOptions.CultureInvariant;
 
     // The name may be missing (it was printed on the line above); OCR can read the "x" as × or X; the quantity has up to three decimals (a weight)
+    // Name, tax letter (or "brak"), quantity x price, value
     private static readonly Regex ItemRow = new(
-        @"^\s*(?:(?<name>.*?)\s+)?(?<ptu>[A-Za-z]|brak)\s+\d+(?:[.,]\d{1,3})?\s*[x×]\s*\d+[.,]\d{2}\s+(?<value>-?\d+[.,]\d{2})\s*$", Options, Timeout);
+        @"^\s*(?:(?<name>.*?)\s+)?(?<ptu>[A-Za-z]|brak)\s+\d+(?:[.,]\d{1,3})?\s*[x×*]\s*\d+[.,]\d{2}\s+(?<value>-?\d+[.,]\d{2})\s*$", Options, Timeout);
+
+    // The other layout: name, quantity * price, value, tax letter
+    private static readonly Regex ItemRowTaxLast = new(
+        @"^\s*(?:(?<name>.*?)\s+)?\d+(?:[.,]\d{1,3})?\s*[x×*]\s*\d+[.,]\d{2}\s+(?<value>-?\d+[.,]\d{2})\s*(?<ptu>[A-Za-z])\s*$", Options, Timeout);
 
     private static readonly Regex DiscountRow = new(@"^\s*Rabat\w*\s+(?<discount>-?\d+[.,]\d{2})\s*$", Options, Timeout);
 
     private static readonly Regex NetAmountRow = new(@"^\s*\d+[.,]\d{2}\s*$", Options, Timeout);
 
-    public static bool IsItemRow(string line) => ItemRow.IsMatch(line);
+    public static bool IsItemRow(string line) => MatchItem(line).Success;
+
+    /// <summary>An item row that has no name of its own: the name is the text line above it.</summary>
+    public static bool IsNamelessItemRow(string line)
+    {
+        var item = MatchItem(line);
+        return item.Success && item.Groups["name"].Value.Trim().Length == 0;
+    }
+
+    /// <summary>
+    /// The line at <paramref name="index"/> is the name of the item row that follows it (the next line with text is a row without a name):
+    /// the preview shows it as part of the row.
+    /// </summary>
+    public static bool IsNameOfNextItemRow(IReadOnlyList<string> lines, int index)
+    {
+        var line = lines[index].Trim();
+        if (line.Length == 0 || IsItemRow(line) || IsDiscountRow(line) || NetAmountRow.IsMatch(line))
+        {
+            return false;
+        }
+
+        var next = lines.Skip(index + 1).FirstOrDefault(other => other.Trim().Length > 0);
+        return next is not null && IsNamelessItemRow(next);
+    }
 
     public static bool IsDiscountRow(string line) => DiscountRow.IsMatch(line);
 
@@ -49,7 +82,7 @@ public static class ReceiptRows
 
         foreach (var line in lines.Select(line => line.Trim()).Where(line => line.Length > 0))
         {
-            var item = ItemRow.Match(line);
+            var item = MatchItem(line);
             if (item.Success)
             {
                 var name = item.Groups["name"].Value.Trim();
@@ -78,6 +111,12 @@ public static class ReceiptRows
         }
 
         return items;
+    }
+
+    private static Match MatchItem(string line)
+    {
+        var item = ItemRow.Match(line);
+        return item.Success ? item : ItemRowTaxLast.Match(line);
     }
 
     private static double ToDouble(string number) => double.Parse(number.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture);

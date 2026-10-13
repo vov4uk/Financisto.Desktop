@@ -109,6 +109,7 @@ namespace Financisto.Desktop.Helpers
         private async Task SaveTransactionResult(Transaction transaction, IEnumerable<Transaction> subTransactions, TransactionDto resultVm)
         {
             var resultTransactions = new List<Transaction>();
+            Logger.Info($"[Transaction] saving id {transaction.Id}: {resultVm.SubTransactions?.Count ?? 0} parts, amount {resultVm.RealFromAmount / 100.0:F2}");
 
             // Accounts the transaction touched before the edit also need their balance rebuilt,
             // e.g. the other account of a split transfer that was removed or moved.
@@ -158,6 +159,7 @@ namespace Financisto.Desktop.Helpers
             await db.InsertOrUpdateAsync(resultTransactions);
 
             await ProcessDeletedTransactions(subTransactions, resultTransactions);
+            Logger.Info($"[Transaction] saved {resultTransactions.Count} rows");
 
             // A template doesn't move any money.
             if (transaction.IsTemplate != 0)

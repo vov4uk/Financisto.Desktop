@@ -118,8 +118,21 @@ namespace Financisto.Desktop.Wizards
 
         void OnClose(bool save)
         {
-            var output = OnRequestClose(save);
+            Logger.Info($"[{GetType().Name}] closing, save={save}");
+            object output;
+            try
+            {
+                output = OnRequestClose(save);
+            }
+            catch (Exception ex)
+            {
+                // The wizard stays open: nothing is lost and the user can try again or cancel.
+                Logger.Error(ex, $"[{GetType().Name}] its result could not be made (save={save}), the wizard stays open");
+                return;
+            }
+
             RequestClose?.Invoke(output, save);
+            Logger.Info($"[{GetType().Name}] closed");
         }
     }
 }

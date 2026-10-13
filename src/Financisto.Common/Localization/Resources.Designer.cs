@@ -1836,6 +1836,15 @@ namespace Financisto.Common.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The recipes wizard failed: {0}. Details are in the log..
+        /// </summary>
+        public static string recipes_wizard_failed {
+            get {
+                return ResourceManager.GetString("recipes_wizard_failed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Refresh.
         /// </summary>
         public static string refresh {
