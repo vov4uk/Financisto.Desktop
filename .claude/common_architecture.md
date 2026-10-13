@@ -120,9 +120,8 @@ Avalonia specifics: there is no `Visibility` enum, so "…ToVisibility" converte
 | `UnixTimeConverter` | `long` ms ↔ `DateTime` (local) | also **static** `UnixTimeConverter.Convert(long)` / `ConvertBack(DateTime)`, used throughout the code |
 | `DateTimeToDateTimeOffsetConverter` | `DateTime` ↔ `DateTimeOffset` | Avalonia `DatePicker.SelectedDate` is `DateTimeOffset?` |
 | `DateTimeToTimeSpanConverter` | `DateTime` ↔ `TimeSpan` | `TimePicker.SelectedTime` is `TimeSpan?` |
-| `BooleanConverter<T>` | `bool` → T | base for `InverseBooleanConverter`, `InvertedBooleanToVisibilityConverter`, `ActiveStatusBrushConverter`, `ActiveStatusOpacityConverter`, `NoCategoryBackgroundConverter` |
-| `NullToBoolConverter` / `NullToVisibilityConverter` | object → `value != null` | MarkupExtensions |
-| `StringEmptyToVisibilityConverter` | string → `IsNullOrEmpty` | MarkupExtension |
+| `BooleanConverter<T>` | `bool` → T | base for `InverseBooleanConverter`, `ActiveStatusBrushConverter`, `ActiveStatusOpacityConverter`, `NoCategoryBackgroundConverter` |
+| `NullToBoolConverter` | object → `value != null` | MarkupExtension |
 | `TransactionTypeBrushConverter` / `TransactionTypeIconConverter` | `BlotterModel.Type` → brush / `Icon*` resource | blotter rows |
 | `MccConverter` | MCC int → `Mcc` via `DbManual.MCCCodes`; for a `string` target, the localized MCC title | WPF showed the enum through its `TypeConverter`; Avalonia would show the enum name |
 | `EnumDescriptionConverter` | Enum → description text | |

@@ -374,8 +374,3 @@ Ported from the Financier WPF repo (xunit v3, AutoFixture, Moq). In `Financisto.
 
 **Test setup in `Financisto.Desktop.Tests/TestEnvironment.cs`** (module initializers): `FINANCISTO_SETTINGS_PATH` points to a scratch dir (`SettingsService.Current` is a static singleton that saves to disk); a background thread owns and pumps `Dispatcher.UIThread`, because `MainWindowVM` navigates through it and would hang otherwise (no Avalonia.Headless needed).
 
-**Porting notes:** WPF's `MainWindowVM.Blotter/Locations/...` are gone; page VMs are built directly (`new BlotterPageVM(db, dialogMock.Object)`), and `MainWindowVM.ImportCommand`/`SaveBackup*` stay disabled until `OpenBackup` ran (`MainWindowVMTest.GetLoadedFinancistoVM`). `IDialogWrapper` is async (`ShowDialogAsync<TDialog>(vm, height, width, title)` with `ReturnsAsync`), `SaveCommand`/`CancelCommand` are toolkit `RelayCommand`s (`CanExecute(null)`), import results are toasts, not message boxes. Running-balance rows store the transaction time, so integration tests zero `Datetime` before comparing (the DTO fixtures carry a `+02:00` offset).
-
-## Leftovers (unused scaffold)
-
-`Models/Categoria.cs`, `Models/Transacao.cs`, `Enum/TipoTransacao.cs`, `Enum/AppTheme.cs` (the settings use Common's `AppThemeType`) and `ViewModels/Charts/*` are not referenced by the running app.
