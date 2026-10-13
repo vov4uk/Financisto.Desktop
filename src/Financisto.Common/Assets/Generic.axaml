@@ -1,7 +1,6 @@
 <ResourceDictionary
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:conv="using:Financisto.Converters"
     xmlns:convert="using:Financisto.Common.Converters"
     xmlns:data="using:Financisto.Common.Model">
 
@@ -21,7 +20,7 @@
     <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#FFF0F0F0" />
     <convert:CategoryTitleConverter x:Key="categoryTitleConvert" />
     <convert:LocalizedFormatConverter x:Key="localizedFormatConverter" />
-    <conv:ActiveStatusBrushConverter x:Key="activeStatusBrush" />
+    <convert:ActiveStatusBrushConverter x:Key="activeStatusBrush" />
     <DataTemplate x:Key="IActive" DataType="{x:Type data:IActive}">
         <TextBlock
             x:Name="Txt"

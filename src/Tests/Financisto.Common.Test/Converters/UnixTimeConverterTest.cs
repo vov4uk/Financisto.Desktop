@@ -3,7 +3,7 @@
     using System;
     using System.Globalization;
     using AutoFixture.Xunit3;
-    using Financisto.Converters;
+    using Financisto.Common.Converters;
     using Xunit;
 
     // Cant use constants as expexted value because Azure Pipeline run test in different time zone

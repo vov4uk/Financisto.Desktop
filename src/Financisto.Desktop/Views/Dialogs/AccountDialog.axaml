@@ -2,7 +2,7 @@
     x:Class="Financisto.Desktop.Views.Dialogs.AccountDialog"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:conv="using:Financisto.Converters"
+    xmlns:conv="using:Financisto.Common.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:ent="clr-namespace:Financisto.Common.Entities;assembly=Financisto.Common"
     xmlns:helpers="using:Financisto.Desktop.Helpers"
@@ -72,9 +72,7 @@
 
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                    <Image
-                                        Height="24"
-                                        Margin="1">
+                                    <Image Height="24" Margin="1">
                                         <Image.Source>
                                             <MultiBinding Converter="{StaticResource AccountTypeConverter}">
                                                 <Binding />
@@ -136,9 +134,7 @@
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                    <Image
-                                        Height="24"
-                                        Margin="1">
+                                    <Image Height="24" Margin="1">
                                         <Image.Source>
                                             <MultiBinding Converter="{StaticResource AccountTypeConverter}">
                                                 <Binding Source="CREDIT_CARD" />
@@ -169,9 +165,7 @@
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                    <Image
-                                        Height="24"
-                                        Margin="1">
+                                    <Image Height="24" Margin="1">
                                         <Image.Source>
                                             <MultiBinding Converter="{StaticResource AccountTypeConverter}">
                                                 <Binding Source="ELECTRONIC" />

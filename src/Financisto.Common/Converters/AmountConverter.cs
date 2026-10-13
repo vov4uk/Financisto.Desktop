@@ -2,7 +2,7 @@
 using System.Globalization;
 using Avalonia.Data.Converters;
 
-namespace Financisto.Converters
+namespace Financisto.Common.Converters
 {
     public class AmountConverter : IValueConverter
     {

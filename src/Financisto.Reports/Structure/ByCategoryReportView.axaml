@@ -3,10 +3,10 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:Financisto.Common.Controls;assembly=Financisto.Common"
-    xmlns:conv="clr-namespace:Financisto.Converters;assembly=Financisto.Common"
+    xmlns:conv="clr-namespace:Financisto.Common.Converters;assembly=Financisto.Common"
     xmlns:filters="clr-namespace:Financisto.Common.Filters;assembly=Financisto.Common"
-    xmlns:local="using:Financisto.Reports"
     xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:local="using:Financisto.Reports"
     xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
     x:DataType="local:ByCategoryReportVM">
     <UserControl.Styles>
@@ -53,8 +53,8 @@
             <!--  the period presets set the control's From/To, which the report reads from its VM  -->
             <filters:PeriodFilter
                 Margin="0"
-                From="{Binding From, Mode=TwoWay, Converter={StaticResource DateTimeToDateTimeOffsetConverter}}"
                 Orientation="Horizontal"
+                From="{Binding From, Mode=TwoWay, Converter={StaticResource DateTimeToDateTimeOffsetConverter}}"
                 To="{Binding To, Mode=TwoWay, Converter={StaticResource DateTimeToDateTimeOffsetConverter}}" />
             <Button
                 Classes="refresh"

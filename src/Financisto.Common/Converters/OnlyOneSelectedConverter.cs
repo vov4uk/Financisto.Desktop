@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Linq;
 using Avalonia.Data.Converters;
 
-namespace Financisto.Converters
+namespace Financisto.Common.Converters
 {
     public class OnlyOneSelectedConverter : IMultiValueConverter
     {

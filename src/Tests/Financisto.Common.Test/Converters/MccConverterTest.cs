@@ -2,8 +2,8 @@ namespace Financisto.Converters.Tests
 {
     using System;
     using System.Globalization;
+    using Financisto.Common.Converters;
     using Financisto.Common.Entities;
-    using Financisto.Converters;
     using Xunit;
 
     public class MccConverterTest

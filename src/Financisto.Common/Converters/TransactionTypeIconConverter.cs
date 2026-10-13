@@ -4,7 +4,7 @@ using System.Globalization;
 using Avalonia;
 using Avalonia.Data.Converters;
 
-namespace Financisto.Converters
+namespace Financisto.Common.Converters
 {
     /// <summary>
     /// Replaces the WPF DataTemplate.Triggers (Type -> Image.Source) used by the type column;

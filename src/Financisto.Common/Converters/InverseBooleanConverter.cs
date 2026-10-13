@@ -1,4 +1,4 @@
-﻿namespace Financisto.Converters
+﻿namespace Financisto.Common.Converters
 {
     public class InverseBooleanConverter : BooleanConverter<bool>
     {

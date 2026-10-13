@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:behaviors="using:Financisto.Common.Behaviors"
     xmlns:controls="using:Financisto.Common.Controls"
-    xmlns:conv="using:Financisto.Converters"
+    xmlns:conv="using:Financisto.Common.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dialogs="using:Financisto.Desktop.Views.Dialogs"
     xmlns:entities="using:Financisto.Common.Entities"
@@ -253,11 +253,11 @@
                         Grid.ColumnSpan="2"
                         HorizontalAlignment="Stretch"
                         IsVisible="{Binding !IsUpdateBalanceMode}"
-                        TextPath="Title"
                         ItemsSource="{x:Static entities:DbManual.Currencies}"
                         SelectedItem="{Binding Transaction.OriginalCurrency}"
                         SelectedValue="{Binding Transaction.OriginalCurrencyId}"
-                        SelectedValueBinding="{Binding Id}" />
+                        SelectedValueBinding="{Binding Id}"
+                        TextPath="Title" />
 
                     <StackPanel
                         Grid.Row="10"
@@ -317,8 +317,8 @@
                                 Command="{Binding OpenRecipesDialogCommand}"
                                 ToolTip.Tip="{loc:Translate Key=open_recipes_wizard}">
                                 <Image
-                                    Width="16"
-                                    Height="16"
+                                    Width="24"
+                                    Height="24"
                                     Source="{StaticResource ResourceKey=IconReceiptBlack}" />
                             </Button>
                             <Button
@@ -331,8 +331,8 @@
                                 Command="{Binding GroupSubTransactionsCommand}"
                                 ToolTip.Tip="{loc:Translate Key=group_by_category}">
                                 <Image
-                                    Width="16"
-                                    Height="16"
+                                    Width="24"
+                                    Height="24"
                                     Source="{StaticResource ResourceKey=IconSigma}" />
                             </Button>
                             <Button
@@ -345,8 +345,8 @@
                                 Command="{Binding AddSubTransferCommand}"
                                 ToolTip.Tip="{loc:Translate Key=add_split_transfers}">
                                 <Image
-                                    Width="16"
-                                    Height="16"
+                                    Width="24"
+                                    Height="24"
                                     Source="{StaticResource ResourceKey=IconArrowRightArrowLeft}" />
                             </Button>
                             <Button
@@ -359,8 +359,8 @@
                                 Command="{Binding AddSubTransactionCommand}"
                                 ToolTip.Tip="{loc:Translate Key=add_split_transactions}">
                                 <Image
-                                    Width="16"
-                                    Height="16"
+                                    Width="24"
+                                    Height="24"
                                     Source="{StaticResource IconPlus}" />
                             </Button>
                         </Grid>

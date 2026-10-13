@@ -8,7 +8,6 @@ using Financisto.Common;
 using Financisto.Common.Entities;
 using Financisto.Common.Localization;
 using Financisto.Common.Model;
-using Financisto.Converters;
 using Financisto.DataAccess.Abstractions;
 using Financisto.DataAccess.Data;
 using Financisto.Desktop.Helpers;
@@ -20,6 +19,7 @@ using LiveChartsCore.Defaults;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using SkiaSharp;
+using Financisto.Common.Converters;
 
 namespace Financisto.Desktop.ViewModels.Pages
 {

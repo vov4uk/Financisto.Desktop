@@ -8,7 +8,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 
-namespace Financisto.Converters
+namespace Financisto.Common.Converters
 {
     [ExcludeFromCodeCoverage]
     public class AccountTypeConverter : IMultiValueConverter

@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace Financisto.Converters
+namespace Financisto.Common.Converters
 {
     /// <summary>
     /// Used to visually dim DataGridRow items whose IsActive is false, without relying on

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using Avalonia.Data.Converters;
 
-namespace Financisto.Converters
+namespace Financisto.Common.Converters
 {
     public class BooleanConverter<T> : IValueConverter
     {
