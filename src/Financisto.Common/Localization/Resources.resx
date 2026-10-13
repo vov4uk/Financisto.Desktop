@@ -516,20 +516,26 @@
   <data name="highlight_tooltip" xml:space="preserve">
     <value>Highlight text. Yellow - transaction row, green - other numbers</value>
   </data>
-  <data name="open_pdf" xml:space="preserve">
-    <value>Open PDF…</value>
-  </data>
-  <data name="open_pdf_tooltip" xml:space="preserve">
-    <value>Read the text of a PDF file (a receipt) into the text field</value>
-  </data>
   <data name="pdf_no_text" xml:space="preserve">
     <value>No text found in this PDF: it is a scan or a photo without a text layer, and this system has no built-in OCR. Run it through OCR (e.g. Google Lens) and paste the result.</value>
   </data>
   <data name="pdf_ocr_empty" xml:space="preserve">
     <value>No text could be recognized in this PDF.</value>
   </data>
-  <data name="pdf_read_error" xml:space="preserve">
-    <value>Can't read the PDF: {0}</value>
+  <data name="open_file" xml:space="preserve">
+    <value>Open file…</value>
+  </data>
+  <data name="open_file_tooltip" xml:space="preserve">
+    <value>Read the text of a receipt file (PDF, HTML or text) into the text field</value>
+  </data>
+  <data name="file_read_error" xml:space="preserve">
+    <value>Can't read the file: {0}</value>
+  </data>
+  <data name="file_no_text" xml:space="preserve">
+    <value>No text found in this file.</value>
+  </data>
+  <data name="receipt_files" xml:space="preserve">
+    <value>Receipts (PDF, HTML, text)</value>
   </data>
   <data name="reciept_wizard_total_format" xml:space="preserve">
     <value>Total : {0:F2} Current : {1:F2} Diff : {2:F2}</value>

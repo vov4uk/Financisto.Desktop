@@ -101,11 +101,11 @@ namespace Financisto.Desktop.Tests.Wizards.Recipes
             File.WriteAllBytes(pdf, builder.Build());
             var vm = new Page1VM(-5.49);
 
-            await vm.LoadPdfAsync(pdf);
+            await vm.LoadFileAsync(pdf);
 
-            Assert.Contains(this.Lines, line => line.Contains("[Recipes] reading PDF receipt.pdf"));
+            Assert.Contains(this.Lines, line => line.Contains("[Recipes] reading file receipt.pdf"));
             Assert.Contains(this.Lines, line => line.Contains("[Recipes] the PDF has a text layer"));
-            Assert.Contains(this.Lines, line => line.Contains("[Recipes] PDF read in") && line.Contains("OCR used: False"));
+            Assert.Contains(this.Lines, line => line.Contains("[Recipes] file read in") && line.Contains("OCR used: False"));
         }
 
         [Fact]
@@ -115,10 +115,10 @@ namespace Financisto.Desktop.Tests.Wizards.Recipes
             File.WriteAllText(pdf, "not a pdf");
             var vm = new Page1VM(-1.0);
 
-            await vm.LoadPdfAsync(pdf);
+            await vm.LoadFileAsync(pdf);
 
             Assert.Contains(this.Lines, line => line.StartsWith("ERROR|") && line.Contains("broken.pdf could not be read"));
-            Assert.False(string.IsNullOrEmpty(vm.PdfStatus));
+            Assert.False(string.IsNullOrEmpty(vm.FileStatus));
         }
 
         [Fact]

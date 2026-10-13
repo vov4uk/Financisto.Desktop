@@ -516,20 +516,26 @@
   <data name="highlight_tooltip" xml:space="preserve">
     <value>Wyróżnij tekst. Żółty - wiersz transakcji, zielony - inne liczby</value>
   </data>
-  <data name="open_pdf" xml:space="preserve">
-    <value>Otwórz PDF…</value>
-  </data>
-  <data name="open_pdf_tooltip" xml:space="preserve">
-    <value>Wczytaj tekst z pliku PDF (paragonu) do pola tekstowego</value>
-  </data>
   <data name="pdf_no_text" xml:space="preserve">
     <value>W tym pliku PDF nie ma tekstu: to skan lub zdjęcie bez warstwy tekstowej, a ten system nie ma wbudowanego OCR. Rozpoznaj go przez OCR (np. Google Lens) i wklej wynik.</value>
   </data>
   <data name="pdf_ocr_empty" xml:space="preserve">
     <value>Nie udało się rozpoznać tekstu w tym pliku PDF.</value>
   </data>
-  <data name="pdf_read_error" xml:space="preserve">
-    <value>Nie można odczytać pliku PDF: {0}</value>
+  <data name="open_file" xml:space="preserve">
+    <value>Otwórz plik…</value>
+  </data>
+  <data name="open_file_tooltip" xml:space="preserve">
+    <value>Wczytaj tekst z pliku paragonu (PDF, HTML lub tekstowego) do pola tekstowego</value>
+  </data>
+  <data name="file_read_error" xml:space="preserve">
+    <value>Nie można odczytać pliku: {0}</value>
+  </data>
+  <data name="file_no_text" xml:space="preserve">
+    <value>W tym pliku nie znaleziono tekstu.</value>
+  </data>
+  <data name="receipt_files" xml:space="preserve">
+    <value>Paragony (PDF, HTML, tekst)</value>
   </data>
   <data name="reciept_wizard_total_format" xml:space="preserve">
     <value>Suma : {0:F2} Bieżące : {1:F2} Różnica : {2:F2}</value>

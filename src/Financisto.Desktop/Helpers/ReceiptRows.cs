@@ -23,6 +23,9 @@ public readonly record struct ReceiptItem(string Name, double Amount);
 /// Krasnystaw Kefir 2%
 ///                        2 * 2.89 5.78 C
 /// </code>
+/// Lidl prints that layout, and its discounts are lines of free text with a negative amount under the item
+/// (<c>Taniej za 2   -20,00</c>, <c>Lidl Plus voucher   -1,76</c>), not a <c>Rabat</c> row; a returnable deposit is a row with the name and no tax letter
+/// (<c>Kaucja PET   1 * 0.5 0.5</c>).
 /// The marked-amount format ("12,50 A") is the other kind of receipt, see <see cref="Wizards.RecipesWizard.View.RecipesFormatter.Pattern"/>.
 /// </summary>
 public static class ReceiptRows
@@ -39,7 +42,13 @@ public static class ReceiptRows
     private static readonly Regex ItemRowTaxLast = new(
         @"^\s*(?:(?<name>.*?)\s+)?\d+(?:[.,]\d{1,3})?\s*[x×*]\s*\d+[.,]\d{2}\s+(?<value>-?\d+[.,]\d{2})\s*(?<ptu>[A-Za-z])\s*$", Options, Timeout);
 
-    private static readonly Regex DiscountRow = new(@"^\s*Rabat\w*\s+(?<discount>-?\d+[.,]\d{2})\s*$", Options, Timeout);
+    // A row without a tax letter, with its name on the same line
+    private static readonly Regex ItemRowNoTax = new(
+        @"^\s*(?<name>\S.*?)\s+\d+(?:[.,]\d{1,3})?\s*[x×*]\s*\d+[.,]\d{1,2}\s+(?<value>-?\d+[.,]\d{1,2})\s*$", Options, Timeout);
+
+    // "Rabat" with an amount (any sign), or a line of any text ending with a negative amount ("Taniej za 2   -20,00"); it counts under an item
+    private static readonly Regex DiscountRow = new(
+        @"^\s*(?:Rabat\w*\s+(?<discount>-?\d+[.,]\d{2})|(?:.*\S\s+)?(?<discount>-\d+[.,]\d{2}))\s*$", Options, Timeout);
 
     private static readonly Regex NetAmountRow = new(@"^\s*\d+[.,]\d{2}\s*$", Options, Timeout);
 
@@ -95,7 +104,7 @@ public static class ReceiptRows
             var discount = DiscountRow.Match(line);
             if (discount.Success && afterItem)
             {
-                // printed with a minus; a plain number is a discount too
+                // printed with a minus; after "Rabat" a plain number is a discount too
                 var last = items[^1];
                 items[^1] = last with { Amount = Math.Round(last.Amount - Math.Abs(ToDouble(discount.Groups["discount"].Value)), 2) };
                 continue;
@@ -116,7 +125,12 @@ public static class ReceiptRows
     private static Match MatchItem(string line)
     {
         var item = ItemRow.Match(line);
-        return item.Success ? item : ItemRowTaxLast.Match(line);
+        if (!item.Success)
+        {
+            item = ItemRowTaxLast.Match(line);
+        }
+
+        return item.Success ? item : ItemRowNoTax.Match(line);
     }
 
     private static double ToDouble(string number) => double.Parse(number.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture);

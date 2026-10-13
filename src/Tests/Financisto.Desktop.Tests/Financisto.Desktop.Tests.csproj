@@ -84,6 +84,9 @@
       <None Update="Assets\pireus.pdf">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+      <None Update="Assets\lidl_receipt.html">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
       <None Update="Assets\pko.pdf">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>

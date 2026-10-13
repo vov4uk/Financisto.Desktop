@@ -21,8 +21,8 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
         private static readonly char[] charactersToRemove = { ':', '/', '?', '#', '[', ']', '@', '*', '.', ',', '\"', '&', '\'' };
         private DelegateCommand _highlightCommand;
         private string text;
-        private string? pdfStatus;
-        private bool isPdfBusy;
+        private string? fileStatus;
+        private bool isFileBusy;
         private int rememberedHits;
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private readonly RecipeCategoryMemory? memory;
@@ -51,50 +51,51 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
         /// <summary>Where the OCR engine for scanned PDFs comes from; <c>null</c> (no OCR on this system) goes without it. A test sets its own.</summary>
         internal Func<IOcrEngine?> CreateOcr { get; set; } = OcrEngines.GetDefault;
 
-        /// <summary>A PDF is being read (OCR of a scan takes a few seconds).</summary>
-        public bool IsPdfBusy
+        /// <summary>A file is being read (the OCR of a scanned PDF takes a few seconds).</summary>
+        public bool IsFileBusy
         {
-            get => this.isPdfBusy;
+            get => this.isFileBusy;
             private set
             {
-                this.isPdfBusy = value;
-                this.RaisePropertyChanged(nameof(this.IsPdfBusy));
-                this.RaisePropertyChanged(nameof(this.IsPdfIdle));
+                this.isFileBusy = value;
+                this.RaisePropertyChanged(nameof(this.IsFileBusy));
+                this.RaisePropertyChanged(nameof(this.IsFileIdle));
             }
         }
 
-        public bool IsPdfIdle => !this.IsPdfBusy;
+        public bool IsFileIdle => !this.IsFileBusy;
 
-        /// <summary>Why the last PDF gave no text (a scan without OCR, a damaged file); empty when it was read.</summary>
-        public string? PdfStatus
+        /// <summary>Why the last file gave no text (a scanned PDF without OCR, a damaged or unsupported file); empty when it was read.</summary>
+        public string? FileStatus
         {
-            get => this.pdfStatus;
+            get => this.fileStatus;
             private set
             {
-                this.pdfStatus = value;
-                this.RaisePropertyChanged(nameof(this.PdfStatus));
+                this.fileStatus = value;
+                this.RaisePropertyChanged(nameof(this.FileStatus));
             }
         }
 
         public override string Title => "Paste text";
 
         /// <summary>
-        /// Puts the text of the PDF into <see cref="Text"/> (replacing it): its text layer, or, for a scan, what the OCR of this system reads from its pictures.
-        /// A PDF without text, a bad file or a failed OCR leaves <see cref="Text"/> alone and sets <see cref="PdfStatus"/>.
+        /// Puts the text of a receipt file into <see cref="Text"/> (replacing it): a PDF gives its text layer, or, for a scan, what the OCR of this system reads from
+        /// its pictures; an HTML page (an e-receipt) gives its text, a text file its content (<see cref="ReceiptFiles"/>).
+        /// A file without text, a bad or unsupported file or a failed OCR leaves <see cref="Text"/> alone and sets <see cref="FileStatus"/>.
         /// </summary>
-        public async Task LoadPdfAsync(string filePath)
+        public async Task LoadFileAsync(string filePath)
         {
-            IsPdfBusy = true;
-            PdfStatus = null;
+            IsFileBusy = true;
+            FileStatus = null;
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             try
             {
-                Logger.Info($"[Recipes] reading PDF {System.IO.Path.GetFileName(filePath)}, {new System.IO.FileInfo(filePath).Length} bytes");
-                var (extracted, ocrTried) = await Task.Run(() => ReadPdfAsync(filePath));
-                Logger.Info($"[Recipes] PDF read in {stopwatch.ElapsedMilliseconds} ms: {extracted.Length} characters, OCR used: {ocrTried}");
+                Logger.Info($"[Recipes] reading file {System.IO.Path.GetFileName(filePath)}, {new System.IO.FileInfo(filePath).Length} bytes");
+                var (extracted, ocrTried) = await Task.Run(() => ReadFileAsync(filePath));
+                Logger.Info($"[Recipes] file read in {stopwatch.ElapsedMilliseconds} ms: {extracted.Length} characters, OCR used: {ocrTried}");
                 if (string.IsNullOrWhiteSpace(extracted))
                 {
-                    PdfStatus = LocalizationService.Instance[ocrTried ? "pdf_ocr_empty" : "pdf_no_text"];
+                    FileStatus = LocalizationService.Instance[ocrTried ? "pdf_ocr_empty" : ReceiptFiles.IsPdf(filePath) ? "pdf_no_text" : "file_no_text"];
                     return;
                 }
 
@@ -102,17 +103,25 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, $"[Recipes] the PDF {System.IO.Path.GetFileName(filePath)} could not be read");
-                PdfStatus = string.Format(LocalizationService.Instance["pdf_read_error"], ex.Message);
+                Logger.Error(ex, $"[Recipes] the file {System.IO.Path.GetFileName(filePath)} could not be read");
+                FileStatus = string.Format(LocalizationService.Instance["file_read_error"], ex.Message);
             }
             finally
             {
-                IsPdfBusy = false;
+                IsFileBusy = false;
             }
         }
 
-        private async Task<(string text, bool ocrTried)> ReadPdfAsync(string filePath)
+        private async Task<(string text, bool ocrTried)> ReadFileAsync(string filePath)
         {
+            if (!ReceiptFiles.IsPdf(filePath))
+            {
+                // an HTML page or a text file: the text is in it, no OCR
+                var content = ReceiptFiles.ReadText(filePath);
+                Logger.Info($"[Recipes] {System.IO.Path.GetExtension(filePath)} file: {content.Length} characters");
+                return (content, false);
+            }
+
             var text = PdfTextExtractor.ExtractText(filePath);
             if (!string.IsNullOrWhiteSpace(text))
             {

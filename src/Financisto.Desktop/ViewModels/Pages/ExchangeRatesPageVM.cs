@@ -243,7 +243,20 @@ namespace Financisto.Desktop.ViewModels.Pages
                 {
                     using var uow = db.CreateUnitOfWork();
                     var currencyExchangeRepo = uow.GetRepository<CurrencyExchangeRate>();
-                    await currencyExchangeRepo.AddRangeAsync(exchangeRates);
+
+                    // The providers stamp a rate with their own update time, so a second refresh the same day (or a backup saved after
+                    // one) brings keys the database already has; inserting those would fail the whole batch on the primary key.
+                    var knownKeys = (await currencyExchangeRepo.GetAllAsync())
+                        .Select(x => (x.FromCurrencyId, x.ToCurrencyId, x.Date))
+                        .ToHashSet();
+                    var newRates = exchangeRates.Where(x => knownKeys.Add((x.FromCurrencyId, x.ToCurrencyId, x.Date))).ToList();
+                    if (newRates.Count == 0)
+                    {
+                        notifier?.ShowWarning(LocalizationService.Instance.exchange_rates_exist);
+                        return;
+                    }
+
+                    await currencyExchangeRepo.AddRangeAsync(newRates);
                     try
                     {
                         await uow.SaveChangesAsync();
@@ -251,6 +264,7 @@ namespace Financisto.Desktop.ViewModels.Pages
                     }
                     catch (DbUpdateException ex)
                     {
+                        Logger.Warn(ex, "Exchange rates were not saved.");
                         string msg = ex?.InnerException?.Message!;
                         if (!string.IsNullOrEmpty(msg) && msg.Contains("UNIQUE constraint failed", StringComparison.OrdinalIgnoreCase))
                         {

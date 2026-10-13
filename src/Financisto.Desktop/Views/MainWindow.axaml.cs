@@ -47,8 +47,7 @@ public partial class MainWindow : Window
         Closed += (_, _) => LocalizationService.Instance.PropertyChanged -= OnLocalizationChanged;
         _ = LoadBankHelpersAsync();
 
-        var version = typeof(MainWindow).Assembly.GetName().Version;
-        Title = $"Financisto Desktop v.{version?.ToString(3)}";
+        Title = $"Financisto Desktop v.{GetTitleVersion()}";
         Logger.Info("App started");
         foreach (var line in CrashDiagnostics.DescribeEnvironment())
         {
@@ -63,6 +62,30 @@ public partial class MainWindow : Window
                 Logger.Info(line);
             }
         }, DispatcherPriority.Background);
+    }
+
+    /// <summary>
+    /// The version for the title; test builds are all versioned 999.9.9, so those show when the build was made instead.
+    /// </summary>
+    private static string GetTitleVersion()
+    {
+        var name = typeof(MainWindow).Assembly.GetName();
+        var version = name.Version;
+        if (version is not { Major: 999, Minor: 9, Build: 9 })
+        {
+            return version?.ToString(3) ?? string.Empty;
+        }
+
+        // A single-file publish has no assembly file next to the executable; the executable is then the file written at build time.
+        var path = Path.Combine(AppContext.BaseDirectory, name.Name + ".dll");
+        if (!File.Exists(path))
+        {
+            path = Environment.ProcessPath ?? path;
+        }
+
+        return File.Exists(path)
+            ? File.GetLastWriteTime(path).ToString("yyyy-MM-dd HH:mm")
+            : version.ToString(3);
     }
 
     private async Task LoadBankHelpersAsync()

@@ -516,20 +516,26 @@
   <data name="highlight_tooltip" xml:space="preserve">
     <value>Виділити текст. Жовтий - рядок операції, зелений - інші числа</value>
   </data>
-  <data name="open_pdf" xml:space="preserve">
-    <value>Відкрити PDF…</value>
-  </data>
-  <data name="open_pdf_tooltip" xml:space="preserve">
-    <value>Прочитати текст з PDF-файлу (чека) у текстове поле</value>
-  </data>
   <data name="pdf_no_text" xml:space="preserve">
     <value>У цьому PDF немає тексту: це скан або фото без текстового шару, а вбудованого OCR у цій системі немає. Розпізнайте його через OCR (наприклад, Google Lens) і вставте результат.</value>
   </data>
   <data name="pdf_ocr_empty" xml:space="preserve">
     <value>У цьому PDF не вдалося розпізнати текст.</value>
   </data>
-  <data name="pdf_read_error" xml:space="preserve">
-    <value>Не вдалося прочитати PDF: {0}</value>
+  <data name="open_file" xml:space="preserve">
+    <value>Відкрити файл…</value>
+  </data>
+  <data name="open_file_tooltip" xml:space="preserve">
+    <value>Прочитати текст з файлу чека (PDF, HTML або текстового) у текстове поле</value>
+  </data>
+  <data name="file_read_error" xml:space="preserve">
+    <value>Не вдалося прочитати файл: {0}</value>
+  </data>
+  <data name="file_no_text" xml:space="preserve">
+    <value>У цьому файлі не знайдено тексту.</value>
+  </data>
+  <data name="receipt_files" xml:space="preserve">
+    <value>Чеки (PDF, HTML, текст)</value>
   </data>
   <data name="reciept_wizard_total_format" xml:space="preserve">
     <value>Всього : {0:F2} Поточне : {1:F2} Різниця : {2:F2}</value>

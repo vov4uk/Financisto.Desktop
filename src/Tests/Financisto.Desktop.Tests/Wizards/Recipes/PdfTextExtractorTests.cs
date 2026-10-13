@@ -73,53 +73,53 @@ namespace Financisto.Desktop.Tests.Wizards.Recipes
         }
 
         [Fact]
-        public async Task LoadPdfAsync_TextPdf_TextFieldFilled()
+        public async Task LoadFileAsync_TextPdf_TextFieldFilled()
         {
             var path = this.CreatePdf(page => page.Page.AddText("Beer Baltyka 50.00 A", 12, new PdfPoint(25, 700), page.Font));
             var vm = new Page1VM(-50.0) { Text = "old text" };
 
-            await vm.LoadPdfAsync(path);
+            await vm.LoadFileAsync(path);
 
             Assert.Equal("Beer Baltyka 50.00 A", vm.Text);
-            Assert.True(string.IsNullOrEmpty(vm.PdfStatus));
+            Assert.True(string.IsNullOrEmpty(vm.FileStatus));
             Assert.True(vm.IsValid());
         }
 
         [Fact]
-        public async Task LoadPdfAsync_PdfWithoutText_TextKeptAndStatusSet()
+        public async Task LoadFileAsync_PdfWithoutText_TextKeptAndStatusSet()
         {
             var path = this.CreatePdf(_ => { });
             var vm = new Page1VM(-50.0) { Text = "old text" };
 
-            await vm.LoadPdfAsync(path);
+            await vm.LoadFileAsync(path);
 
             Assert.Equal("old text", vm.Text);
-            Assert.False(string.IsNullOrWhiteSpace(vm.PdfStatus));
+            Assert.False(string.IsNullOrWhiteSpace(vm.FileStatus));
         }
 
         [Fact]
-        public async Task LoadPdfAsync_BadFile_TextKeptAndStatusSet()
+        public async Task LoadFileAsync_BadFile_TextKeptAndStatusSet()
         {
             var path = Path.Combine(this.dir, "notes.pdf");
             File.WriteAllText(path, "just some text");
             var vm = new Page1VM(-50.0) { Text = "old text" };
 
-            await vm.LoadPdfAsync(path);
+            await vm.LoadFileAsync(path);
 
             Assert.Equal("old text", vm.Text);
-            Assert.False(string.IsNullOrWhiteSpace(vm.PdfStatus));
+            Assert.False(string.IsNullOrWhiteSpace(vm.FileStatus));
         }
 
         [Fact]
-        public async Task LoadPdfAsync_AfterFailure_StatusClearedByGoodPdf()
+        public async Task LoadFileAsync_AfterFailure_StatusClearedByGoodPdf()
         {
             var vm = new Page1VM(-50.0);
-            await vm.LoadPdfAsync(this.CreatePdf(_ => { }));
-            Assert.False(string.IsNullOrWhiteSpace(vm.PdfStatus));
+            await vm.LoadFileAsync(this.CreatePdf(_ => { }));
+            Assert.False(string.IsNullOrWhiteSpace(vm.FileStatus));
 
-            await vm.LoadPdfAsync(this.CreatePdf(page => page.Page.AddText("25.50 A", 12, new PdfPoint(25, 700), page.Font)));
+            await vm.LoadFileAsync(this.CreatePdf(page => page.Page.AddText("25.50 A", 12, new PdfPoint(25, 700), page.Font)));
 
-            Assert.True(string.IsNullOrEmpty(vm.PdfStatus));
+            Assert.True(string.IsNullOrEmpty(vm.FileStatus));
             Assert.Equal("25.50 A", vm.Text);
         }
 

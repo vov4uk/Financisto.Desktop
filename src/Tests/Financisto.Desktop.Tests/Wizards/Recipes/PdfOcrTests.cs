@@ -51,83 +51,83 @@ namespace Financisto.Desktop.Tests.Wizards.Recipes
         }
 
         [Fact]
-        public async Task LoadPdfAsync_ScannedPdf_TextOfEveryPictureFromOcr()
+        public async Task LoadFileAsync_ScannedPdf_TextOfEveryPictureFromOcr()
         {
             var path = this.CreateScan(SKEncodedImageFormat.Jpeg, RenderText(SKEncodedImageFormat.Jpeg, "a"), RenderText(SKEncodedImageFormat.Jpeg, "b"));
             var ocr = new FakeOcr(_ => Task.FromResult("row"));
             var vm = new Page1VM(-1.0) { CreateOcr = () => ocr, Text = "old text" };
 
-            await vm.LoadPdfAsync(path);
+            await vm.LoadFileAsync(path);
 
             Assert.Equal(2, ocr.Calls);
             Assert.Equal("row" + Environment.NewLine + "row", vm.Text);
-            Assert.True(string.IsNullOrEmpty(vm.PdfStatus));
-            Assert.False(vm.IsPdfBusy);
-            Assert.True(vm.IsPdfIdle);
+            Assert.True(string.IsNullOrEmpty(vm.FileStatus));
+            Assert.False(vm.IsFileBusy);
+            Assert.True(vm.IsFileIdle);
         }
 
         [Fact]
-        public async Task LoadPdfAsync_TextPdf_OcrNotUsed()
+        public async Task LoadFileAsync_TextPdf_OcrNotUsed()
         {
             var ocr = new FakeOcr(_ => Task.FromResult("from ocr"));
             var vm = new Page1VM(-1.0) { CreateOcr = () => ocr };
 
-            await vm.LoadPdfAsync(this.CreateTextPdf("25.50 A"));
+            await vm.LoadFileAsync(this.CreateTextPdf("25.50 A"));
 
             Assert.Equal(0, ocr.Calls);
             Assert.Equal("25.50 A", vm.Text);
         }
 
         [Fact]
-        public async Task LoadPdfAsync_ScannedPdfAndNoOcr_StatusAsksForOcr()
+        public async Task LoadFileAsync_ScannedPdfAndNoOcr_StatusAsksForOcr()
         {
             var path = this.CreateScan(SKEncodedImageFormat.Png, RenderText(SKEncodedImageFormat.Png, "a"));
             var vm = new Page1VM(-1.0) { CreateOcr = () => null, Text = "old text" };
 
-            await vm.LoadPdfAsync(path);
+            await vm.LoadFileAsync(path);
 
             Assert.Equal("old text", vm.Text);
-            Assert.False(string.IsNullOrWhiteSpace(vm.PdfStatus));
-            Assert.False(vm.IsPdfBusy);
+            Assert.False(string.IsNullOrWhiteSpace(vm.FileStatus));
+            Assert.False(vm.IsFileBusy);
 
             // the status tells apart "no OCR here" from "OCR found nothing"
             var withOcr = new Page1VM(-1.0) { CreateOcr = () => new FakeOcr(_ => Task.FromResult(" ")) };
-            await withOcr.LoadPdfAsync(path);
-            Assert.False(string.IsNullOrWhiteSpace(withOcr.PdfStatus));
-            Assert.NotEqual(vm.PdfStatus, withOcr.PdfStatus);
+            await withOcr.LoadFileAsync(path);
+            Assert.False(string.IsNullOrWhiteSpace(withOcr.FileStatus));
+            Assert.NotEqual(vm.FileStatus, withOcr.FileStatus);
         }
 
         [Fact]
-        public async Task LoadPdfAsync_OcrFails_TextKeptAndStatusHasTheReason()
+        public async Task LoadFileAsync_OcrFails_TextKeptAndStatusHasTheReason()
         {
             var path = this.CreateScan(SKEncodedImageFormat.Png, RenderText(SKEncodedImageFormat.Png, "a"));
             var vm = new Page1VM(-1.0) { CreateOcr = () => new FakeOcr(_ => throw new InvalidOperationException("no OCR language")), Text = "old text" };
 
-            await vm.LoadPdfAsync(path);
+            await vm.LoadFileAsync(path);
 
             Assert.Equal("old text", vm.Text);
-            Assert.Contains("no OCR language", vm.PdfStatus);
-            Assert.False(vm.IsPdfBusy);
+            Assert.Contains("no OCR language", vm.FileStatus);
+            Assert.False(vm.IsFileBusy);
         }
 
         [Fact]
-        public async Task LoadPdfAsync_WhileReading_IsBusy()
+        public async Task LoadFileAsync_WhileReading_IsBusy()
         {
             var path = this.CreateScan(SKEncodedImageFormat.Png, RenderText(SKEncodedImageFormat.Png, "a"));
             var release = new TaskCompletionSource<string>();
             var entered = new TaskCompletionSource();
             var vm = new Page1VM(-1.0) { CreateOcr = () => new FakeOcr(_ => { entered.SetResult(); return release.Task; }) };
 
-            var loading = vm.LoadPdfAsync(path);
+            var loading = vm.LoadFileAsync(path);
             await entered.Task;
 
-            Assert.True(vm.IsPdfBusy);
-            Assert.False(vm.IsPdfIdle);
+            Assert.True(vm.IsFileBusy);
+            Assert.False(vm.IsFileIdle);
 
             release.SetResult("25.50 A");
             await loading;
 
-            Assert.False(vm.IsPdfBusy);
+            Assert.False(vm.IsFileBusy);
             Assert.Equal("25.50 A", vm.Text);
         }
 
