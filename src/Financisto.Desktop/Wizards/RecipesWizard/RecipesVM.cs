@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Financisto.Desktop.Data;
+using Financisto.Desktop.Helpers;
 
 namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
 {
@@ -10,8 +11,13 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
     /// </summary>
     public class RecipesVM : WizardBaseVM
     {
-        public RecipesVM(double totalAmount)
+        private readonly RecipeCategoryMemory memory;
+
+        /// <param name="memory">The categories chosen on earlier receipts; by default the file next to the settings, read now.</param>
+        public RecipesVM(double totalAmount, RecipeCategoryMemory? memory = null)
         {
+            this.memory = memory ?? new RecipeCategoryMemory(RecipeCategoryMemory.DefaultPath);
+            this.memory.Load();
             TotalAmount = totalAmount;
 #pragma warning disable S1699 // Constructors should only call non-overridable methods
             CreatePages();
@@ -40,7 +46,7 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
 
         public override void CreatePages()
         {
-            var page1 = new Page1VM(this.TotalAmount);
+            var page1 = new Page1VM(this.TotalAmount, memory);
             page1.PropertyChanged += (_, e) =>
             {
                 if (e.PropertyName == nameof(page1.Text))
@@ -52,7 +58,7 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
             _pages = new List<WizardPageBaseVM>()
             {
                 page1,
-                new Page2VM(this.TotalAmount),
+                new Page2VM(this.TotalAmount, memory),
             }.AsReadOnly();
 
             CurrentPage = Pages[0];
@@ -61,11 +67,13 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
         {
             if (save)
             {
-                return _pages.OfType<Page2VM>()
-                    .Single()
-                    .FinancistoTransactions
-                    .Select(TransformMonoTransaction)
-                    .ToList();
+                var rows = _pages.OfType<Page2VM>().Single().FinancistoTransactions;
+
+                // what was chosen for these notes is kept for the next receipt (notes Clear notes already wiped were taken before)
+                memory.Remember(rows);
+                memory.Save();
+
+                return rows.Select(TransformMonoTransaction).ToList();
             }
             return null;
         }

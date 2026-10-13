@@ -10,7 +10,7 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.View
 {
     /// <summary>
     /// Receipt text → highlighted inlines for a TextBlock (Avalonia has no RichTextBox; this replaces the WPF
-    /// RichTextBox formatter): words that are receipt amounts get yellow, other words with digits green.
+    /// RichTextBox formatter): words that are receipt amounts get yellow (the whole row for a receipt table), other words with digits green.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class RecipesFormatter : IValueConverter
@@ -40,6 +40,18 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.View
             var lines = RecipiesHelper.SplitLines(text);
             for (int l = 0; l < lines.Length; l++)
             {
+                // A row of a receipt table (and its Rabat line) is the amount as a whole
+                if (ReceiptRows.IsItemRow(lines[l]) || ReceiptRows.IsDiscountRow(lines[l]))
+                {
+                    inlines.Add(new Run(lines[l].Trim()) { Foreground = Brushes.DarkRed, Background = Brushes.Yellow });
+                    if (l != lines.Length - 1)
+                    {
+                        inlines.Add(new LineBreak());
+                    }
+
+                    continue;
+                }
+
                 var words = lines[l].Trim().Split(Space);
                 for (int i = 0; i < words.Length; i++)
                 {

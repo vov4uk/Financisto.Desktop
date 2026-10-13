@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Financisto.Common.Entities;
+using Financisto.Common.Localization;
 using Financisto.Common.Utils;
 using Financisto.Desktop.Helpers;
+using Financisto.Desktop.Helpers.Ocr;
 using Financisto.Desktop.Wizards.RecipesWizard.View;
 using Prism.Commands;
 
@@ -15,12 +18,18 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
     {
         //TODO fix '100600 Балтика' case then it calculates (100600 Б), no more symbols after a|b
         private readonly string pattern = RecipesFormatter.Pattern + @"(\t|\n|\r|$)";
-        private readonly char[] charactersToRemove = { ':', '/', '?', '#', '[', ']', '@', '*', '.', ',', '\"', '&', '\'' };
+        private static readonly char[] charactersToRemove = { ':', '/', '?', '#', '[', ']', '@', '*', '.', ',', '\"', '&', '\'' };
         private DelegateCommand _highlightCommand;
         private string text;
-        public Page1VM(double totalAmount)
+        private string? pdfStatus;
+        private bool isPdfBusy;
+        private readonly RecipeCategoryMemory? memory;
+
+        /// <param name="memory">The categories chosen for these lines on earlier receipts; null = nothing remembered.</param>
+        public Page1VM(double totalAmount, RecipeCategoryMemory? memory = null)
         {
             TotalAmount = totalAmount;
+            this.memory = memory;
         }
 
         public List<FinancistoTransactionDto> Amounts { get; } = new List<FinancistoTransactionDto>();
@@ -37,7 +46,88 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
             }
         }
 
+        /// <summary>Where the OCR engine for scanned PDFs comes from; <c>null</c> (no OCR on this system) goes without it. A test sets its own.</summary>
+        internal Func<IOcrEngine?> CreateOcr { get; set; } = OcrEngines.GetDefault;
+
+        /// <summary>A PDF is being read (OCR of a scan takes a few seconds).</summary>
+        public bool IsPdfBusy
+        {
+            get => this.isPdfBusy;
+            private set
+            {
+                this.isPdfBusy = value;
+                this.RaisePropertyChanged(nameof(this.IsPdfBusy));
+                this.RaisePropertyChanged(nameof(this.IsPdfIdle));
+            }
+        }
+
+        public bool IsPdfIdle => !this.IsPdfBusy;
+
+        /// <summary>Why the last PDF gave no text (a scan without OCR, a damaged file); empty when it was read.</summary>
+        public string? PdfStatus
+        {
+            get => this.pdfStatus;
+            private set
+            {
+                this.pdfStatus = value;
+                this.RaisePropertyChanged(nameof(this.PdfStatus));
+            }
+        }
+
         public override string Title => "Paste text";
+
+        /// <summary>
+        /// Puts the text of the PDF into <see cref="Text"/> (replacing it): its text layer, or, for a scan, what the OCR of this system reads from its pictures.
+        /// A PDF without text, a bad file or a failed OCR leaves <see cref="Text"/> alone and sets <see cref="PdfStatus"/>.
+        /// </summary>
+        public async Task LoadPdfAsync(string filePath)
+        {
+            IsPdfBusy = true;
+            PdfStatus = null;
+            try
+            {
+                var (extracted, ocrTried) = await Task.Run(() => ReadPdfAsync(filePath));
+                if (string.IsNullOrWhiteSpace(extracted))
+                {
+                    PdfStatus = LocalizationService.Instance[ocrTried ? "pdf_ocr_empty" : "pdf_no_text"];
+                    return;
+                }
+
+                Text = extracted;
+            }
+            catch (Exception ex)
+            {
+                PdfStatus = string.Format(LocalizationService.Instance["pdf_read_error"], ex.Message);
+            }
+            finally
+            {
+                IsPdfBusy = false;
+            }
+        }
+
+        private async Task<(string text, bool ocrTried)> ReadPdfAsync(string filePath)
+        {
+            var text = PdfTextExtractor.ExtractText(filePath);
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                return (text, false);
+            }
+
+            // No text layer: a scan. Read its pictures with the OCR of this system, if it has one.
+            var ocr = CreateOcr();
+            if (ocr is null)
+            {
+                return (string.Empty, false);
+            }
+
+            var pages = new List<string>();
+            foreach (var image in PdfTextExtractor.ExtractImages(filePath))
+            {
+                pages.Add(await ocr.RecognizeAsync(image));
+            }
+
+            return (string.Join(Environment.NewLine, pages.Where(page => !string.IsNullOrWhiteSpace(page))), true);
+        }
 
         public void CalculateCurrentAmount()
         {
@@ -47,32 +137,49 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
             {
                 double tmp = 0.0;
                 int order = 1;
-                var lines = RecipiesHelper.SplitLines(text).Where(line => !string.IsNullOrWhiteSpace(line));
-                foreach (var line in lines)
+                var lines = RecipiesHelper.SplitLines(text).Where(line => !string.IsNullOrWhiteSpace(line)).ToList();
+                foreach (var (amount, note) in ReadAmounts(lines))
                 {
-                    var findNumber = Regex.Match(line, pattern, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(1000));
-                    if (findNumber.Success)
+                    tmp += amount;
+
+                    if (DoubleUtils.DoubleNotEqual(amount, 0.0))
                     {
-                        var amount = GetDouble(findNumber.Value.Substring(0, findNumber.Value.Length - 2).Replace(",", ".").Trim());
-                        tmp += amount;
-
-                        if (DoubleUtils.DoubleNotEqual(amount, 0.0))
+                        var transaction = new FinancistoTransactionDto
                         {
-                            var note = line.Replace(findNumber.Value, string.Empty);
-                            var lineResult = ParseLine(note);
-
-                            Amounts.Add(new FinancistoTransactionDto
-                            {
-                                FromAmount = Convert.ToInt64(amount * -100.0),
-                                Note = lineResult.note,
-                                CategoryId = lineResult.categoryId,
-                                Order = order++
-                            });
-                        }
+                            FromAmount = Convert.ToInt64(amount * -100.0),
+                            Order = order++
+                        };
+                        ParseLine(note, transaction);
+                        Amounts.Add(transaction);
                     }
                 }
 
-                CalculatedAmount = Math.Abs(tmp) * -1.0;
+                // cents: a sum of doubles is off by 1e-13 (Diff would print as -0.00)
+                CalculatedAmount = Math.Round(Math.Abs(tmp), 2) * -1.0;
+            }
+        }
+
+        // The amount and the text around it of every receipt row: a receipt table (rows with quantity x price, Rabat lines) or lines with a marked amount ("12,50 A")
+        private IEnumerable<(double amount, string note)> ReadAmounts(List<string> lines)
+        {
+            if (ReceiptRows.IsReceiptTable(lines))
+            {
+                return ReceiptRows.Parse(lines).Select(item => (item.Amount, item.Name));
+            }
+
+            return ReadMarkedAmounts(lines);
+        }
+
+        private IEnumerable<(double amount, string note)> ReadMarkedAmounts(IEnumerable<string> lines)
+        {
+            foreach (var line in lines)
+            {
+                var findNumber = Regex.Match(line, pattern, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(1000));
+                if (findNumber.Success)
+                {
+                    var amount = GetDouble(findNumber.Value.Substring(0, findNumber.Value.Length - 2).Replace(",", ".").Trim());
+                    yield return (amount, line.Replace(findNumber.Value, string.Empty));
+                }
             }
         }
 
@@ -105,17 +212,30 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
             return false;
         }
 
-        private static void TryParseCategory(string[] desc, out int categoryId)
+        /// <summary>
+        /// Gives the row its category. What the user chose for the same note on an earlier receipt (<see cref="RecipeCategoryMemory"/>) comes first;
+        /// a note never seen is matched against the words of the category titles.
+        /// </summary>
+        /// <param name="transaction">The row; its <c>Note</c> is already the cleaned text.</param>
+        /// <param name="words">The words of the cleaned text.</param>
+        private void TryParseCategory(FinancistoTransactionDto transaction, string[] words)
         {
+            if (memory is not null && memory.TryGetCategoryId(transaction.Note, out var remembered))
+            {
+                transaction.CategoryId = remembered;
+                return;
+            }
+
             var category = DbManual.Category
                     .Where(x => x.Id > 0)
-                    .FirstOrDefault(l => ContainsString(l.Title, desc));
-            categoryId = category?.Id ?? 0;
+                    .FirstOrDefault(l => ContainsString(l.Title, words));
+            transaction.CategoryId = category?.Id ?? 0;
         }
 
-        private (string note, int categoryId) ParseLine(string note)
+        private void ParseLine(string line, FinancistoTransactionDto transaction)
         {
-            int categoryId = 0;
+            var note = line;
+            string[] words = Array.Empty<string>();
             if (!string.IsNullOrWhiteSpace(note))
             {
                 foreach (char c in charactersToRemove)
@@ -123,17 +243,19 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
                     note = note.Replace(c.ToString(), string.Empty);
                 }
 
-                var arr = note.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                words = note.Split(' ', StringSplitOptions.RemoveEmptyEntries)
                               .Where(x => x.Length > 2)
-                              .Select(x => x.Trim('-').Trim().ToLowerInvariant())
+                              .Select(x => x.Trim('-').Trim())
                               .ToArray();
 
-                TryParseCategory(arr, out categoryId);
-
-                note = string.Join(" ", arr);
+                note = string.Join(" ", words);
             }
-            note = string.IsNullOrWhiteSpace(note) ? string.Empty : note.TrimEnd();
-            return (note, categoryId);
+            transaction.Note = string.IsNullOrWhiteSpace(note) ? string.Empty : note.TrimEnd();
+
+            if (!string.IsNullOrWhiteSpace(line))
+            {
+                TryParseCategory(transaction, words);
+            }
         }
     }
 }

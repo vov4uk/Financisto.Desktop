@@ -197,21 +197,7 @@ namespace Financisto.Desktop.ViewModels.Pages
                 return;
             }
 
-            var updatedRule = new RuleModel
-            {
-                Id = id,
-                Description = updated.Description,
-                CategoryId = updated.CategoryId,
-                Condition = updated.Condition,
-                Created = updated.Created,
-                IsActive = updated.IsActive,
-                LocationId = updated.LocationId,
-                PayeeId = updated.PayeeId,
-                ProjectId = updated.ProjectId,
-                MCCCategory = updated.MCCCategory,
-            };
-
-            await db.InsertOrUpdateAsync(new[] { RuleSmsTemplateMapper.ToSmsTemplate(updatedRule) });
+            await db.InsertOrUpdateAsync(new[] { RuleSmsTemplateMapper.ToSmsTemplate(updated.ToModel(id)) });
             await RefreshData();
         }
     }

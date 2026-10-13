@@ -17,6 +17,9 @@
     <Project Path="src/CustomControls/AvaloniaSearchableComboBox/AvaloniaSearchableComboBox.csproj" />
     <Project Path="src/CustomControls/Message.Avalonia/Message.Avalonia.csproj" />
   </Folder>
+  <Folder Name="/Ocr/">
+    <Project Path="src/Ocr/Financisto.Ocr.Windows/Financisto.Ocr.Windows.csproj" />
+  </Folder>
   <Folder Name="/SolutionItems/">
     <File Path=".github/workflows/main.yml" />
     <File Path="Directory.Build.props" />

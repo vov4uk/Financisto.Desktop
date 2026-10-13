@@ -157,7 +157,7 @@ namespace Financisto.Desktop.Wizards.MonoWizard.ViewModel
                     IsAmountNegative = amount < 0
                 };
 
-                ApplyRules(newTr);
+                RuleMatcher.Apply(newTr);
 
                 transToAdd.Add(newTr);
             }
@@ -187,59 +187,6 @@ namespace Financisto.Desktop.Wizards.MonoWizard.ViewModel
 
         // Only some banks give an exchange rate; the others just name the operation currency when it differs from the card's.
         private static bool IsForeignCurrency(BankTransaction x) => x.ExchangeRate != null || (!string.IsNullOrEmpty(x.OperationCurrency) && x.OperationAmount != 0 && Financisto.Common.Utils.DoubleUtils.DoubleNotEqual(Math.Abs(x.OperationAmount), Math.Abs(x.CardCurrencyAmount)));
-
-        private static void ApplyRules(FinancistoTransactionDto transaction)
-        {
-            foreach (var rule in DbManual.Rules.Where(r => r.IsActive))
-            {
-                HashSet<int> mccCodes = new HashSet<int>();
-                if (rule.Condition == RuleConditionType.MCC && DbManual.MCCEnums.ContainsKey(rule.MCCCategory))
-                {
-                    var list = DbManual.MCCEnums[rule.MCCCategory];
-                    mccCodes = [.. list];
-                }
-
-                bool meetsCondition = false;
-                if (rule.Condition == RuleConditionType.DescriptionContains && !string.IsNullOrEmpty(transaction.Note))
-                {
-                    if (transaction.Note.Contains(rule.Description, StringComparison.OrdinalIgnoreCase))
-                    {
-                        meetsCondition = true;
-                    }
-                }
-                else if (rule.Condition == RuleConditionType.DescriptionMatches && !string.IsNullOrEmpty(transaction.Note))
-                {
-                    if (transaction.Note.Equals(rule.Description, StringComparison.OrdinalIgnoreCase))
-                    {
-                        meetsCondition = true;
-                    }
-                }
-                else if (rule.Condition == RuleConditionType.MCC && transaction.MCC > 0 && mccCodes.Contains(transaction.MCC))
-                {
-                    meetsCondition = true;
-                }
-
-                if (meetsCondition)
-                {
-                    if (rule.CategoryId.HasValue)
-                    {
-                        transaction.CategoryId = rule.CategoryId.Value;
-                    }
-                    if (rule.LocationId.HasValue)
-                    {
-                        transaction.LocationId = rule.LocationId.Value;
-                    }
-                    if (rule.PayeeId.HasValue)
-                    {
-                        transaction.PayeeId = rule.PayeeId.Value;
-                    }
-                    if (rule.ProjectId.HasValue)
-                    {
-                        transaction.ProjectId = rule.ProjectId.Value;
-                    }
-                }
-            }
-        }
 
         private void ClearAllNotes()
         {
@@ -378,44 +325,11 @@ namespace Financisto.Desktop.Wizards.MonoWizard.ViewModel
 
         private async Task OpenRulesDialogAsync(string description, int mccCode)
         {
-            Mcc mcc = Mcc.none;
-            if (DbManual.MCCCodes.TryGetValue(mccCode, out var mccValue))
+            if (await RuleCreator.AddRuleAsync(_dialogWrapper, description, mccCode) != null)
             {
-                mcc = mccValue;
-            }
-
-            RuleDto rule = new RuleDto()
-            {
-                Description = description,
-                Condition = RuleConditionType.DescriptionContains,
-                Created = DateTime.Now,
-                IsActive = true,
-                MCCCategory = mcc
-            };
-
-            RuleDialogVM ruleVm = new RuleDialogVM(rule);
-
-            var result = await _dialogWrapper.ShowDialogAsync<RuleDialog>(ruleVm, 420, 440, LocalizationService.Instance.rule);
-
-            var updatedItem = result as RuleDto;
-            if (updatedItem != null)
-            {
-                DbManual.Rules.Add(new RuleModel
-                {
-                    Description = updatedItem.Description,
-                    CategoryId = updatedItem.CategoryId,
-                    Condition = updatedItem.Condition,
-                    Created = updatedItem.Created,
-                    IsActive = updatedItem.IsActive,
-                    LocationId = updatedItem.LocationId,
-                    PayeeId = updatedItem.PayeeId,
-                    ProjectId = updatedItem.ProjectId,
-                    MCCCategory = updatedItem.MCCCategory
-                });
-
                 foreach (var transaction in FinancistoTransactions)
                 {
-                    ApplyRules(transaction);
+                    RuleMatcher.Apply(transaction);
                 }
             }
         }

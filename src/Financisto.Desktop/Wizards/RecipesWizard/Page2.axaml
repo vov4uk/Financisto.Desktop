@@ -7,6 +7,7 @@
     xmlns:entities="using:Financisto.Common.Entities"
     xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sc="using:AvaloniaSearchableComboBox"
     xmlns:vm="using:Financisto.Desktop.Wizards.RecipesWizard.ViewModel"
     d:DesignHeight="300"
     d:DesignWidth="900"
@@ -19,10 +20,11 @@
                 <ResourceInclude Source="avares://Financisto.Common/Assets/Generic.axaml" />
             </ResourceDictionary.MergedDictionaries>
             <conv:AmountConverter x:Key="AmountConverter" />
+            <conv:NoCategoryBackgroundConverter x:Key="NoCategoryBackgroundConverter" />
         </ResourceDictionary>
     </UserControl.Resources>
     <UserControl.Styles>
-        <Style Selector="DataGridCell ComboBox">
+        <Style Selector="DataGridCell sc|SearchableComboBox">
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="MinWidth" Value="160" />
         </Style>
@@ -83,20 +85,29 @@
                     Gesture="Delete" />
             </DataGrid.KeyBindings>
             <DataGrid.Columns>
-                <DataGridTextColumn
-                    Binding="{Binding Order}"
-                    Header="{loc:Translate Key=order}"
-                    IsReadOnly="True" />
+                <DataGridTemplateColumn Header="{loc:Translate Key=order}" IsReadOnly="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <!--  Pink until a category is chosen, like the import wizard marks the rows it can't place  -->
+                            <Border Background="{Binding HasNoCategory, Converter={StaticResource NoCategoryBackgroundConverter}}">
+                                <TextBlock
+                                    Margin="6,0"
+                                    VerticalAlignment="Center"
+                                    Text="{Binding Order}" />
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTemplateColumn Header="{loc:Translate Key=category}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <ComboBox
-                                IsTextSearchEnabled="True"
+                            <sc:SearchableComboBox
+                                VerticalAlignment="Center"
                                 ItemTemplate="{StaticResource CategoryTemplate}"
                                 ItemsSource="{x:Static entities:DbManual.Category}"
                                 SelectedValue="{Binding CategoryId}"
-                                SelectedValueBinding="{Binding Id}"
-                                TextSearch.TextBinding="{Binding Title}" />
+                                SelectedValuePath="Id"
+                                TextPath="Title" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
@@ -125,13 +136,13 @@
                 <DataGridTemplateColumn Header="{loc:Translate Key=project}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <ComboBox
-                                IsTextSearchEnabled="True"
+                            <sc:SearchableComboBox
+                                VerticalAlignment="Center"
                                 ItemTemplate="{StaticResource IActive}"
                                 ItemsSource="{x:Static entities:DbManual.Project}"
                                 SelectedValue="{Binding ProjectId}"
-                                SelectedValueBinding="{Binding Id}"
-                                TextSearch.TextBinding="{Binding Title}" />
+                                SelectedValuePath="Id"
+                                TextPath="Title" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

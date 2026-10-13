@@ -1,12 +1,15 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Financisto.Common.Localization;
+using Financisto.Desktop.Helpers;
 using Prism.Commands;
 
 namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
 {
     public class Page2VM : RecipesWizardPageVMBase
     {
+        private readonly RecipeCategoryMemory? memory;
         private DelegateCommand _addRowCommand;
         private DelegateCommand<FinancistoTransactionDto> _deleteCommand;
         private DelegateCommand _totalCommand;
@@ -14,8 +17,10 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
 
         private ObservableCollection<FinancistoTransactionDto> financistoTransactions;
 
-        public Page2VM(double totalAmount)
+        /// <param name="memory">Gets the notes and categories of the rows before Clear notes wipes the notes; null = nothing is remembered.</param>
+        public Page2VM(double totalAmount, RecipeCategoryMemory? memory = null)
         {
+            this.memory = memory;
             TotalAmount = totalAmount;
             financistoTransactions = new();
         }
@@ -53,7 +58,7 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
             }
         }
 
-        public override string Title => "Transactions";
+        public override string Title => LocalizationService.Instance.recipe_wizard_transactions;
 
         public DelegateCommand TotalCommand
         {
@@ -86,6 +91,8 @@ namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
 
         private void ClearAllNotes()
         {
+            // the notes are what a category is remembered by: take them before they go (the file is written when the wizard is saved)
+            memory?.Remember(FinancistoTransactions);
             foreach (var item in FinancistoTransactions)
             {
                 item.Note = null;

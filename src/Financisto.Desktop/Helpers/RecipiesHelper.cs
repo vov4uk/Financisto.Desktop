@@ -17,7 +17,7 @@ namespace Financisto.Desktop.Helpers
             return text.Split(LineSeparators, options);
         }
 
-        /// <summary>Puts every receipt amount at the end of its own line, joining the words in between.</summary>
+        /// <summary>Puts every receipt amount at the end of its own line, joining the words in between. A receipt table is left as it is.</summary>
         public static string FormatText(string text)
         {
             if (string.IsNullOrWhiteSpace(text))
@@ -26,6 +26,12 @@ namespace Financisto.Desktop.Helpers
             }
 
             var array = SplitLines(text, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+
+            // A receipt table is already one row per line (that is what its amounts are read by): joining the lines would destroy it
+            if (ReceiptRows.IsReceiptTable(array))
+            {
+                return text;
+            }
 
             var singleLine = string.Join(' ', array);
             Regex numberRegex = new Regex(RecipesFormatter.Pattern, RegexOptions.Singleline | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(1000));

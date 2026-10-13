@@ -111,7 +111,7 @@ namespace Financisto.Desktop.ViewModels
             new(typeof(PayeeModel), () => LocalizationService.Instance.payees, "IconAddressBook"),
             new(typeof(LocationModel), () => LocalizationService.Instance.locations, "IconMap"),
             new(typeof(ExchangeRateModel), () => LocalizationService.Instance.exchange_rates, "IconDollarEuro"),
-            new(typeof(BlotterModel), () => LocalizationService.Instance.blotter, "IconReceipt"),
+            new(typeof(BlotterModel), () => LocalizationService.Instance.blotter, "IconList"),
             new(typeof(ReportsControlVM), () => LocalizationService.Instance.reports, "IconChartBar"),
         };
 
@@ -396,13 +396,7 @@ namespace Financisto.Desktop.ViewModels
 
             var output = await dialogWrapper.ShowWizardAsync(vm);
 
-            // The wizard only adds new rules to DbManual.Rules; store them and reload to get their ids.
-            if (DbManual.Rules.Any(r => !(r.Id > 0)))
-            {
-                await new RulesRepository(db).SaveAsync(DbManual.Rules);
-                DbManual.ResetManuals(nameof(DbManual.Rules));
-                await DbManual.SetupAsync(db);
-            }
+            await RuleCreator.SaveNewAsync(db);
 
             if (output is List<Transaction> outputTransactions)
             {

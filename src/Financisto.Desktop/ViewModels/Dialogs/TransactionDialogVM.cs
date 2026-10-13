@@ -27,6 +27,7 @@ public class TransactionDialogVM : SubTransactionDialogVM
     private DelegateCommand<BaseTransactionDto> _deleteSubTransactionCommand;
     private AsyncCommand<BaseTransactionDto> _editSubTransaction;
     private Common.IAsyncCommand _openRecipesDialogCommand;
+    private DelegateCommand _groupSubTransactionsCommand;
 
     /// <param name="accountBalances">Account id → current balance (<c>IFinancistoDatabase.GetLastRunningBalancesAsync</c>), read right before
     /// the dialog opens; shown under the account combobox. Null shows no balance.</param>
@@ -38,6 +39,7 @@ public class TransactionDialogVM : SubTransactionDialogVM
     {
         this.dialogWrapper = dialogWrapper;
         this.accountBalances = accountBalances;
+        Transaction.SubTransactions.CollectionChanged += (_, _) => GroupSubTransactionsCommand.RaiseCanExecuteChanged();
         Transaction.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(TransactionDto.FromAccount))
@@ -98,6 +100,9 @@ public class TransactionDialogVM : SubTransactionDialogVM
 
     public AsyncCommand<BaseTransactionDto> EditSubTransactionCommand => _editSubTransaction ??= new AsyncCommand<BaseTransactionDto>(EditSubTransaction);
 
+    /// <summary>Merges the split parts of the same category into one with the sum of their amounts (fewer parts).</summary>
+    public DelegateCommand GroupSubTransactionsCommand => _groupSubTransactionsCommand ??= new DelegateCommand(GroupSubTransactions, () => Transaction.CanGroupSubTransactions());
+
     public Common.IAsyncCommand OpenRecipesDialogCommand => _openRecipesDialogCommand ??= new AsyncCommand(ShowRecipesDialog);
 
     // Only a split must be fully distributed among its parts; a regular transaction has no parts, so its UnsplitAmount is the whole amount.
@@ -134,6 +139,12 @@ public class TransactionDialogVM : SubTransactionDialogVM
         original.ToAmount = Math.Abs(modifiedCopy.IsToAmountVisible ? modifiedCopy.ToAmount : modifiedCopy.FromAmount);
         original.Date = modifiedCopy.DateTime.Date;
         original.Time = modifiedCopy.DateTime;
+    }
+
+    private void GroupSubTransactions()
+    {
+        Transaction.GroupSubTransactionsByCategory();
+        SaveCommand.NotifyCanExecuteChanged();
     }
 
     /// <summary>Recipes wizard: parses a pasted receipt into split parts of this transaction.</summary>
@@ -243,6 +254,7 @@ public class TransactionDialogVM : SubTransactionDialogVM
             if (isNewItem) Transaction.SubTransactions.Add(original);
             Transaction.RecalculateUnSplitAmount();
             SaveCommand.NotifyCanExecuteChanged();
+            GroupSubTransactionsCommand.RaiseCanExecuteChanged();
         }
     }
 }

@@ -53,6 +53,7 @@
         <PackageReference Include="MacBundle" />
         <PackageReference Include="Onova" />
         <PackageReference Include="Optris.LoadingIndicators.Avalonia" />
+        <PackageReference Include="PdfPig" />
         <PackageReference Include="System.Security.Cryptography.ProtectedData" />
     </ItemGroup>
 
@@ -90,6 +91,38 @@
         <!-- The assemblies shared with the plugins; the plugin build reads the same file (see PluginLoadContext) -->
         <EmbeddedResource Include="..\BankHelpers\Plugins\HostProvidedAssemblies.txt" LogicalName="HostProvidedAssemblies.txt" />
     </ItemGroup>
+
+    <!--
+        Windows OCR (src/Ocr/Financisto.Ocr.Windows): the Windows API needs a windows target framework, so it is its own library, built only on Windows
+        for the Windows runtimes and put in <app>/ocr (the folder is simply missing in the other builds, and the app goes without OCR). Like the plugins,
+        the app has no code reference to it: it is built first and its output (the DLL, the Windows API projection, WinRT.Runtime) is copied and published.
+    -->
+    <PropertyGroup>
+        <IncludeWindowsOcr Condition="$([MSBuild]::IsOSPlatform('Windows')) And $(RuntimeIdentifier.StartsWith('win-'))">true</IncludeWindowsOcr>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(IncludeWindowsOcr)' == 'true'">
+        <ProjectReference Include="..\Ocr\Financisto.Ocr.Windows\Financisto.Ocr.Windows.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" GlobalPropertiesToRemove="RuntimeIdentifier;SelfContained" />
+    </ItemGroup>
+
+    <Target Name="GetWindowsOcrOutputs" Condition="'$(IncludeWindowsOcr)' == 'true'">
+        <MSBuild Projects="..\Ocr\Financisto.Ocr.Windows\Financisto.Ocr.Windows.csproj" Targets="GetTargetPath" RemoveProperties="RuntimeIdentifier;SelfContained">
+            <Output TaskParameter="TargetOutputs" ItemName="WindowsOcrTargetPath" />
+        </MSBuild>
+        <ItemGroup>
+            <WindowsOcrOutput Include="%(WindowsOcrTargetPath.RootDir)%(WindowsOcrTargetPath.Directory)*.dll;%(WindowsOcrTargetPath.RootDir)%(WindowsOcrTargetPath.Directory)*.deps.json" />
+        </ItemGroup>
+    </Target>
+
+    <Target Name="CopyWindowsOcr" AfterTargets="CopyFilesToOutputDirectory" DependsOnTargets="GetWindowsOcrOutputs" Condition="'$(IncludeWindowsOcr)' == 'true'">
+        <Copy SourceFiles="@(WindowsOcrOutput)" DestinationFolder="$(OutDir)ocr" SkipUnchangedFiles="true" />
+    </Target>
+
+    <Target Name="PublishWindowsOcr" BeforeTargets="ComputeResolvedFilesToPublishList" DependsOnTargets="GetWindowsOcrOutputs" Condition="'$(IncludeWindowsOcr)' == 'true'">
+        <ItemGroup>
+            <ResolvedFileToPublish Include="@(WindowsOcrOutput)" RelativePath="ocr/%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+        </ItemGroup>
+    </Target>
 
     <Target Name="GetBankHelperPluginOutputs">
         <!-- The plugins are plain net10.0 libraries, built without the app's runtime (the SDK drops these properties for a library reference too) -->

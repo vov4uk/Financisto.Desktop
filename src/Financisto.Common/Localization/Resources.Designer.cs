@@ -990,6 +990,15 @@ namespace Financisto.Common.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Group by category.
+        /// </summary>
+        public static string group_by_category {
+            get {
+                return ResourceManager.GetString("group_by_category", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Group separator.
         /// </summary>
         public static string group_separator {
@@ -1404,6 +1413,24 @@ namespace Financisto.Common.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open PDF….
+        /// </summary>
+        public static string open_pdf {
+            get {
+                return ResourceManager.GetString("open_pdf", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Read the text of a PDF file (a receipt) into the text field.
+        /// </summary>
+        public static string open_pdf_tooltip {
+            get {
+                return ResourceManager.GetString("open_pdf_tooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Open recipes wizard.
         /// </summary>
         public static string open_recipes_wizard {
@@ -1508,6 +1535,33 @@ namespace Financisto.Common.Localization {
         public static string payment_day {
             get {
                 return ResourceManager.GetString("payment_day", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No text found in this PDF: it is a scan or a photo without a text layer, and this system has no built-in OCR. Run it through OCR (e.g. Google Lens) and paste the result..
+        /// </summary>
+        public static string pdf_no_text {
+            get {
+                return ResourceManager.GetString("pdf_no_text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No text could be recognized in this PDF..
+        /// </summary>
+        public static string pdf_ocr_empty {
+            get {
+                return ResourceManager.GetString("pdf_ocr_empty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Can't read the PDF: {0}.
+        /// </summary>
+        public static string pdf_read_error {
+            get {
+                return ResourceManager.GetString("pdf_read_error", resourceCulture);
             }
         }
         
@@ -1755,7 +1809,7 @@ namespace Financisto.Common.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Paste recipes text. Make recipes photo and parse text via Google Lens or other OCR. I&apos;ll look for numbers with article symbol..
+        ///   Looks up a localized string similar to Paste recipes text. Make recipes photo and parse text via Google Lens or other OCR. I&apos;ll look for numbers with article symbol. A receipt printed as a table (name, tax letter, quantity x price, value, with Rabat lines) is read row by row..
         /// </summary>
         public static string recipes_instructions_line1 {
             get {

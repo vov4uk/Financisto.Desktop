@@ -270,6 +270,9 @@
   <data name="open_recipes_wizard" xml:space="preserve">
     <value>Otwórz kreatora przepisów</value>
   </data>
+  <data name="group_by_category" xml:space="preserve">
+    <value>Grupuj według kategorii</value>
+  </data>
   <data name="add_split_transfers" xml:space="preserve">
     <value>Dodaj podziałowe transfery</value>
   </data>
@@ -487,7 +490,10 @@
     <value>Oryginał</value>
   </data>
   <data name="recipes_instructions_line1" xml:space="preserve">
-    <value>Wklej tekst przepisu. Zrób zdjęcie przepisu i przeanalizuj tekst za pomocą Google Lens lub innego OCR. Będę szukać liczb z symbolem artykułu.</value>
+    <value>Wklej tekst przepisu. Zrób zdjęcie przepisu i przeanalizuj tekst za pomocą Google Lens lub innego OCR. Będę szukać liczb z symbolem artykułu. Paragon wydrukowany jako tabela (nazwa, litera PTU, ilość x cena, wartość, wiersze Rabat) jest czytany wiersz po wierszu.</value>
+  </data>
+  <data name="recipe_wizard_transactions" xml:space="preserve">
+    <value>Transakcje</value>
   </data>
   <data name="recipe_wizard_total_format" xml:space="preserve">
     <value>Suma: {0:F2}   Obliczono: {1:F2}   Różnica: {2:F2}</value>
@@ -506,6 +512,21 @@
   </data>
   <data name="highlight_tooltip" xml:space="preserve">
     <value>Wyróżnij tekst. Żółty - wiersz transakcji, zielony - inne liczby</value>
+  </data>
+  <data name="open_pdf" xml:space="preserve">
+    <value>Otwórz PDF…</value>
+  </data>
+  <data name="open_pdf_tooltip" xml:space="preserve">
+    <value>Wczytaj tekst z pliku PDF (paragonu) do pola tekstowego</value>
+  </data>
+  <data name="pdf_no_text" xml:space="preserve">
+    <value>W tym pliku PDF nie ma tekstu: to skan lub zdjęcie bez warstwy tekstowej, a ten system nie ma wbudowanego OCR. Rozpoznaj go przez OCR (np. Google Lens) i wklej wynik.</value>
+  </data>
+  <data name="pdf_ocr_empty" xml:space="preserve">
+    <value>Nie udało się rozpoznać tekstu w tym pliku PDF.</value>
+  </data>
+  <data name="pdf_read_error" xml:space="preserve">
+    <value>Nie można odczytać pliku PDF: {0}</value>
   </data>
   <data name="reciept_wizard_total_format" xml:space="preserve">
     <value>Suma : {0:F2} Bieżące : {1:F2} Różnica : {2:F2}</value>

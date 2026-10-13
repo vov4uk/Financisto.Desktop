@@ -26,6 +26,10 @@
         <Style Selector="Border.positive">
             <Setter Property="Background" Value="YellowGreen" />
         </Style>
+        <!--  An icon button that can't run (the group by category button with nothing to group): the icon is an Image, which the theme's disabled foreground doesn't dim  -->
+        <Style Selector="Button:disabled Image">
+            <Setter Property="Opacity" Value="0.3" />
+        </Style>
     </UserControl.Styles>
 
     <UserControl.Resources>
@@ -288,6 +292,7 @@
                                 <ColumnDefinition Width="32" />
                                 <ColumnDefinition Width="32" />
                                 <ColumnDefinition Width="32" />
+                                <ColumnDefinition Width="32" />
                             </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="20" />
@@ -323,6 +328,20 @@
                                 Height="32"
                                 Margin="0,3,0,0"
                                 VerticalAlignment="Top"
+                                Command="{Binding GroupSubTransactionsCommand}"
+                                ToolTip.Tip="{loc:Translate Key=group_by_category}">
+                                <Image
+                                    Width="16"
+                                    Height="16"
+                                    Source="{StaticResource ResourceKey=IconSigma}" />
+                            </Button>
+                            <Button
+                                Grid.Row="0"
+                                Grid.RowSpan="2"
+                                Grid.Column="3"
+                                Height="32"
+                                Margin="0,3,0,0"
+                                VerticalAlignment="Top"
                                 Command="{Binding AddSubTransferCommand}"
                                 ToolTip.Tip="{loc:Translate Key=add_split_transfers}">
                                 <Image
@@ -333,7 +352,7 @@
                             <Button
                                 Grid.Row="0"
                                 Grid.RowSpan="2"
-                                Grid.Column="3"
+                                Grid.Column="4"
                                 Height="32"
                                 Margin="0,3,0,0"
                                 VerticalAlignment="Top"

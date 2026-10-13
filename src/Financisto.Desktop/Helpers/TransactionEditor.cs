@@ -73,6 +73,7 @@ namespace Financisto.Desktop.Helpers
                 ? LocalizationService.Instance.update_balance
                 : transaction.IsTemplate == 1 ? LocalizationService.Instance.transaction_template : LocalizationService.Instance.transaction;
             var result = await dialogWrapper.ShowDialogAsync<TransactionDialog>(dialogVm, 640, 440, title);
+
             if (result is not TransactionDto resultVm)
             {
                 return false;
