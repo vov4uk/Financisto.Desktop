@@ -1,9 +1,7 @@
 namespace Financisto.Desktop.Tests.Rules
 {
-    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using Financisto.Common;
     using Financisto.Common.Entities;
     using Financisto.Common.Localization;
     using Financisto.Common.Model;

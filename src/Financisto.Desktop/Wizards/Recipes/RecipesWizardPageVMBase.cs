@@ -1,6 +1,6 @@
 using Financisto.Common.Localization;
 
-namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
+namespace Financisto.Desktop.Wizards.Recipes
 {
     public abstract class RecipesWizardPageVMBase : WizardPageBaseVM
     {

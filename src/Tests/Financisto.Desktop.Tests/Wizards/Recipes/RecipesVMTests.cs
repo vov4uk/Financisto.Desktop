@@ -4,7 +4,7 @@
     using System.Diagnostics.CodeAnalysis;
     using Financisto.Common.Entities;
     using Financisto.Desktop.Data;
-    using Financisto.Desktop.Wizards.RecipesWizard.ViewModel;
+    using Financisto.Desktop.Wizards.Recipes;
     using Xunit;
 
     public class RecipesVMTests

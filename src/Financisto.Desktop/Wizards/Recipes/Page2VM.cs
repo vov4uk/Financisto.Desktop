@@ -5,7 +5,7 @@ using Financisto.Common.Localization;
 using Financisto.Desktop.Helpers;
 using Prism.Commands;
 
-namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
+namespace Financisto.Desktop.Wizards.Recipes
 {
     public class Page2VM : RecipesWizardPageVMBase
     {

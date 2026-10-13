@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Financisto.Desktop.Wizards.RecipesWizard.View;
+using Financisto.Desktop.Wizards.Recipes;
 
 namespace Financisto.Desktop.Helpers
 {

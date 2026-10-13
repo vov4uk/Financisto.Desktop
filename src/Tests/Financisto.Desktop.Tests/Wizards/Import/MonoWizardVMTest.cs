@@ -15,9 +15,7 @@
     using Financisto.Common.Model;
     using Financisto.DataAccess.Data;
     using Financisto.Desktop.Helpers;
-    using Financisto.Desktop.Helpers.BankHelper;
-    using Financisto.Desktop.Wizards;
-    using Financisto.Desktop.Wizards.MonoWizard.ViewModel;
+    using Financisto.Desktop.Wizards.Import;
     using Financisto.Tests.Common;
     using Moq;
     using Newtonsoft.Json;
@@ -30,7 +28,7 @@
         public void Constructor_ReceiveParameters_CurrentPageNotEmpty(List<BankTransaction> mono)
         {
             DbManual.SetupTests(new List<AccountFilterModel>());
-            var vm = new MonoWizardVM("Monobank", mono, new Dictionary<int, BlotterModel>(), new Mock<IDialogWrapper>().Object);
+            var vm = new ImportWizardVM("Monobank", mono, new Dictionary<int, BlotterModel>(), new Mock<IDialogWrapper>().Object);
 
             Assert.NotNull(vm.CurrentPage);
         }
@@ -152,7 +150,7 @@
             DbManual.SetupTests(new List<AccountFilterModel>());
             var csvPath = Path.Combine(Environment.CurrentDirectory, "Assets", "mono.eng.csv");
             IEnumerable<BankTransaction> mono = new MonobankHelper().ParseReport(csvPath);
-            var vm = new MonoWizardVM("Monobank", mono, new Dictionary<int, BlotterModel>(), new Mock<IDialogWrapper>().Object);
+            var vm = new ImportWizardVM("Monobank", mono, new Dictionary<int, BlotterModel>(), new Mock<IDialogWrapper>().Object);
 
             Assert.Single(((Page2VM)vm.Pages[1]).GetMonoTransactions());
             Assert.NotNull(vm.CurrentPage);
@@ -367,7 +365,7 @@
         {
             var csvPath = Path.Combine(Environment.CurrentDirectory, "Assets", "mono.ukr.csv");
             var mono = new MonobankHelper().ParseReport(csvPath);
-            var vm = new MonoWizardVM("Monobank", mono, new Dictionary<int, BlotterModel>(), new Mock<IDialogWrapper>().Object);
+            var vm = new ImportWizardVM("Monobank", mono, new Dictionary<int, BlotterModel>(), new Mock<IDialogWrapper>().Object);
 
             Assert.Equal(46, mono.Count());
             Assert.Equal(46, ((Page2VM)vm.Pages[1]).GetMonoTransactions().Count);
@@ -406,7 +404,7 @@
 
             var csvPath = Path.Combine(Environment.CurrentDirectory, "Assets", "mono.ukr.csv");
             var mono = new MonobankHelper().ParseReport(csvPath);
-            var vm = new MonoWizardVM("Monobank", mono, new Dictionary<int, BlotterModel>(), new Mock<IDialogWrapper>().Object);
+            var vm = new ImportWizardVM("Monobank", mono, new Dictionary<int, BlotterModel>(), new Mock<IDialogWrapper>().Object);
 
             vm.RequestClose += (sender, args) => { output = sender as List<Transaction>; };
 
@@ -493,7 +491,7 @@
 
             var csvPath = Path.Combine(Environment.CurrentDirectory, "Assets", "mono.eng.transfer.csv");
             var mono = new MonobankHelper().ParseReport(csvPath);
-            var vm = new MonoWizardVM("Monobank", mono, new Dictionary<int, BlotterModel>(), new Mock<IDialogWrapper>().Object);
+            var vm = new ImportWizardVM("Monobank", mono, new Dictionary<int, BlotterModel>(), new Mock<IDialogWrapper>().Object);
 
             vm.RequestClose += (sender, args) => { output = sender as List<Transaction>; };
             vm.MoveNextCommand.Execute();

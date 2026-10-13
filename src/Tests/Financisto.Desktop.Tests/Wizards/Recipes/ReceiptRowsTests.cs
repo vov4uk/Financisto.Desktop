@@ -6,10 +6,8 @@ namespace Financisto.Desktop.Tests.Wizards.Recipes
     using Avalonia.Controls.Documents;
     using Avalonia.Media;
     using Financisto.Common.Entities;
-    using Financisto.Desktop.Data;
     using Financisto.Desktop.Helpers;
-    using Financisto.Desktop.Wizards.RecipesWizard.View;
-    using Financisto.Desktop.Wizards.RecipesWizard.ViewModel;
+    using Financisto.Desktop.Wizards.Recipes;
     using Xunit;
 
     /// <summary>The receipt printed as a table (Biedronka): <c>Name PTU quantity x price value</c>, <c>Rabat</c> rows, the net amount on its own line.</summary>

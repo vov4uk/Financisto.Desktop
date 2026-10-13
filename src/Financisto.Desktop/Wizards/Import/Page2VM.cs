@@ -7,7 +7,7 @@ using Financisto.Common.Localization;
 using Financisto.Common.Model;
 using Prism.Commands;
 
-namespace Financisto.Desktop.Wizards.MonoWizard.ViewModel
+namespace Financisto.Desktop.Wizards.Import
 {
     public class Page2VM : WizardPageBaseVM
     {

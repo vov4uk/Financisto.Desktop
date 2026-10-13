@@ -5,9 +5,8 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Financisto.Common.Localization;
 using Financisto.Desktop.Helpers;
-using Financisto.Desktop.Wizards.RecipesWizard.ViewModel;
 
-namespace Financisto.Desktop.Wizards.RecipesWizard.View;
+namespace Financisto.Desktop.Wizards.Recipes;
 
 [ExcludeFromCodeCoverage]
 public partial class Page1 : UserControl

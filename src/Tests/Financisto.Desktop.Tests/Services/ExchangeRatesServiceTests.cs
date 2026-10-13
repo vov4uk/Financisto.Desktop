@@ -2,7 +2,7 @@ namespace Financisto.Desktop.Tests.Services
 {
     using System;
     using System.IO;
-using System.Linq;
+    using System.Linq;
     using System.Net;
     using System.Net.Http;
     using System.Threading;

@@ -5,7 +5,7 @@ namespace Financisto.Desktop.Tests.Wizards.Recipes
     using System.Threading.Tasks;
     using Financisto.Desktop.Helpers;
     using Financisto.Desktop.Helpers.Ocr;
-    using Financisto.Desktop.Wizards.RecipesWizard.ViewModel;
+    using Financisto.Desktop.Wizards.Recipes;
     using SkiaSharp;
     using UglyToad.PdfPig.Content;
     using UglyToad.PdfPig.Core;

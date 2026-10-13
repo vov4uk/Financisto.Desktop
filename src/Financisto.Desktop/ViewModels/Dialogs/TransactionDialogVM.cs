@@ -10,7 +10,7 @@ using Financisto.Common.Utils;
 using Financisto.Desktop.Data;
 using Financisto.Desktop.Helpers;
 using Financisto.Desktop.Views.Dialogs;
-using Financisto.Desktop.Wizards.RecipesWizard.ViewModel;
+using Financisto.Desktop.Wizards.Recipes;
 using Prism.Commands;
 
 namespace Financisto.Desktop.ViewModels.Dialogs;

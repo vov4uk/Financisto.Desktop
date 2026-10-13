@@ -6,7 +6,7 @@ using Avalonia.Data.Converters;
 using Avalonia.Media;
 using Financisto.Desktop.Helpers;
 
-namespace Financisto.Desktop.Wizards.RecipesWizard.View
+namespace Financisto.Desktop.Wizards.Recipes
 {
     /// <summary>
     /// Receipt text → highlighted inlines for a TextBlock (Avalonia has no RichTextBox; this replaces the WPF

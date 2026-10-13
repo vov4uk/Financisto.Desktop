@@ -1,6 +1,5 @@
 namespace Financisto.Desktop.Tests.Wizards.Recipes
 {
-    using System;
     using System.Diagnostics;
     using System.Linq;
     using Financisto.Desktop.Helpers;

@@ -3,7 +3,7 @@ using Financisto.Common.Entities;
 using Financisto.Common.Localization;
 using Financisto.Common.Model;
 
-namespace Financisto.Desktop.Wizards.MonoWizard.ViewModel
+namespace Financisto.Desktop.Wizards.Import
 {
     public class Page1VM : WizardPageBaseVM
     {

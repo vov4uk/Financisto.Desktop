@@ -3,7 +3,6 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
-using Financisto.Desktop.ViewModels;
 using Financisto.Desktop.Views;
 
 namespace Financisto.Desktop;

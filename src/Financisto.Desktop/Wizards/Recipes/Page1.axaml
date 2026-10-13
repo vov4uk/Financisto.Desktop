@@ -1,12 +1,12 @@
 <UserControl
-    x:Class="Financisto.Desktop.Wizards.RecipesWizard.View.Page1"
+    x:Class="Financisto.Desktop.Wizards.Recipes.Page1"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
-    xmlns:local="using:Financisto.Desktop.Wizards.RecipesWizard.View"
+    xmlns:local="using:Financisto.Desktop.Wizards.Recipes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:vm="using:Financisto.Desktop.Wizards.RecipesWizard.ViewModel"
+    xmlns:vm="using:Financisto.Desktop.Wizards.Recipes"
     d:DesignHeight="450"
     d:DesignWidth="800"
     x:DataType="vm:Page1VM"
@@ -37,8 +37,8 @@
                 Margin="2"
                 HorizontalContentAlignment="Center"
                 Click="OnOpenFileClick"
-                IsEnabled="{Binding IsFileIdle}"
                 Content="{loc:Translate Key=open_file}"
+                IsEnabled="{Binding IsFileIdle}"
                 ToolTip.Tip="{loc:Translate Key=open_file_tooltip}" />
             <Button
                 Grid.Column="2"

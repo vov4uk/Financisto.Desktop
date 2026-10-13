@@ -9,10 +9,9 @@ using Financisto.Common.Localization;
 using Financisto.Common.Utils;
 using Financisto.Desktop.Helpers;
 using Financisto.Desktop.Helpers.Ocr;
-using Financisto.Desktop.Wizards.RecipesWizard.View;
 using Prism.Commands;
 
-namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
+namespace Financisto.Desktop.Wizards.Recipes
 {
     public class Page1VM : RecipesWizardPageVMBase
     {

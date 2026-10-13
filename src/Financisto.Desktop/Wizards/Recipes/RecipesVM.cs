@@ -3,7 +3,7 @@ using System.Linq;
 using Financisto.Desktop.Data;
 using Financisto.Desktop.Helpers;
 
-namespace Financisto.Desktop.Wizards.RecipesWizard.ViewModel
+namespace Financisto.Desktop.Wizards.Recipes
 {
     /// <summary>
     /// Splits a receipt (recipe) into split parts: paste the OCR'ed text, check the parsed rows,

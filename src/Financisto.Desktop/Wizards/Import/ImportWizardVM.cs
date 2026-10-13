@@ -7,20 +7,20 @@ using Financisto.Common.Model;
 using Financisto.DataAccess.Data;
 using Financisto.Desktop.Helpers;
 
-namespace Financisto.Desktop.Wizards.MonoWizard.ViewModel
+namespace Financisto.Desktop.Wizards.Import
 {
     /// <summary>
     /// Bank statement import (all banks, named after the first one supported): pick the account,
     /// the first new statement row, then categories/transfers. The output is a list of new <see cref="Transaction"/>s.
     /// </summary>
-    public class MonoWizardVM : WizardBaseVM
+    public class ImportWizardVM : WizardBaseVM
     {
         private readonly IDialogWrapper _dialogWrapper;
         private readonly List<BankTransaction> monoTransactions;
         private readonly Dictionary<int, BlotterModel> lastTransactions;
         private readonly string Bank;
 
-        public MonoWizardVM(string bank, IEnumerable<BankTransaction> monoTransactions, Dictionary<int, BlotterModel> lastTransactions, IDialogWrapper dialogWrapper)
+        public ImportWizardVM(string bank, IEnumerable<BankTransaction> monoTransactions, Dictionary<int, BlotterModel> lastTransactions, IDialogWrapper dialogWrapper)
         {
             this.monoTransactions = new(monoTransactions);
             this.Bank = bank;

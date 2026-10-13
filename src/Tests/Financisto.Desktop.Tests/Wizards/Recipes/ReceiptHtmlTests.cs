@@ -9,7 +9,7 @@ namespace Financisto.Desktop.Tests.Wizards.Recipes
     using Financisto.Common.Localization;
     using Financisto.Common.Model;
     using Financisto.Desktop.Helpers;
-    using Financisto.Desktop.Wizards.RecipesWizard.ViewModel;
+    using Financisto.Desktop.Wizards.Recipes;
     using Xunit;
 
     /// <summary>A receipt saved as an HTML page (a Lidl e-receipt): its text goes to the text field and is read like any other receipt.</summary>

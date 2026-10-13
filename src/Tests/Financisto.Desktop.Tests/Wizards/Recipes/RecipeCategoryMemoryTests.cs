@@ -9,7 +9,7 @@ namespace Financisto.Desktop.Tests.Wizards.Recipes
     using Financisto.Desktop.Data;
     using Financisto.Desktop.Helpers;
     using Financisto.Desktop.Wizards;
-    using Financisto.Desktop.Wizards.RecipesWizard.ViewModel;
+    using Financisto.Desktop.Wizards.Recipes;
     using Xunit;
 
     /// <summary>The recipes wizard remembers the category chosen for a note (a text file) and offers it the next time the note comes up.</summary>

@@ -4,7 +4,7 @@ namespace Financisto.Desktop.Tests.Wizards.Recipes
     using System.IO;
     using System.Threading.Tasks;
     using Financisto.Desktop.Helpers;
-    using Financisto.Desktop.Wizards.RecipesWizard.ViewModel;
+    using Financisto.Desktop.Wizards.Recipes;
     using UglyToad.PdfPig.Content;
     using UglyToad.PdfPig.Core;
     using UglyToad.PdfPig.Fonts.Standard14Fonts;

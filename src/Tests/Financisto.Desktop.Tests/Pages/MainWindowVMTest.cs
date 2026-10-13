@@ -22,11 +22,11 @@
     using Financisto.Desktop.Views;
     using Financisto.Desktop.Views.Dialogs;
     using Financisto.Desktop.Wizards;
-    using Financisto.Desktop.Wizards.MonoWizard.ViewModel;
     using Financisto.Tests.Common;
     using Moq;
     using Xunit;
     using Path = System.IO.Path;
+    using Financisto.Desktop.Wizards.Import;
 
     public class MainWindowVMTest
     {
@@ -806,7 +806,7 @@
         /// <param name="existingTransactions">Transactions already in the database (duplicate candidates).</param>
         private void SetupImportWizard(string path, List<Transaction> wizardOutput, List<Transaction> existingTransactions = null)
         {
-            this.dialogMock.Setup(x => x.ShowWizardAsync(It.IsAny<MonoWizardVM>()))
+            this.dialogMock.Setup(x => x.ShowWizardAsync(It.IsAny<ImportWizardVM>()))
                 .ReturnsAsync(wizardOutput);
             this.SetupWizardRepos();
             this.SetupRepo(new Mock<IBaseRepository<BlotterTransactions>>());

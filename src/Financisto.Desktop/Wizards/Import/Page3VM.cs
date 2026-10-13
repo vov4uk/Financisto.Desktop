@@ -16,7 +16,7 @@ using Financisto.Desktop.ViewModels.Dialogs;
 using Financisto.Desktop.Views.Dialogs;
 using Prism.Commands;
 
-namespace Financisto.Desktop.Wizards.MonoWizard.ViewModel
+namespace Financisto.Desktop.Wizards.Import
 {
     public class Page3VM : WizardPageBaseVM
     {

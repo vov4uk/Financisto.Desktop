@@ -15,7 +15,7 @@
     using Financisto.Desktop.ViewModels.Dialogs;
     using Financisto.Desktop.Views.Dialogs;
     using Financisto.Desktop.Wizards;
-    using Financisto.Desktop.Wizards.MonoWizard.ViewModel;
+    using Financisto.Desktop.Wizards.Import;
     using Financisto.Tests.Common;
     using Moq;
     using Newtonsoft.Json;

@@ -5,10 +5,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:monoView="using:Financisto.Desktop.Wizards.MonoWizard.View"
-    xmlns:monoVm="using:Financisto.Desktop.Wizards.MonoWizard.ViewModel"
-    xmlns:recipesView="using:Financisto.Desktop.Wizards.RecipesWizard.View"
-    xmlns:recipesVm="using:Financisto.Desktop.Wizards.RecipesWizard.ViewModel"
+    xmlns:import="using:Financisto.Desktop.Wizards.Import"
+    xmlns:recipes="using:Financisto.Desktop.Wizards.Recipes"
     xmlns:wizards="using:Financisto.Desktop.Wizards"
     Title="{Binding Title}"
     Width="1100"
@@ -25,20 +23,20 @@
 
     <!--  Wizard pages resolve here, before the app-wide ViewLocator (which matches every BindableBase).  -->
     <Window.DataTemplates>
-        <DataTemplate DataType="monoVm:Page1VM">
-            <monoView:Page1 IsVisible="{Binding IsCurrentPage}" />
+        <DataTemplate DataType="import:Page1VM">
+            <import:Page1 IsVisible="{Binding IsCurrentPage}" />
         </DataTemplate>
-        <DataTemplate DataType="monoVm:Page2VM">
-            <monoView:Page2 IsVisible="{Binding IsCurrentPage}" />
+        <DataTemplate DataType="import:Page2VM">
+            <import:Page2 IsVisible="{Binding IsCurrentPage}" />
         </DataTemplate>
-        <DataTemplate DataType="monoVm:Page3VM">
-            <monoView:Page3 IsVisible="{Binding IsCurrentPage}" />
+        <DataTemplate DataType="import:Page3VM">
+            <import:Page3 IsVisible="{Binding IsCurrentPage}" />
         </DataTemplate>
-        <DataTemplate DataType="recipesVm:Page1VM">
-            <recipesView:Page1 IsVisible="{Binding IsCurrentPage}" />
+        <DataTemplate DataType="recipes:Page1VM">
+            <recipes:Page1 IsVisible="{Binding IsCurrentPage}" />
         </DataTemplate>
-        <DataTemplate DataType="recipesVm:Page2VM">
-            <recipesView:Page2 IsVisible="{Binding IsCurrentPage}" />
+        <DataTemplate DataType="recipes:Page2VM">
+            <recipes:Page2 IsVisible="{Binding IsCurrentPage}" />
         </DataTemplate>
     </Window.DataTemplates>
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Financisto.Desktop.Wizards.Recipes;
 
 namespace Financisto.Desktop.Helpers;
 
@@ -26,7 +27,7 @@ public readonly record struct ReceiptItem(string Name, double Amount);
 /// Lidl prints that layout, and its discounts are lines of free text with a negative amount under the item
 /// (<c>Taniej za 2   -20,00</c>, <c>Lidl Plus voucher   -1,76</c>), not a <c>Rabat</c> row; a returnable deposit is a row with the name and no tax letter
 /// (<c>Kaucja PET   1 * 0.5 0.5</c>).
-/// The marked-amount format ("12,50 A") is the other kind of receipt, see <see cref="Wizards.RecipesWizard.View.RecipesFormatter.Pattern"/>.
+/// The marked-amount format ("12,50 A") is the other kind of receipt, see <see cref="RecipesFormatter.Pattern"/>.
 /// </summary>
 public static class ReceiptRows
 {

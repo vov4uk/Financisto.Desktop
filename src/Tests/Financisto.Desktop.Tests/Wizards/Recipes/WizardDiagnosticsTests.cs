@@ -11,7 +11,7 @@ namespace Financisto.Desktop.Tests.Wizards.Recipes
     using Financisto.Desktop.Helpers;
     using Financisto.Desktop.ViewModels.Dialogs;
     using Financisto.Desktop.Wizards;
-    using Financisto.Desktop.Wizards.RecipesWizard.ViewModel;
+    using Financisto.Desktop.Wizards.Recipes;
     using Moq;
     using NLog;
     using NLog.Config;

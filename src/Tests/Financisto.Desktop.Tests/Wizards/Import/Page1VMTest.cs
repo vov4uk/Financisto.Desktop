@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using Financisto.Common.Entities;
     using Financisto.Common.Model;
-    using Financisto.Desktop.Wizards.MonoWizard.ViewModel;
+    using Financisto.Desktop.Wizards.Import;
     using Financisto.Tests.Common;
     using Xunit;
 

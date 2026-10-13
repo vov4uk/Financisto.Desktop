@@ -6,8 +6,6 @@ namespace Financisto.Desktop.Tests.Wizards.Mono.Erste
     using System.Linq;
     using Financisto.BankHelpers;
     using Financisto.BankHelpers.Erste;
-    using Financisto.Desktop.Helpers.BankHelper;
-    using Financisto.Desktop.Wizards;
     using Xunit;
 
     public class ErsteHelperTest
