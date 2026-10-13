@@ -32,7 +32,7 @@ public static class PdfTextExtractor
         var images = new List<byte[]>();
         foreach (var page in document.GetPages())
         {
-            foreach (var image in page.GetImages().OrderByDescending(image => image.Bounds.Top))
+            foreach (var image in page.GetImages().OrderByDescending(image => image.BoundingBox.Top))
             {
                 if (image.TryGetPng(out var png))
                 {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -12,6 +13,9 @@ namespace Financisto.Converters
     [ExcludeFromCodeCoverage]
     public class AccountTypeConverter : IMultiValueConverter
     {
+        // About thirty small png files, and every row of every grid asks for one: each is decoded once (an Image does not dispose its source)
+        private static readonly ConcurrentDictionary<Uri, IImage> Cache = new();
+
         private static HashSet<string> KnownTypes = new HashSet<string> { "asset", "bank", "cash", "liability", "electronic", "credit_card", "debit_card" };
 
         /// <summary>Values: account type, and the card issuer / electronic type. The icons are the png files in Assets/AccountType and Assets/ElectronicType.</summary>
@@ -28,8 +32,16 @@ namespace Financisto.Converters
             // An issuer that doesn't belong to the type (e.g. DEBIT_CARD + GOOGLE_WALLET) has no icon: fall back to the type's icon.
             foreach (Uri uri in GetImageUris(type, card_issuer))
             {
+                if (Cache.TryGetValue(uri, out var cached))
+                    return cached;
+
                 if (AssetLoader.Exists(uri))
-                    return LoadImage(uri);
+                {
+                    var image = LoadImage(uri);
+                    if (image != null)
+                        Cache[uri] = image;
+                    return image;
+                }
             }
             return null;
         }

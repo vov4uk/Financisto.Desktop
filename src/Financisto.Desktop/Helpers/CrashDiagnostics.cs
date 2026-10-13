@@ -32,7 +32,11 @@ public static class CrashDiagnostics
 
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
         {
-            Logger.Fatal(e.ExceptionObject as Exception, $"Unhandled exception (terminating: {e.IsTerminating}): {e.ExceptionObject}");
+            // The log layout writes the exception itself (type, message, stack trace): the message must not repeat it
+            var exception = e.ExceptionObject as Exception;
+            Logger.Fatal(exception, exception is null
+                ? $"Unhandled non-exception object (terminating: {e.IsTerminating}): {e.ExceptionObject}"
+                : $"Unhandled exception (terminating: {e.IsTerminating})");
             NLog.LogManager.Flush(TimeSpan.FromSeconds(3));
         };
 
@@ -66,12 +70,16 @@ public static class CrashDiagnostics
         var lines = new List<string>();
         try
         {
-            foreach (ProcessModule module in Process.GetCurrentProcess().Modules)
+            using var process = Process.GetCurrentProcess();
+            foreach (ProcessModule module in process.Modules)
             {
-                var file = System.IO.Path.GetFileNameWithoutExtension(module.ModuleName);
-                if (NativeModules.Contains(file, StringComparer.OrdinalIgnoreCase))
+                using (module)
                 {
-                    lines.Add($"Native: {module.ModuleName} {module.FileVersionInfo.FileVersion} ({module.FileName})");
+                    var file = System.IO.Path.GetFileNameWithoutExtension(module.ModuleName);
+                    if (NativeModules.Contains(file, StringComparer.OrdinalIgnoreCase))
+                    {
+                        lines.Add($"Native: {module.ModuleName} {module.FileVersionInfo.FileVersion} ({module.FileName})");
+                    }
                 }
             }
         }

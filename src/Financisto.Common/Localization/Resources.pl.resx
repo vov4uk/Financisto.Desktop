@@ -273,6 +273,9 @@
   <data name="recipes_wizard_failed" xml:space="preserve">
     <value>Kreator przepisów zakończył się błędem: {0}. Szczegóły w dzienniku.</value>
   </data>
+  <data name="wizard_failed" xml:space="preserve">
+    <value>Kreator nie mógł zakończyć pracy: {0}. Szczegóły w dzienniku.</value>
+  </data>
   <data name="group_by_category" xml:space="preserve">
     <value>Grupuj według kategorii</value>
   </data>

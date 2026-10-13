@@ -52,6 +52,10 @@ public static class ReceiptRows
 
     private static readonly Regex NetAmountRow = new(@"^\s*\d+[.,]\d{2}\s*$", Options, Timeout);
 
+    // No receipt row is anywhere near this long. A longer line (a page pasted as one line, a run of thousands of spaces) is no row, and it is not
+    // matched at all: the patterns' lazy name and its spaces make matching such a line quadratic (2000 spaces took a second and then threw).
+    private const int MaxRowLength = 300;
+
     public static bool IsItemRow(string line) => MatchItem(line).Success;
 
     /// <summary>An item row that has no name of its own: the name is the text line above it.</summary>
@@ -77,7 +81,7 @@ public static class ReceiptRows
         return next is not null && IsNamelessItemRow(next);
     }
 
-    public static bool IsDiscountRow(string line) => DiscountRow.IsMatch(line);
+    public static bool IsDiscountRow(string line) => MatchDiscount(line).Success;
 
     /// <summary>The text is a receipt table: at least one of its lines is an item row.</summary>
     public static bool IsReceiptTable(IEnumerable<string> lines) => lines.Any(IsItemRow);
@@ -101,7 +105,7 @@ public static class ReceiptRows
                 continue;
             }
 
-            var discount = DiscountRow.Match(line);
+            var discount = MatchDiscount(line);
             if (discount.Success && afterItem)
             {
                 // printed with a minus; after "Rabat" a plain number is a discount too
@@ -110,7 +114,7 @@ public static class ReceiptRows
                 continue;
             }
 
-            if (NetAmountRow.IsMatch(line))
+            if (TryMatch(NetAmountRow, line, out _))
             {
                 continue; // the net amount of the item above: already counted
             }
@@ -122,15 +126,30 @@ public static class ReceiptRows
         return items;
     }
 
-    private static Match MatchItem(string line)
+    private static Match MatchItem(string line) =>
+        TryMatch(ItemRow, line, out var match) || TryMatch(ItemRowTaxLast, line, out match) || TryMatch(ItemRowNoTax, line, out match) ? match : Match.Empty;
+
+    private static Match MatchDiscount(string line) => TryMatch(DiscountRow, line, out var match) ? match : Match.Empty;
+
+    private static bool TryMatch(Regex regex, string line, out Match match)
     {
-        var item = ItemRow.Match(line);
-        if (!item.Success)
+        match = Match.Empty;
+        var text = line.Trim();
+        if (text.Length == 0 || text.Length > MaxRowLength)
         {
-            item = ItemRowTaxLast.Match(line);
+            return false;
         }
 
-        return item.Success ? item : ItemRowNoTax.Match(line);
+        try
+        {
+            match = regex.Match(text);
+            return match.Success;
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            match = Match.Empty;
+            return false;
+        }
     }
 
     private static double ToDouble(string number) => double.Parse(number.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture);

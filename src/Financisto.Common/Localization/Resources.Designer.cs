@@ -2511,6 +2511,15 @@ namespace Financisto.Common.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The wizard could not finish: {0}. Details are in the log..
+        /// </summary>
+        public static string wizard_failed {
+            get {
+                return ResourceManager.GetString("wizard_failed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Year.
         /// </summary>
         public static string year {

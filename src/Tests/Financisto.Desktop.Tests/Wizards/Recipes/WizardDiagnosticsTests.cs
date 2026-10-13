@@ -22,6 +22,7 @@ namespace Financisto.Desktop.Tests.Wizards.Recipes
     /// A native crash leaves nothing in the app's log, so the receipt wizard writes down every step (the last line shows how far it got), and a
     /// managed failure in the flow is logged and reported instead of ending the app.
     /// </summary>
+    [Collection("NLog configuration")]
     public sealed class WizardDiagnosticsTests : IDisposable
     {
         private readonly string dir = Path.Combine(Path.GetTempPath(), "Financisto.Desktop.Tests", "diagnostics", Guid.NewGuid().ToString("N"));
@@ -136,6 +137,58 @@ namespace Financisto.Desktop.Tests.Wizards.Recipes
         }
 
         [Fact]
+        public void WizardThatCannotMakeItsResult_TellsTheUser()
+        {
+            var wizard = new FailingWizard();
+            var changed = new List<string>();
+            wizard.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+            wizard.MoveNextCommand.Execute();
+
+            Assert.Contains("no result today", wizard.ErrorMessage);
+            Assert.Contains(nameof(WizardBaseVM.ErrorMessage), changed);
+        }
+
+        [Fact]
+        public void WizardErrorMessage_ClearedByTheNextTry()
+        {
+            var wizard = new FailingWizard();
+            object result = null;
+            wizard.RequestClose += (output, _) => result = output;
+            wizard.MoveNextCommand.Execute();
+            Assert.NotNull(wizard.ErrorMessage);
+
+            wizard.Fail = false;
+            wizard.MoveNextCommand.Execute();
+
+            Assert.Null(wizard.ErrorMessage);
+            Assert.Equal("result", result);
+        }
+
+        [Fact]
+        public void WizardErrorMessage_ClearedByAPageChange()
+        {
+            var wizard = new FailingWizard(pages: 2);
+            wizard.MoveNextCommand.Execute();   // to the second page
+            wizard.MoveNextCommand.Execute();   // finish: fails
+            Assert.NotNull(wizard.ErrorMessage);
+
+            wizard.MovePreviousCommand.Execute();
+
+            Assert.Null(wizard.ErrorMessage);
+        }
+
+        [Fact]
+        public void WizardErrorMessage_NoneWhenTheWizardFinishes()
+        {
+            var wizard = new FailingWizard { Fail = false };
+
+            wizard.MoveNextCommand.Execute();
+
+            Assert.Null(wizard.ErrorMessage);
+        }
+
+        [Fact]
         public async Task RecipesButton_WizardThrows_MessageShownNothingAddedAndLogged()
         {
             var dialog = new Mock<IDialogWrapper>(MockBehavior.Strict);
@@ -214,11 +267,13 @@ namespace Financisto.Desktop.Tests.Wizards.Recipes
 
         private sealed class FailingWizard : WizardBaseVM
         {
-            public FailingWizard()
+            public FailingWizard(int pages = 1)
             {
-                _pages = new List<WizardPageBaseVM> { new StubPage() }.AsReadOnly();
+                _pages = Enumerable.Range(0, pages).Select(_ => (WizardPageBaseVM)new StubPage()).ToList().AsReadOnly();
                 CurrentPage = Pages[0];
             }
+
+            public bool Fail { get; set; } = true;
 
             public override void AfterCurrentPageUpdated(WizardPageBaseVM newValue)
             {
@@ -232,7 +287,7 @@ namespace Financisto.Desktop.Tests.Wizards.Recipes
             {
             }
 
-            public override object OnRequestClose(bool save) => throw new InvalidOperationException("no result today");
+            public override object OnRequestClose(bool save) => Fail ? throw new InvalidOperationException("no result today") : "result";
         }
 
         private sealed class StubPage : WizardPageBaseVM
@@ -242,4 +297,8 @@ namespace Financisto.Desktop.Tests.Wizards.Recipes
             public override bool IsValid() => true;
         }
     }
+
+    /// <summary>The tests that replace the global NLog configuration never run next to another test class.</summary>
+    [CollectionDefinition("NLog configuration", DisableParallelization = true)]
+    public sealed class NLogConfigurationCollection;
 }

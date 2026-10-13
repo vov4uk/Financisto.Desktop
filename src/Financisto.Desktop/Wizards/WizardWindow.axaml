@@ -42,7 +42,7 @@
         </DataTemplate>
     </Window.DataTemplates>
 
-    <Grid Margin="10" RowDefinitions="*,Auto">
+    <Grid Margin="10" RowDefinitions="*,Auto,Auto">
         <!--
             Every page keeps its view and only the current one is visible. Swapping views in a ContentControl
             detaches the old one, and its DataGrid then clears the selection bound to the page (e.g. the start transaction).
@@ -55,8 +55,17 @@
             </ItemsControl.ItemsPanel>
         </ItemsControl>
 
-        <Border
+        <!--  Why the wizard could not finish (its result could not be made); the details are in the log  -->
+        <TextBlock
             Grid.Row="1"
+            Margin="0,8,0,0"
+            Foreground="OrangeRed"
+            IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+            Text="{Binding ErrorMessage}"
+            TextWrapping="Wrap" />
+
+        <Border
+            Grid.Row="2"
             Margin="0,10,0,0"
             Padding="0,10,0,0"
             BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"

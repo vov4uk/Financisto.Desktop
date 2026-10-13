@@ -214,6 +214,21 @@ namespace Financisto.Desktop.ViewModels.Pages
             }
         }
 
+        /// <summary>
+        /// The rates of the batch the database doesn't have yet, each key once. Only the rows of the days in the batch are read: the table holds
+        /// a row for every currency pair for every day, for years.
+        /// </summary>
+        internal static async Task<List<CurrencyExchangeRate>> WithoutKnownAsync(IBaseRepository<CurrencyExchangeRate> repository, IEnumerable<CurrencyExchangeRate> rates)
+        {
+            var batch = rates.ToList();
+            var dates = batch.Select(x => x.Date).Distinct().ToList();
+            var known = (await repository.FindManyAsync(x => dates.Contains(x.Date)))
+                .Select(x => (x.FromCurrencyId, x.ToCurrencyId, x.Date))
+                .ToHashSet();
+
+            return batch.Where(x => known.Add((x.FromCurrencyId, x.ToCurrencyId, x.Date))).ToList();
+        }
+
         private async Task RefreshExchangeRates_Click()
         {
             var erSettings = SettingsService.Current.Settings.ExchangeRates;
@@ -246,10 +261,7 @@ namespace Financisto.Desktop.ViewModels.Pages
 
                     // The providers stamp a rate with their own update time, so a second refresh the same day (or a backup saved after
                     // one) brings keys the database already has; inserting those would fail the whole batch on the primary key.
-                    var knownKeys = (await currencyExchangeRepo.GetAllAsync())
-                        .Select(x => (x.FromCurrencyId, x.ToCurrencyId, x.Date))
-                        .ToHashSet();
-                    var newRates = exchangeRates.Where(x => knownKeys.Add((x.FromCurrencyId, x.ToCurrencyId, x.Date))).ToList();
+                    var newRates = await WithoutKnownAsync(currencyExchangeRepo, exchangeRates);
                     if (newRates.Count == 0)
                     {
                         notifier?.ShowWarning(LocalizationService.Instance.exchange_rates_exist);
@@ -284,6 +296,10 @@ namespace Financisto.Desktop.ViewModels.Pages
                     }
 
                     notifier?.ShowMessage(string.Format(LocalizationService.Instance.exchange_rates_updated, erSettings.Provider.GetEnumDescription()));
+                }
+                else
+                {
+                    notifier?.ShowWarning(LocalizationService.Instance.exchange_rates_not_updated);
                 }
             }
             else

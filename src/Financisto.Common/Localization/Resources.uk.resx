@@ -273,6 +273,9 @@
   <data name="recipes_wizard_failed" xml:space="preserve">
     <value>Помилка майстра рецептів: {0}. Подробиці в журналі.</value>
   </data>
+  <data name="wizard_failed" xml:space="preserve">
+    <value>Майстер не зміг завершити роботу: {0}. Подробиці в журналі.</value>
+  </data>
   <data name="group_by_category" xml:space="preserve">
     <value>Групувати за категорією</value>
   </data>

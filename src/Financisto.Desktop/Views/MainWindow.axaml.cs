@@ -54,14 +54,15 @@ public partial class MainWindow : Window
             Logger.Info(line);
         }
 
-        // The native libraries (Skia, ANGLE, the graphics driver) load with the first frame
-        Opened += (_, _) => Dispatcher.UIThread.Post(() =>
+        // The native libraries (Skia, ANGLE, the graphics driver) load with the first frame; listing them reads the version of every DLL,
+        // so it runs on a worker thread, once the UI has had its turn
+        Opened += (_, _) => Dispatcher.UIThread.Post(() => _ = Task.Run(() =>
         {
             foreach (var line in CrashDiagnostics.DescribeNativeModules())
             {
                 Logger.Info(line);
             }
-        }, DispatcherPriority.Background);
+        }), DispatcherPriority.Background);
     }
 
     /// <summary>

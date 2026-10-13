@@ -273,6 +273,9 @@
   <data name="recipes_wizard_failed" xml:space="preserve">
     <value>The recipes wizard failed: {0}. Details are in the log.</value>
   </data>
+  <data name="wizard_failed" xml:space="preserve">
+    <value>The wizard could not finish: {0}. Details are in the log.</value>
+  </data>
   <data name="group_by_category" xml:space="preserve">
     <value>Group by category</value>
   </data>
