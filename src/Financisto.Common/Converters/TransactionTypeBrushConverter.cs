@@ -4,7 +4,7 @@ using System.Globalization;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
 
-namespace Financisto.Converters
+namespace Financisto.Common.Converters
 {
     /// <summary>
     /// Replaces the WPF DataTemplate.Triggers (Type -> Foreground) used by the amount column;

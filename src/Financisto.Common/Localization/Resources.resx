@@ -270,6 +270,15 @@
   <data name="open_recipes_wizard" xml:space="preserve">
     <value>Open recipes wizard</value>
   </data>
+  <data name="recipes_wizard_failed" xml:space="preserve">
+    <value>The recipes wizard failed: {0}. Details are in the log.</value>
+  </data>
+  <data name="wizard_failed" xml:space="preserve">
+    <value>The wizard could not finish: {0}. Details are in the log.</value>
+  </data>
+  <data name="group_by_category" xml:space="preserve">
+    <value>Group by category</value>
+  </data>
   <data name="add_split_transfers" xml:space="preserve">
     <value>Add Split-transfers</value>
   </data>
@@ -487,7 +496,10 @@
     <value>Original</value>
   </data>
   <data name="recipes_instructions_line1" xml:space="preserve">
-    <value>Paste recipes text. Make recipes photo and parse text via Google Lens or other OCR. I'll look for numbers with article symbol.</value>
+    <value>Paste recipes text. Make recipes photo and parse text via Google Lens or other OCR. I'll look for numbers with article symbol. A receipt printed as a table (name, tax letter, quantity x price, value, with Rabat lines) is read row by row.</value>
+  </data>
+  <data name="recipe_wizard_transactions" xml:space="preserve">
+    <value>Transactions</value>
   </data>
   <data name="recipe_wizard_total_format" xml:space="preserve">
     <value>Total: {0:F2}   Current: {1:F2}   Diff: {2:F2}</value>
@@ -506,6 +518,27 @@
   </data>
   <data name="highlight_tooltip" xml:space="preserve">
     <value>Highlight text. Yellow - transaction row, green - other numbers</value>
+  </data>
+  <data name="pdf_no_text" xml:space="preserve">
+    <value>No text found in this PDF: it is a scan or a photo without a text layer, and this system has no built-in OCR. Run it through OCR (e.g. Google Lens) and paste the result.</value>
+  </data>
+  <data name="pdf_ocr_empty" xml:space="preserve">
+    <value>No text could be recognized in this PDF.</value>
+  </data>
+  <data name="open_file" xml:space="preserve">
+    <value>Open file…</value>
+  </data>
+  <data name="open_file_tooltip" xml:space="preserve">
+    <value>Read the text of a receipt file (PDF, HTML or text) into the text field</value>
+  </data>
+  <data name="file_read_error" xml:space="preserve">
+    <value>Can't read the file: {0}</value>
+  </data>
+  <data name="file_no_text" xml:space="preserve">
+    <value>No text found in this file.</value>
+  </data>
+  <data name="receipt_files" xml:space="preserve">
+    <value>Receipts (PDF, HTML, text)</value>
   </data>
   <data name="reciept_wizard_total_format" xml:space="preserve">
     <value>Total : {0:F2} Current : {1:F2} Diff : {2:F2}</value>
@@ -992,15 +1025,6 @@
   </data>
   <data name="app_theme_dark" xml:space="preserve">
     <value>Dark</value>
-  </data>
-  <data name="icon_set" xml:space="preserve">
-    <value>Icon set</value>
-  </data>
-  <data name="icon_set_default" xml:space="preserve">
-    <value>Default</value>
-  </data>
-  <data name="icon_set_monocolor" xml:space="preserve">
-    <value>Monocolor</value>
   </data>
   <data name="sms_templates" xml:space="preserve">
     <value>SMS templates</value>

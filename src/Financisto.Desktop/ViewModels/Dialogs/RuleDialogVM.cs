@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
+using Financisto.Common.Converters;
 using Financisto.Common.Entities;
 using Financisto.Common.Model;
-using Financisto.Converters;
 using Financisto.Desktop.Data;
 
 namespace Financisto.Desktop.ViewModels.Dialogs;

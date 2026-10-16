@@ -2,13 +2,12 @@
     x:Class="Financisto.Desktop.Views.Dialogs.AccountDialog"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:conv="using:Financisto.Converters"
+    xmlns:conv="using:Financisto.Common.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:ent="clr-namespace:Financisto.Common.Entities;assembly=Financisto.Common"
     xmlns:helpers="using:Financisto.Desktop.Helpers"
     xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:utils="using:Financisto.Common.Utils"
     xmlns:vm="using:Financisto.Desktop.ViewModels.Dialogs"
     d:DesignHeight="800"
     d:DesignWidth="800"
@@ -73,14 +72,11 @@
 
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                    <Image
-                                        Height="24"
-                                        Margin="1">
+                                    <Image Height="24" Margin="1">
                                         <Image.Source>
                                             <MultiBinding Converter="{StaticResource AccountTypeConverter}">
                                                 <Binding />
                                                 <Binding />
-                                                <Binding Source="{x:Static utils:IconSettings.Instance}" Path="IconSet" />
                                             </MultiBinding>
                                         </Image.Source>
                                     </Image>
@@ -138,14 +134,11 @@
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                    <Image
-                                        Height="24"
-                                        Margin="1">
+                                    <Image Height="24" Margin="1">
                                         <Image.Source>
                                             <MultiBinding Converter="{StaticResource AccountTypeConverter}">
                                                 <Binding Source="CREDIT_CARD" />
                                                 <Binding />
-                                                <Binding Source="{x:Static utils:IconSettings.Instance}" Path="IconSet" />
                                             </MultiBinding>
                                         </Image.Source>
                                     </Image>
@@ -172,14 +165,11 @@
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                    <Image
-                                        Height="24"
-                                        Margin="1">
+                                    <Image Height="24" Margin="1">
                                         <Image.Source>
                                             <MultiBinding Converter="{StaticResource AccountTypeConverter}">
                                                 <Binding Source="ELECTRONIC" />
                                                 <Binding />
-                                                <Binding Source="{x:Static utils:IconSettings.Instance}" Path="IconSet" />
                                             </MultiBinding>
                                         </Image.Source>
                                     </Image>

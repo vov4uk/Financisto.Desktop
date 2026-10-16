@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Reflection;
 using Financisto.Common.Attribute;
 
-namespace Financisto.Converters
+namespace Financisto.Common.Converters
 {
     public static class EnumDescriptionExtensions
     {

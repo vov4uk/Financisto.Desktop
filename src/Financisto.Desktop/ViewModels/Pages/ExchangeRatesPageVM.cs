@@ -8,7 +8,6 @@ using Financisto.Common;
 using Financisto.Common.Entities;
 using Financisto.Common.Localization;
 using Financisto.Common.Model;
-using Financisto.Converters;
 using Financisto.DataAccess.Abstractions;
 using Financisto.DataAccess.Data;
 using Financisto.Desktop.Helpers;
@@ -20,6 +19,7 @@ using LiveChartsCore.Defaults;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using SkiaSharp;
+using Financisto.Common.Converters;
 
 namespace Financisto.Desktop.ViewModels.Pages
 {
@@ -214,6 +214,21 @@ namespace Financisto.Desktop.ViewModels.Pages
             }
         }
 
+        /// <summary>
+        /// The rates of the batch the database doesn't have yet, each key once. Only the rows of the days in the batch are read: the table holds
+        /// a row for every currency pair for every day, for years.
+        /// </summary>
+        internal static async Task<List<CurrencyExchangeRate>> WithoutKnownAsync(IBaseRepository<CurrencyExchangeRate> repository, IEnumerable<CurrencyExchangeRate> rates)
+        {
+            var batch = rates.ToList();
+            var dates = batch.Select(x => x.Date).Distinct().ToList();
+            var known = (await repository.FindManyAsync(x => dates.Contains(x.Date)))
+                .Select(x => (x.FromCurrencyId, x.ToCurrencyId, x.Date))
+                .ToHashSet();
+
+            return batch.Where(x => known.Add((x.FromCurrencyId, x.ToCurrencyId, x.Date))).ToList();
+        }
+
         private async Task RefreshExchangeRates_Click()
         {
             var erSettings = SettingsService.Current.Settings.ExchangeRates;
@@ -243,7 +258,17 @@ namespace Financisto.Desktop.ViewModels.Pages
                 {
                     using var uow = db.CreateUnitOfWork();
                     var currencyExchangeRepo = uow.GetRepository<CurrencyExchangeRate>();
-                    await currencyExchangeRepo.AddRangeAsync(exchangeRates);
+
+                    // The providers stamp a rate with their own update time, so a second refresh the same day (or a backup saved after
+                    // one) brings keys the database already has; inserting those would fail the whole batch on the primary key.
+                    var newRates = await WithoutKnownAsync(currencyExchangeRepo, exchangeRates);
+                    if (newRates.Count == 0)
+                    {
+                        notifier?.ShowWarning(LocalizationService.Instance.exchange_rates_exist);
+                        return;
+                    }
+
+                    await currencyExchangeRepo.AddRangeAsync(newRates);
                     try
                     {
                         await uow.SaveChangesAsync();
@@ -251,6 +276,7 @@ namespace Financisto.Desktop.ViewModels.Pages
                     }
                     catch (DbUpdateException ex)
                     {
+                        Logger.Warn(ex, "Exchange rates were not saved.");
                         string msg = ex?.InnerException?.Message!;
                         if (!string.IsNullOrEmpty(msg) && msg.Contains("UNIQUE constraint failed", StringComparison.OrdinalIgnoreCase))
                         {
@@ -270,6 +296,10 @@ namespace Financisto.Desktop.ViewModels.Pages
                     }
 
                     notifier?.ShowMessage(string.Format(LocalizationService.Instance.exchange_rates_updated, erSettings.Provider.GetEnumDescription()));
+                }
+                else
+                {
+                    notifier?.ShowWarning(LocalizationService.Instance.exchange_rates_not_updated);
                 }
             }
             else

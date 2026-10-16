@@ -23,8 +23,12 @@ namespace Financisto.Desktop.Wizards
             {
                 categoryId = value;
                 RaisePropertyChanged(nameof(CategoryId));
+                RaisePropertyChanged(nameof(HasNoCategory));
             }
         }
+
+        /// <summary>No category chosen yet (the recipes wizard paints the first cell of such a row).</summary>
+        public bool HasNoCategory => categoryId <= 0;
 
         public long DateTime { get; set; }
 

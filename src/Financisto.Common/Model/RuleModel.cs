@@ -7,7 +7,6 @@ using Financisto.Common.Attribute;
 using Financisto.Common.Converters;
 using Financisto.Common.Entities;
 using Financisto.Common.Localization;
-using Financisto.Converters;
 
 namespace Financisto.Common.Model
 {

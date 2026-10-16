@@ -2,9 +2,9 @@ namespace Financisto.Desktop.Tests.Pages.Dialog
 {
     using System.Collections.Generic;
     using System.Linq;
+    using Financisto.Common.Converters;
     using Financisto.Common.Entities;
     using Financisto.Common.Model;
-    using Financisto.Converters;
     using Financisto.Desktop.Data;
     using Financisto.Desktop.ViewModels.Dialogs;
     using Xunit;

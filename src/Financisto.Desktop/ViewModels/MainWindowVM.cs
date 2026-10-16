@@ -13,16 +13,13 @@ using Financisto.Common;
 using Financisto.Common.Entities;
 using Financisto.Common.Localization;
 using Financisto.Common.Model;
-using Financisto.Converters;
 using Financisto.DataAccess.Abstractions;
 using Financisto.DataAccess.Data;
 using Financisto.DataAccess.Utils;
 using Financisto.Desktop.Helpers;
-using Financisto.Desktop.Helpers.BankHelper;
 using Financisto.Desktop.Services;
 using Financisto.Desktop.ViewModels.Pages;
-using Financisto.Desktop.Wizards;
-using Financisto.Desktop.Wizards.MonoWizard.ViewModel;
+using Financisto.Desktop.Wizards.Import;
 using Financisto.Reports;
 using Prism.Mvvm;
 using IAsyncCommand = Financisto.Common.IAsyncCommand;
@@ -111,7 +108,7 @@ namespace Financisto.Desktop.ViewModels
             new(typeof(PayeeModel), () => LocalizationService.Instance.payees, "IconAddressBook"),
             new(typeof(LocationModel), () => LocalizationService.Instance.locations, "IconMap"),
             new(typeof(ExchangeRateModel), () => LocalizationService.Instance.exchange_rates, "IconDollarEuro"),
-            new(typeof(BlotterModel), () => LocalizationService.Instance.blotter, "IconReceipt"),
+            new(typeof(BlotterModel), () => LocalizationService.Instance.blotter, "IconList"),
             new(typeof(ReportsControlVM), () => LocalizationService.Instance.reports, "IconChartBar"),
         };
 
@@ -392,17 +389,11 @@ namespace Financisto.Desktop.ViewModels
 
             var lastTransactions = await GetLastTransactionsAsync();
 
-            var vm = new MonoWizardVM(importHelper.BankTitle, sourceData, lastTransactions, dialogWrapper);
+            var vm = new ImportWizardVM(importHelper.BankTitle, sourceData, lastTransactions, dialogWrapper);
 
             var output = await dialogWrapper.ShowWizardAsync(vm);
 
-            // The wizard only adds new rules to DbManual.Rules; store them and reload to get their ids.
-            if (DbManual.Rules.Any(r => !(r.Id > 0)))
-            {
-                await new RulesRepository(db).SaveAsync(DbManual.Rules);
-                DbManual.ResetManuals(nameof(DbManual.Rules));
-                await DbManual.SetupAsync(db);
-            }
+            await RuleCreator.SaveNewAsync(db);
 
             if (output is List<Transaction> outputTransactions)
             {

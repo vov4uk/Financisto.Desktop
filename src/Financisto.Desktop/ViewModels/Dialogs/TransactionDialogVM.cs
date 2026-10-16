@@ -10,13 +10,14 @@ using Financisto.Common.Utils;
 using Financisto.Desktop.Data;
 using Financisto.Desktop.Helpers;
 using Financisto.Desktop.Views.Dialogs;
-using Financisto.Desktop.Wizards.RecipesWizard.ViewModel;
+using Financisto.Desktop.Wizards.Recipes;
 using Prism.Commands;
 
 namespace Financisto.Desktop.ViewModels.Dialogs;
 
 public class TransactionDialogVM : SubTransactionDialogVM
 {
+    private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
     private readonly IDialogWrapper dialogWrapper;
     private readonly IReadOnlyDictionary<int, long> accountBalances;
     private Common.IAsyncCommand _addSubTransactionCommand;
@@ -27,6 +28,7 @@ public class TransactionDialogVM : SubTransactionDialogVM
     private DelegateCommand<BaseTransactionDto> _deleteSubTransactionCommand;
     private AsyncCommand<BaseTransactionDto> _editSubTransaction;
     private Common.IAsyncCommand _openRecipesDialogCommand;
+    private DelegateCommand _groupSubTransactionsCommand;
 
     /// <param name="accountBalances">Account id → current balance (<c>IFinancistoDatabase.GetLastRunningBalancesAsync</c>), read right before
     /// the dialog opens; shown under the account combobox. Null shows no balance.</param>
@@ -38,6 +40,7 @@ public class TransactionDialogVM : SubTransactionDialogVM
     {
         this.dialogWrapper = dialogWrapper;
         this.accountBalances = accountBalances;
+        Transaction.SubTransactions.CollectionChanged += (_, _) => GroupSubTransactionsCommand.RaiseCanExecuteChanged();
         Transaction.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(TransactionDto.FromAccount))
@@ -98,6 +101,9 @@ public class TransactionDialogVM : SubTransactionDialogVM
 
     public AsyncCommand<BaseTransactionDto> EditSubTransactionCommand => _editSubTransaction ??= new AsyncCommand<BaseTransactionDto>(EditSubTransaction);
 
+    /// <summary>Merges the split parts of the same category into one with the sum of their amounts (fewer parts).</summary>
+    public DelegateCommand GroupSubTransactionsCommand => _groupSubTransactionsCommand ??= new DelegateCommand(GroupSubTransactions, () => Transaction.CanGroupSubTransactions());
+
     public Common.IAsyncCommand OpenRecipesDialogCommand => _openRecipesDialogCommand ??= new AsyncCommand(ShowRecipesDialog);
 
     // Only a split must be fully distributed among its parts; a regular transaction has no parts, so its UnsplitAmount is the whole amount.
@@ -136,22 +142,44 @@ public class TransactionDialogVM : SubTransactionDialogVM
         original.Time = modifiedCopy.DateTime;
     }
 
+    private void GroupSubTransactions()
+    {
+        var before = Transaction.SubTransactions.Count;
+        Transaction.GroupSubTransactionsByCategory();
+        Logger.Info($"[Transaction] grouped by category: {before} parts -> {Transaction.SubTransactions.Count}");
+        SaveCommand.NotifyCanExecuteChanged();
+    }
+
     /// <summary>Recipes wizard: parses a pasted receipt into split parts of this transaction.</summary>
     private async Task ShowRecipesDialog()
     {
-        var vm = new RecipesVM(Transaction.RealFromAmount / 100.0);
-
-        var output = await dialogWrapper.ShowWizardAsync(vm);
-
-        if (output is List<TransactionDto> outputTransactions)
+        // The log shows how far the flow got: a crash of the process itself leaves no other trace
+        try
         {
-            foreach (var item in outputTransactions)
+            Logger.Info($"[Transaction] opening the recipes wizard, amount {Transaction.RealFromAmount / 100.0:F2}, {Transaction.SubTransactions.Count} parts already");
+            var vm = new RecipesVM(Transaction.RealFromAmount / 100.0);
+
+            var output = await dialogWrapper.ShowWizardAsync(vm);
+            Logger.Info($"[Transaction] the recipes wizard returned {(output is List<TransactionDto> list ? $"{list.Count} parts" : "nothing (cancelled)")}");
+
+            if (output is List<TransactionDto> outputTransactions)
             {
-                item.Category = DbManual.Category?.Find(x => x.Id == item.CategoryId)!;
-                Transaction.SubTransactions.Add(item);
+                foreach (var item in outputTransactions)
+                {
+                    item.Category = DbManual.Category?.Find(x => x.Id == item.CategoryId)!;
+                    Transaction.SubTransactions.Add(item);
+                }
+                Transaction.RecalculateUnSplitAmount();
+                SaveCommand.NotifyCanExecuteChanged();
+                Logger.Info($"[Transaction] {outputTransactions.Count} parts added, {Transaction.SubTransactions.Count} in all, unsplit {Transaction.UnsplitAmount / 100.0:F2}");
             }
-            Transaction.RecalculateUnSplitAmount();
-            SaveCommand.NotifyCanExecuteChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[Transaction] the recipes wizard failed");
+            await dialogWrapper.ShowMessageBoxAsync(
+                string.Format(LocalizationService.Instance["recipes_wizard_failed"], ex.Message),
+                LocalizationService.Instance["open_recipes_wizard"]);
         }
     }
 
@@ -243,6 +271,7 @@ public class TransactionDialogVM : SubTransactionDialogVM
             if (isNewItem) Transaction.SubTransactions.Add(original);
             Transaction.RecalculateUnSplitAmount();
             SaveCommand.NotifyCanExecuteChanged();
+            GroupSubTransactionsCommand.RaiseCanExecuteChanged();
         }
     }
 }

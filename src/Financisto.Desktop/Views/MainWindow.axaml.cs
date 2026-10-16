@@ -14,7 +14,6 @@ using Financisto.Adapter;
 using Financisto.BankHelpers;
 using Financisto.Common.Entities;
 using Financisto.Common.Localization;
-using Financisto.Common.Utils;
 using Financisto.DataAccess;
 using Financisto.Desktop.Data;
 using Financisto.Desktop.Helpers;
@@ -48,9 +47,46 @@ public partial class MainWindow : Window
         Closed += (_, _) => LocalizationService.Instance.PropertyChanged -= OnLocalizationChanged;
         _ = LoadBankHelpersAsync();
 
-        var version = typeof(MainWindow).Assembly.GetName().Version;
-        Title = $"Financisto Desktop v.{version?.ToString(3)}";
+        Title = $"Financisto Desktop v.{GetTitleVersion()}";
         Logger.Info("App started");
+        foreach (var line in CrashDiagnostics.DescribeEnvironment())
+        {
+            Logger.Info(line);
+        }
+
+        // The native libraries (Skia, ANGLE, the graphics driver) load with the first frame; listing them reads the version of every DLL,
+        // so it runs on a worker thread, once the UI has had its turn
+        Opened += (_, _) => Dispatcher.UIThread.Post(() => _ = Task.Run(() =>
+        {
+            foreach (var line in CrashDiagnostics.DescribeNativeModules())
+            {
+                Logger.Info(line);
+            }
+        }), DispatcherPriority.Background);
+    }
+
+    /// <summary>
+    /// The version for the title; test builds are all versioned 999.9.9, so those show when the build was made instead.
+    /// </summary>
+    private static string GetTitleVersion()
+    {
+        var name = typeof(MainWindow).Assembly.GetName();
+        var version = name.Version;
+        if (version is not { Major: 999, Minor: 9, Build: 9 })
+        {
+            return version?.ToString(3) ?? string.Empty;
+        }
+
+        // A single-file publish has no assembly file next to the executable; the executable is then the file written at build time.
+        var path = Path.Combine(AppContext.BaseDirectory, name.Name + ".dll");
+        if (!File.Exists(path))
+        {
+            path = Environment.ProcessPath ?? path;
+        }
+
+        return File.Exists(path)
+            ? File.GetLastWriteTime(path).ToString("yyyy-MM-dd HH:mm")
+            : version.ToString(3);
     }
 
     private async Task LoadBankHelpersAsync()
@@ -171,8 +207,6 @@ public partial class MainWindow : Window
         {
             Application.Current.RequestedThemeVariant = SettingsService.Current.Settings?.General.ThemeVariant;
         }
-
-        IconSettings.Instance.IconSet = SettingsService.Current.Settings?.General.IconSet ?? IconSetType.Default;
 
         LocalizationService.Instance.ApplyLanguage(SettingsService.Current.Settings?.General.Language ?? Language.English);
         var bakupFolder = !string.IsNullOrEmpty(SettingsService.Current.Settings?.General.DefaultBackupDir) ? SettingsService.Current.Settings.General.DefaultBackupDir : @$"C:\Users\{Environment.UserName}\Dropbox\apps\Financisto Holo";

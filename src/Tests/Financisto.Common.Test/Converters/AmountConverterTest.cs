@@ -2,7 +2,7 @@
 {
     using System.Globalization;
     using AutoFixture.Xunit3;
-    using Financisto.Converters;
+    using Financisto.Common.Converters;
     using Xunit;
 
     public class AmountConverterTest

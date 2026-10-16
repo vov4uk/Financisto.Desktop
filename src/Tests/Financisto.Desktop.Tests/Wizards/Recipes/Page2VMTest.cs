@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using Financisto.Desktop.Wizards;
-    using Financisto.Desktop.Wizards.RecipesWizard.ViewModel;
+    using Financisto.Desktop.Wizards.Recipes;
     using Financisto.Tests.Common;
     using Xunit;
 

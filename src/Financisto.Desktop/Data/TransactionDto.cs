@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Financisto.Common.Converters;
 using Financisto.Common.Entities;
 using Financisto.Common.Model;
 using Financisto.Common.Utils;
-using Financisto.Converters;
 using Financisto.DataAccess.Data;
 
 namespace Financisto.Desktop.Data
@@ -340,6 +340,56 @@ namespace Financisto.Desktop.Data
             get => selectedTags;
             set { SetProperty(ref selectedTags, value, nameof(SelectedTags)); }
         }
+
+        /// <summary>There are split parts in the same category (and project) that <see cref="GroupSubTransactionsByCategory"/> would merge.</summary>
+        public bool CanGroupSubTransactions() => SubTransactions.OfType<TransactionDto>().GroupBy(GroupKey).Any(group => group.Count() > 1);
+
+        /// <summary>
+        /// Merges the split parts that are in the same category (and project) into one part with the sum of their amounts, to have fewer parts:
+        /// 10 + 5 in "Food" become 15 in "Food". The merged part is the first of them (it keeps its place and id; the others are removed, and
+        /// removed saved parts are deleted when the transaction is saved), its note joins the different notes, and a group that adds up to zero
+        /// disappears. Split transfers are left as they are. The amount still to split does not change.
+        /// </summary>
+        /// <returns>How many parts are gone.</returns>
+        public int GroupSubTransactionsByCategory()
+        {
+            var before = SubTransactions.Count;
+            foreach (var group in SubTransactions.OfType<TransactionDto>().GroupBy(GroupKey).Where(group => group.Count() > 1).ToList())
+            {
+                var merged = group.First();
+                var sum = group.Sum(part => part.RealFromAmount);
+                var notes = group.Select(part => part.Note?.Trim()).Where(note => !string.IsNullOrEmpty(note)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+
+                // A part's amount is signed, like the part dialog (CopySubTransaction) and the recipes wizard make it: the list shows FromAmount as it is,
+                // and IsAmountNegative has the sign too (the save maps both to the same stored amount)
+                merged.FromAmount = sum;
+                if (merged.IsOriginalFromAmountVisible)
+                {
+                    merged.OriginalFromAmount = sum;
+                }
+
+                merged.IsAmountNegative = sum < 0;
+                if (notes.Count > 0)
+                {
+                    merged.Note = string.Join(", ", notes);
+                }
+
+                foreach (var other in group.Skip(1))
+                {
+                    SubTransactions.Remove(other);
+                }
+
+                if (sum == 0)
+                {
+                    SubTransactions.Remove(merged);
+                }
+            }
+
+            RecalculateUnSplitAmount();
+            return before - SubTransactions.Count;
+        }
+
+        private static (int, int) GroupKey(TransactionDto part) => (part.CategoryId ?? 0, part.ProjectId ?? 0);
 
         public void RecalculateUnSplitAmount()
         {

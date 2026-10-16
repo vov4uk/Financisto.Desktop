@@ -5,7 +5,7 @@ using System.Linq;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
 
-namespace Financisto.Converters
+namespace Financisto.Common.Converters
 {
     /// <summary>
     /// Import wizard row highlight, replacing the WPF DataTriggers on the date cell:

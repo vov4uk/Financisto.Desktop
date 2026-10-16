@@ -3,7 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:behaviors="using:Financisto.Common.Behaviors"
-    xmlns:conv="using:Financisto.Converters"
+    xmlns:conv="using:Financisto.Common.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -32,8 +32,8 @@
                 x:Name="SearchBox"
                 Grid.Row="0"
                 Margin="0,0,0,8"
-                Text="{Binding SearchText, Mode=TwoWay}"
-                PlaceholderText="{loc:Translate Key=search}" />
+                PlaceholderText="{loc:Translate Key=search}"
+                Text="{Binding SearchText, Mode=TwoWay}" />
 
             <Grid Grid.Row="1">
                 <DataGrid

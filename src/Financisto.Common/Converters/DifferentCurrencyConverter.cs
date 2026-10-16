@@ -6,7 +6,7 @@ using Avalonia.Data.Converters;
 using Financisto.Common.Entities;
 using Financisto.Common.Model;
 
-namespace Financisto.Converters
+namespace Financisto.Common.Converters
 {
     public class DifferentCurrencyConverter : IMultiValueConverter
     {

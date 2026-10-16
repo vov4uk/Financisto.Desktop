@@ -1,7 +1,7 @@
 ﻿namespace Financisto.Desktop.Tests.Wizards.Recipes
 {
     using Financisto.Desktop.Helpers;
-    using Financisto.Desktop.Wizards.RecipesWizard.ViewModel;
+    using Financisto.Desktop.Wizards.Recipes;
     using Xunit;
 
     public class Page1VMTest

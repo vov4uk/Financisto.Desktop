@@ -33,6 +33,21 @@ namespace Financisto.Desktop.Data
             MCCCategory = rulesModel.MCCCategory;
         }
 
+        /// <summary>The rule as it is stored (<paramref name="id"/> null/0 = not stored yet).</summary>
+        public RuleModel ToModel(int? id = null) => new RuleModel
+        {
+            Id = id,
+            Description = Description,
+            CategoryId = CategoryId,
+            Condition = Condition,
+            Created = Created,
+            IsActive = IsActive,
+            LocationId = LocationId,
+            PayeeId = PayeeId,
+            ProjectId = ProjectId,
+            MCCCategory = MCCCategory,
+        };
+
         public CategoryModel Category
         {
             get => category ??= DbManual.Category?.Find(x => x.Id == CategoryId);

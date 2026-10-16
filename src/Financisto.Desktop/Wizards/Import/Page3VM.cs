@@ -1,0 +1,337 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Financisto.BankHelpers;
+using Financisto.Common;
+using Financisto.Common.Converters;
+using Financisto.Common.Entities;
+using Financisto.Common.Localization;
+using Financisto.Common.Model;
+using Financisto.Desktop.Data;
+using Financisto.Desktop.Helpers;
+using Financisto.Desktop.ViewModels.Dialogs;
+using Financisto.Desktop.Views.Dialogs;
+using Prism.Commands;
+
+namespace Financisto.Desktop.Wizards.Import
+{
+    public class Page3VM : WizardPageBaseVM
+    {
+        private readonly IDialogWrapper _dialogWrapper;
+        private DelegateCommand _clearAllNotesCommand;
+        private DelegateCommand<FinancistoTransactionDto> _deleteCommand;
+        private DelegateCommand<FinancistoTransactionDto> _clearNoteCommand;
+        private AsyncCommand<FinancistoTransactionDto> _addRuleCommand;
+        private AsyncCommand<FinancistoTransactionDto> _transferCommand;
+        List<AccountFilterModel> accounts;
+        private AccountFilterModel _monoAccount;
+        private ObservableCollection<FinancistoTransactionDto> financistoTransactions;
+        private static readonly Regex CardNumberRegex = new Regex(@"(\*)([0-9]{4})", RegexOptions.None, TimeSpan.FromMilliseconds(1000));
+
+        public Page3VM(IDialogWrapper dialogWrapper)
+        {
+            this._dialogWrapper = dialogWrapper;
+            Accounts = DbManual.Account
+                .OrderByDescending(x => x.IsActive)
+                .ThenBy(x => x.SortOrder)
+                .ToList();
+        }
+
+        public DelegateCommand<FinancistoTransactionDto> DeleteCommand
+        {
+            get
+            {
+                return _deleteCommand ??= new DelegateCommand<FinancistoTransactionDto>(tr => { financistoTransactions.Remove(tr); });
+            }
+        }
+
+        public DelegateCommand<FinancistoTransactionDto> ClearNoteCommand
+        {
+            get
+            {
+                return _clearNoteCommand ??= new DelegateCommand<FinancistoTransactionDto>(tr =>
+                {
+                    if (tr != null)
+                    {
+                        tr.Note = null;
+                    }
+                });
+            }
+        }
+
+        public AsyncCommand<FinancistoTransactionDto> AddRuleCommand
+        {
+            get
+            {
+                return _addRuleCommand ??= new AsyncCommand<FinancistoTransactionDto>(tr => OpenRulesDialogAsync(tr?.Note!, tr?.MCC ?? 0));
+            }
+        }
+
+        public AsyncCommand<FinancistoTransactionDto> TransferCommand
+        {
+            get
+            {
+                return _transferCommand ??= new AsyncCommand<FinancistoTransactionDto>(OpenTransferDialogAsync);
+            }
+        }
+
+        public DelegateCommand ClearAllNotesCommand
+        {
+            get
+            {
+                return _clearAllNotesCommand ??= new DelegateCommand(ClearAllNotes);
+            }
+        }
+
+        public ObservableCollection<FinancistoTransactionDto> FinancistoTransactions
+        {
+            get => financistoTransactions;
+            private set
+            {
+                financistoTransactions = value;
+                RaisePropertyChanged(nameof(FinancistoTransactions));
+                RaisePropertyChanged(nameof(HasMcc));
+            }
+        }
+
+        public bool HasMcc => FinancistoTransactions?.Any(x => x.MCC > 0) == true;
+
+        public List<AccountFilterModel> Accounts
+        {
+            get => accounts;
+            private set
+            {
+                accounts = value;
+                RaisePropertyChanged(nameof(Accounts));
+            }
+        }
+
+        public AccountFilterModel MonoAccount
+        {
+            get => _monoAccount;
+            set
+            {
+                _monoAccount = value;
+                RaisePropertyChanged(nameof(MonoAccount));
+                if (_monoAccount != null)
+                {
+                    Accounts = new List<AccountFilterModel>(
+                        DbManual.Account.Where(x => x.Id != _monoAccount.Id).OrderByDescending(x => x.IsActive).ThenBy(x => x.SortOrder));
+                }
+            }
+        }
+
+        public override string Title => LocalizationService.Instance.please_select_categories;
+        public override bool IsValid()
+        {
+            return true;
+        }
+
+        public void SetMonoTransactions(List<BankTransaction> transactions)
+        {
+            List<FinancistoTransactionDto> transToAdd = new List<FinancistoTransactionDto>();
+            foreach (var x in transactions)
+            {
+                var parsedDescription = ParseDescription(x.Description, MonoAccount?.Id);
+                long amount = Convert.ToInt64(x.CardCurrencyAmount * 100.0);
+                int toAccountId = amount < 0 ? parsedDescription.accountId : 0;
+                int fromAccountId = amount > 0 ? parsedDescription.accountId : 0;
+                int.TryParse(x.MCC ?? "0", out var mcc);
+
+                var newTr = new FinancistoTransactionDto
+                {
+                    MonoAccountId = MonoAccount.Id,
+                    FromAmount = amount,
+                    OriginalFromAmount = IsForeignCurrency(x) ? Convert.ToInt64(x.OperationAmount * 100.0) : null,
+                    OriginalCurrencyId = IsForeignCurrency(x) ? (DbManual.Currencies.FirstOrDefault(c => c.Name == x.OperationCurrency)?.Id ?? 0) : 0,
+                    CategoryId = parsedDescription.categoryId,
+                    ToAccountId = toAccountId,
+                    FromAccountId = fromAccountId,
+                    LocationId = parsedDescription.locationId,
+                    Note = RemoveOwnCardLine(x.Description, MonoAccount),
+                    DateTime = new DateTimeOffset(x.Date).ToUnixTimeMilliseconds(),
+                    MCC = mcc,
+                    IsAmountNegative = amount < 0
+                };
+
+                RuleMatcher.Apply(newTr);
+
+                transToAdd.Add(newTr);
+            }
+
+            FinancistoTransactions = new ObservableCollection<FinancistoTransactionDto>(transToAdd);
+        }
+
+        // A card payment's first line names the card and the amount ("VISA PLAT 421352******8814 74.00 PLN"). When the card
+        // is the imported account's own (same last 4 digits), the line only repeats what the transaction already holds, so
+        // the note keeps the lines after it. A note that is only that line stays as it is.
+        private static string RemoveOwnCardLine(string note, AccountFilterModel importedAccount)
+        {
+            var accountDigits = new string((importedAccount?.Number ?? string.Empty).Where(char.IsDigit).ToArray());
+            var lineEnd = note?.IndexOf('\n') ?? -1;
+            if (accountDigits.Length < 4 || lineEnd < 0)
+            {
+                return note;
+            }
+
+            var ownCard = accountDigits[^4..];
+            var firstLine = note[..lineEnd];
+            var namesOwnCard = CardNumberRegex.Matches(firstLine).Any(m => m.Groups[2].Value == ownCard);
+            var rest = note[(lineEnd + 1)..].Trim();
+
+            return namesOwnCard && rest.Length > 0 ? rest : note;
+        }
+
+        // Only some banks give an exchange rate; the others just name the operation currency when it differs from the card's.
+        private static bool IsForeignCurrency(BankTransaction x) => x.ExchangeRate != null || (!string.IsNullOrEmpty(x.OperationCurrency) && x.OperationAmount != 0 && Financisto.Common.Utils.DoubleUtils.DoubleNotEqual(Math.Abs(x.OperationAmount), Math.Abs(x.CardCurrencyAmount)));
+
+        private void ClearAllNotes()
+        {
+            foreach (var item in FinancistoTransactions)
+            {
+                item.Note = null;
+            }
+        }
+
+        private static (int categoryId, int locationId, int accountId) ParseDescription(string description, int? importedAccountId)
+        {
+            int accountId, locationId, categoryId;
+            TryParseLocation(description, out locationId);
+            TryParseCategory(description, out categoryId);
+            TryParseAccount(description, importedAccountId, out accountId);
+            return (categoryId, locationId, accountId);
+        }
+
+        private static bool ContainsString(string title, string description)
+        {
+            if (!string.IsNullOrEmpty(title) && !string.IsNullOrEmpty(description))
+            {
+                return description.Split(" ").Where(x => !string.IsNullOrEmpty(x) && x.Length > 2).Any(x => title.Contains(x, StringComparison.OrdinalIgnoreCase));
+            }
+            return false;
+        }
+
+        private static void TryParseLocation(string desc, out int locationId)
+        {
+            locationId = 0;
+            var location = DbManual.Location
+                .Where(x => x.Id > 0 && x.IsActive)
+                .FirstOrDefault(l => ContainsString(l.Title, desc) || ContainsString(l.Address, desc));
+            if (location?.Id != null)
+            {
+                locationId = location.Id.Value;
+            }
+        }
+
+        private static void TryParseCategory(string desc, out int categoryId)
+        {
+            categoryId = 0;
+            var category = DbManual.Category
+                    .Where(x => x.Id > 0)
+                    .FirstOrDefault(l => ContainsString(l.Title, desc));
+            if (category?.Id != null)
+            {
+                categoryId = category.Id.Value;
+            }
+        }
+
+        // A card number in the note names the other side of a transfer. A card payment's own card (e.g. Erste's
+        // "VISA PLAT 421352******8814") belongs to the imported account, which must not become its own transfer target.
+        private static void TryParseAccount(string desc, int? importedAccountId, out int accountId)
+        {
+            accountId = 0;
+
+            foreach (Match match in CardNumberRegex.Matches(desc))
+            {
+                string cardNumber = match.Groups[2].Value;
+                var acc = DbManual.Account
+                    .Find(y => y.Id != importedAccountId && !string.IsNullOrWhiteSpace(y.Number) && string.Equals(y.Number, cardNumber, StringComparison.InvariantCultureIgnoreCase));
+
+                if (acc?.Id != null)
+                {
+                    accountId = acc.Id.Value;
+                    return;
+                }
+            }
+        }
+
+        private AccountFilterModel GetOtherAccount(FinancistoTransactionDto tr, out bool transferToMono)
+        {
+            transferToMono = false;
+            if (tr == null)
+            {
+                return null;
+            }
+
+            if (tr.FromAccountId > 0) // Transfer To Mono
+            {
+                transferToMono = true;
+                return Accounts.FirstOrDefault(a => a.Id == tr.FromAccountId);
+            }
+
+            if (tr.ToAccountId > 0) // Transfer From Mono
+            {
+                return Accounts.FirstOrDefault(a => a.Id == tr.ToAccountId);
+            }
+
+            return null;
+        }
+
+        private async Task OpenTransferDialogAsync(FinancistoTransactionDto tr)
+        {
+            var otherAccount = GetOtherAccount(tr, out var transferToMono);
+            if (otherAccount == null || MonoAccount == null)
+            {
+                return;
+            }
+
+            var fromAccount = transferToMono ? otherAccount : MonoAccount;
+            var toAccount = transferToMono ? MonoAccount : otherAccount;
+            var monoAmount = Math.Abs(tr.FromAmount);
+
+            var transferDto = new TransferDto
+            {
+                FromAccountId = fromAccount.Id ?? 0,
+                FromAccount = fromAccount,
+                ToAccountId = toAccount.Id ?? 0,
+                ToAccount = toAccount,
+                Note = tr.Note,
+                Date = UnixTimeConverter.Convert(tr.DateTime).Date,
+                Time = UnixTimeConverter.Convert(tr.DateTime)
+            };
+
+            if (transferToMono)
+            {
+                transferDto.ToAmount = monoAmount;
+            }
+            else
+            {
+                transferDto.FromAmount = monoAmount;
+            }
+
+            TransferDialogVM dialogVm = new TransferDialogVM(transferDto);
+            var result = await _dialogWrapper.ShowDialogAsync<TransferDialog>(dialogVm, 480, 440, LocalizationService.Instance.transfer);
+
+            if (result is TransferDto output)
+            {
+                tr.OriginalCurrencyId = otherAccount.CurrencyId;
+                tr.OriginalFromAmount = transferToMono ? Math.Abs(output.FromAmount) : Math.Abs(output.ToAmount);
+                tr.Note = output.Note;
+            }
+        }
+
+        private async Task OpenRulesDialogAsync(string description, int mccCode)
+        {
+            if (await RuleCreator.AddRuleAsync(_dialogWrapper, description, mccCode) != null)
+            {
+                foreach (var transaction in FinancistoTransactions)
+                {
+                    RuleMatcher.Apply(transaction);
+                }
+            }
+        }
+    }
+}

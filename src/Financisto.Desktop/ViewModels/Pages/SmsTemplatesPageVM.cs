@@ -5,10 +5,10 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using Financisto.Common;
+using Financisto.Common.Converters;
 using Financisto.Common.Entities;
 using Financisto.Common.Localization;
 using Financisto.Common.Model;
-using Financisto.Converters;
 using Financisto.DataAccess.Abstractions;
 using Financisto.DataAccess.Data;
 using Financisto.Desktop.Data;
@@ -197,21 +197,7 @@ namespace Financisto.Desktop.ViewModels.Pages
                 return;
             }
 
-            var updatedRule = new RuleModel
-            {
-                Id = id,
-                Description = updated.Description,
-                CategoryId = updated.CategoryId,
-                Condition = updated.Condition,
-                Created = updated.Created,
-                IsActive = updated.IsActive,
-                LocationId = updated.LocationId,
-                PayeeId = updated.PayeeId,
-                ProjectId = updated.ProjectId,
-                MCCCategory = updated.MCCCategory,
-            };
-
-            await db.InsertOrUpdateAsync(new[] { RuleSmsTemplateMapper.ToSmsTemplate(updatedRule) });
+            await db.InsertOrUpdateAsync(new[] { RuleSmsTemplateMapper.ToSmsTemplate(updated.ToModel(id)) });
             await RefreshData();
         }
     }

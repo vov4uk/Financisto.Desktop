@@ -270,6 +270,15 @@
   <data name="open_recipes_wizard" xml:space="preserve">
     <value>Відкрити майстер рецептів</value>
   </data>
+  <data name="recipes_wizard_failed" xml:space="preserve">
+    <value>Помилка майстра рецептів: {0}. Подробиці в журналі.</value>
+  </data>
+  <data name="wizard_failed" xml:space="preserve">
+    <value>Майстер не зміг завершити роботу: {0}. Подробиці в журналі.</value>
+  </data>
+  <data name="group_by_category" xml:space="preserve">
+    <value>Групувати за категорією</value>
+  </data>
   <data name="add_split_transfers" xml:space="preserve">
     <value>Додати розділені перекази</value>
   </data>
@@ -487,7 +496,10 @@
     <value>Оригіналь</value>
   </data>
   <data name="recipes_instructions_line1" xml:space="preserve">
-    <value>Вставте текст рецепту. Зробіть фото рецепту та розберіть текст за допомогою Google Lens чи іншого OCR. Я шукатиму числа з символом товару.</value>
+    <value>Вставте текст рецепту. Зробіть фото рецепту та розберіть текст за допомогою Google Lens чи іншого OCR. Я шукатиму числа з символом товару. Чек, надрукований таблицею (назва, літера ПТУ, кількість x ціна, сума, рядки Rabat), читається по рядках.</value>
+  </data>
+  <data name="recipe_wizard_transactions" xml:space="preserve">
+    <value>Транзакції</value>
   </data>
   <data name="recipe_wizard_total_format" xml:space="preserve">
     <value>Разом: {0:F2}   Розраховано: {1:F2}   Різниця: {2:F2}</value>
@@ -506,6 +518,27 @@
   </data>
   <data name="highlight_tooltip" xml:space="preserve">
     <value>Виділити текст. Жовтий - рядок операції, зелений - інші числа</value>
+  </data>
+  <data name="pdf_no_text" xml:space="preserve">
+    <value>У цьому PDF немає тексту: це скан або фото без текстового шару, а вбудованого OCR у цій системі немає. Розпізнайте його через OCR (наприклад, Google Lens) і вставте результат.</value>
+  </data>
+  <data name="pdf_ocr_empty" xml:space="preserve">
+    <value>У цьому PDF не вдалося розпізнати текст.</value>
+  </data>
+  <data name="open_file" xml:space="preserve">
+    <value>Відкрити файл…</value>
+  </data>
+  <data name="open_file_tooltip" xml:space="preserve">
+    <value>Прочитати текст з файлу чека (PDF, HTML або текстового) у текстове поле</value>
+  </data>
+  <data name="file_read_error" xml:space="preserve">
+    <value>Не вдалося прочитати файл: {0}</value>
+  </data>
+  <data name="file_no_text" xml:space="preserve">
+    <value>У цьому файлі не знайдено тексту.</value>
+  </data>
+  <data name="receipt_files" xml:space="preserve">
+    <value>Чеки (PDF, HTML, текст)</value>
   </data>
   <data name="reciept_wizard_total_format" xml:space="preserve">
     <value>Всього : {0:F2} Поточне : {1:F2} Різниця : {2:F2}</value>
@@ -992,15 +1025,6 @@
   </data>
   <data name="app_theme_dark" xml:space="preserve">
     <value>Темна</value>
-  </data>
-  <data name="icon_set" xml:space="preserve">
-    <value>Набір іконок</value>
-  </data>
-  <data name="icon_set_default" xml:space="preserve">
-    <value>Типовий</value>
-  </data>
-  <data name="icon_set_monocolor" xml:space="preserve">
-    <value>Монохромний</value>
   </data>
   <data name="sms_templates" xml:space="preserve">
     <value>Шаблони SMS</value>

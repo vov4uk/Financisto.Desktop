@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Avalonia.Media;
 
-namespace Financisto.Converters
+namespace Financisto.Common.Converters
 {
     /// <summary>
     /// Replaces the WPF DataTrigger (HasNoCategory=True -> Pink) used by the transaction title cell;

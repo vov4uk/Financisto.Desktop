@@ -9,6 +9,9 @@ namespace Financisto.Desktop
 
         /// <summary>The folder with the bank helper plugins (DLLs); see <see cref="Helpers.BankHelper.PluginBankHelperProvider"/>.</summary>
         public required string PluginsPath { get; init; }
+
+        /// <summary>The folder with the Windows OCR library (Windows builds only); see <see cref="Helpers.Ocr.OcrEngines"/>.</summary>
+        public required string OcrPath { get; init; }
     }
 
     public partial class StartOptions
@@ -27,7 +30,12 @@ namespace Financisto.Desktop
                     Environment.GetEnvironmentVariable("FINANCISTO_PLUGINS_PATH") is { } pluginsPath
                     && !string.IsNullOrWhiteSpace(pluginsPath)
                         ? pluginsPath
-                        : Path.Combine(AppContext.BaseDirectory, "plugins")
+                        : Path.Combine(AppContext.BaseDirectory, "plugins"),
+                OcrPath =
+                    Environment.GetEnvironmentVariable("FINANCISTO_OCR_PATH") is { } ocrPath
+                    && !string.IsNullOrWhiteSpace(ocrPath)
+                        ? ocrPath
+                        : Path.Combine(AppContext.BaseDirectory, "ocr")
             };
     }
 }
