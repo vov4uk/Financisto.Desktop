@@ -173,8 +173,11 @@ namespace Financisto.Desktop.Wizards.Recipes
                     }
                 }
 
-                // cents: a sum of doubles is off by 1e-13 (Diff would print as -0.00)
-                CalculatedAmount = Math.Round(Math.Abs(tmp), 2) * -1.0;
+                // The rows are signed (an expense is negative, a returned item is a credit): the total is their sum with its sign, as page 2 adds them up.
+                // Forcing it negative made a refund receipt show the wrong total and a Diff twice as big as it was.
+                // Cents: a sum of doubles is off by 1e-13. Zero is plain 0: -0.0 would print as "-0,00".
+                var total = Math.Round(-tmp, 2);
+                CalculatedAmount = total == 0.0 ? 0.0 : total;
                 Logger.Info($"[Recipes] {lines.Count} lines -> {Amounts.Count} rows, {rememberedHits} categories from the remembered ones, sum {CalculatedAmount:F2}");
             }
         }
