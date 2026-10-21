@@ -126,6 +126,7 @@ namespace Financisto.BankHelpers.Pko
 
                             var dataWalutyGodzina = Regex.Match(transactionDescriprion, @"Godz\.([0-9]{2}:[0-9]{2}:[0-9]{2})", RegexOptions.None, TimeSpan.FromSeconds(5));
                             string dataWalutyGodzinaStr = "00:00:00";
+                            var hasTime = dataWalutyGodzina.Success;
                             if (dataWalutyGodzina.Success)
                             {
                                 transactionDescriprion = transactionDescriprion.Replace(dataWalutyGodzina.Value, "");
@@ -154,6 +155,7 @@ namespace Financisto.BankHelpers.Pko
                                 DataOperacji = transactionDate,
                                 IdentyfikatorOperacji = idStr,
                                 DataWaluty = currencyDate,
+                                HasTime = hasTime,
                                 KwotaOperacji = GetDouble(operationAmount.Value),
                                 Saldo = GetDouble(saldo.Value),
                                 OpisOperacji = transactionDescriprion,
@@ -170,11 +172,25 @@ namespace Financisto.BankHelpers.Pko
                     }
                 }
 
+                // The statement lists rows oldest first and most of them carry no time, so rows of the same day would tie.
+                // The first timeless row of a day keeps 00:00 and every later one gets a minute more (the hour rolls over
+                // after 59 rows). That keeps the statement's order, stops the importer's (account, time, amount) duplicate
+                // check from collapsing same-day rows, and gives the wizard's "newer than the selected transaction"
+                // filter something to compare within a day. Rows with a real time keep it.
+                var minutesPerDay = new Dictionary<DateTime, int>();
                 foreach (var transaction in transactions)
                 {
+                    var date = transaction.DataWaluty;
+                    if (!transaction.HasTime)
+                    {
+                        minutesPerDay.TryGetValue(date, out var minutes);
+                        minutesPerDay[date] = minutes + 1;
+                        date = date.AddMinutes(minutes);
+                    }
+
                     result.Add(new BankTransaction
                     {
-                        Date = transaction.DataWaluty,
+                        Date = date,
                         Description = $"{transaction.TypOperacji}\r\n{transaction.OpisOperacji}",
                         OperationAmount = transaction.KwotaOperacji,
                         Balance = transaction.Saldo,
@@ -195,6 +211,7 @@ namespace Financisto.BankHelpers.Pko
             public double KwotaOperacji { get; set; }
             public double Saldo { get; set; }
             public DateTime DataWaluty { get; set; }
+            public bool HasTime { get; set; }
             public string OpisOperacji { get; set; }
             public double KwotaOryg { get; set; }
             public string WalutaOryg { get; set; }

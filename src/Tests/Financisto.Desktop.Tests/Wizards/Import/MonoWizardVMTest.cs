@@ -266,6 +266,24 @@
         }
 
         [Fact]
+        public void LoadTransactions_PKO_SameDayRowsWithoutTime_GetMinutesInStatementOrder()
+        {
+            var path = Path.Combine(Environment.CurrentDirectory, "Assets", "pko.pdf");
+            var pko = new PkoHelper().ParseReport(path).ToList();
+
+            // The statement lists these oldest first (balances 260.81 then 256.21), so the later one is a minute newer.
+            var june15 = pko.Where(t => t.Date.Date == new DateTime(2025, 6, 15)).ToList();
+            Assert.Equal(new[] { 256.21, 260.81 }, june15.Select(t => t.Balance));
+            Assert.Equal(new[] { new DateTime(2025, 6, 15, 0, 1, 0), new DateTime(2025, 6, 15, 0, 0, 0) }, june15.Select(t => t.Date));
+
+            // A row with a real time keeps it and does not take part in the minute counting.
+            var june18 = pko.Where(t => t.Date.Date == new DateTime(2025, 6, 18)).ToList();
+            Assert.Equal(new[] { new DateTime(2025, 6, 18, 11, 30, 55), new DateTime(2025, 6, 18, 0, 0, 0) }, june18.Select(t => t.Date));
+
+            Assert.Equal(pko.OrderByDescending(t => t.Date).ToList(), pko);
+        }
+
+        [Fact]
         public void LoadTransactions_PrivatExcel_ExpectedTransactions()
         {
             var first = new BankTransaction
