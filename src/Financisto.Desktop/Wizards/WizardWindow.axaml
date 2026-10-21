@@ -5,10 +5,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:monoView="using:Financisto.Desktop.Wizards.MonoWizard.View"
-    xmlns:monoVm="using:Financisto.Desktop.Wizards.MonoWizard.ViewModel"
-    xmlns:recipesView="using:Financisto.Desktop.Wizards.RecipesWizard.View"
-    xmlns:recipesVm="using:Financisto.Desktop.Wizards.RecipesWizard.ViewModel"
+    xmlns:import="using:Financisto.Desktop.Wizards.Import"
+    xmlns:recipes="using:Financisto.Desktop.Wizards.Recipes"
     xmlns:wizards="using:Financisto.Desktop.Wizards"
     Title="{Binding Title}"
     Width="1100"
@@ -25,24 +23,24 @@
 
     <!--  Wizard pages resolve here, before the app-wide ViewLocator (which matches every BindableBase).  -->
     <Window.DataTemplates>
-        <DataTemplate DataType="monoVm:Page1VM">
-            <monoView:Page1 IsVisible="{Binding IsCurrentPage}" />
+        <DataTemplate DataType="import:Page1VM">
+            <import:Page1 IsVisible="{Binding IsCurrentPage}" />
         </DataTemplate>
-        <DataTemplate DataType="monoVm:Page2VM">
-            <monoView:Page2 IsVisible="{Binding IsCurrentPage}" />
+        <DataTemplate DataType="import:Page2VM">
+            <import:Page2 IsVisible="{Binding IsCurrentPage}" />
         </DataTemplate>
-        <DataTemplate DataType="monoVm:Page3VM">
-            <monoView:Page3 IsVisible="{Binding IsCurrentPage}" />
+        <DataTemplate DataType="import:Page3VM">
+            <import:Page3 IsVisible="{Binding IsCurrentPage}" />
         </DataTemplate>
-        <DataTemplate DataType="recipesVm:Page1VM">
-            <recipesView:Page1 IsVisible="{Binding IsCurrentPage}" />
+        <DataTemplate DataType="recipes:Page1VM">
+            <recipes:Page1 IsVisible="{Binding IsCurrentPage}" />
         </DataTemplate>
-        <DataTemplate DataType="recipesVm:Page2VM">
-            <recipesView:Page2 IsVisible="{Binding IsCurrentPage}" />
+        <DataTemplate DataType="recipes:Page2VM">
+            <recipes:Page2 IsVisible="{Binding IsCurrentPage}" />
         </DataTemplate>
     </Window.DataTemplates>
 
-    <Grid Margin="10" RowDefinitions="*,Auto">
+    <Grid Margin="10" RowDefinitions="*,Auto,Auto">
         <!--
             Every page keeps its view and only the current one is visible. Swapping views in a ContentControl
             detaches the old one, and its DataGrid then clears the selection bound to the page (e.g. the start transaction).
@@ -55,8 +53,17 @@
             </ItemsControl.ItemsPanel>
         </ItemsControl>
 
-        <Border
+        <!--  Why the wizard could not finish (its result could not be made); the details are in the log  -->
+        <TextBlock
             Grid.Row="1"
+            Margin="0,8,0,0"
+            Foreground="OrangeRed"
+            IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+            Text="{Binding ErrorMessage}"
+            TextWrapping="Wrap" />
+
+        <Border
+            Grid.Row="2"
             Margin="0,10,0,0"
             Padding="0,10,0,0"
             BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"

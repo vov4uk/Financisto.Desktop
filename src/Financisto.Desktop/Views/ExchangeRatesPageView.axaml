@@ -3,11 +3,11 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:behaviors="using:Financisto.Common.Behaviors"
-    xmlns:conv="using:Financisto.Converters"
+    xmlns:conv="using:Financisto.Common.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:ent="using:Financisto.Common.Entities"
-    xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
     xmlns:loc="clr-namespace:Financisto.Common.Localization;assembly=Financisto.Common"
+    xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:Financisto.Desktop.ViewModels.Pages"
     d:DesignHeight="600"
@@ -100,7 +100,7 @@
             </StackPanel>
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="8*"/>
+                    <ColumnDefinition Width="8*" />
                     <ColumnDefinition Width="2*" />
                 </Grid.ColumnDefinitions>
                 <lvc:CartesianChart

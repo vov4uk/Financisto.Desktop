@@ -6,7 +6,7 @@ using Avalonia.Data.Converters;
 using Avalonia.Media;
 using Financisto.Common.Utils;
 
-namespace Financisto.Converters
+namespace Financisto.Common.Converters
 {
     /// <summary>
     /// Account accent color code -> the highlight behind the account icon, like Android's AccountRecyclerAdapter:

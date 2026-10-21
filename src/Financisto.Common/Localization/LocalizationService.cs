@@ -143,6 +143,7 @@ public sealed class LocalizationService : INotifyPropertyChanged
     public string categories => Get();
     // RecipesWizard Page1
     public string recipe_wizard_total_format => Get();
+    public string recipe_wizard_transactions => Get();
     // MainWindow Messages
 
     public string import_result => Get();

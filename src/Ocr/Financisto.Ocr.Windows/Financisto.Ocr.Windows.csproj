@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <!-- Text recognition (OCR) with the OCR engine built into Windows 10/11 (Windows.Media.Ocr), for scanned PDFs.
+         The projection of the Windows API needs a windows target framework, which the app itself (it also publishes for Linux and
+         macOS) doesn't have, so this is a separate library: it is built only on Windows, copied to <app>/ocr next to the exe, and
+         loaded by name when it is there (Financisto.Desktop/Helpers/Ocr). Other systems simply don't have it. -->
+    <PropertyGroup>
+        <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+        <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+        <Nullable>enable</Nullable>
+        <RootNamespace>Financisto.Ocr.Windows</RootNamespace>
+        <!-- Lets the solution build on Linux and macOS too (only the reference assemblies are needed to compile it) -->
+        <EnableWindowsTargeting>true</EnableWindowsTargeting>
+        <!-- The projection and WinRT.Runtime go next to the DLL: they are loaded from there -->
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    </PropertyGroup>
+</Project>

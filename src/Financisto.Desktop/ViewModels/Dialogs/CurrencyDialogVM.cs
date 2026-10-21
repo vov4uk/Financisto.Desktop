@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using Financisto.Common.Converters;
-using Financisto.Converters;
 using Financisto.Desktop.Data;
 
 namespace Financisto.Desktop.ViewModels.Dialogs

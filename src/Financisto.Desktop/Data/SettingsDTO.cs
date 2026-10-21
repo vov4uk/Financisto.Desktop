@@ -28,7 +28,6 @@ namespace Financisto.Desktop.Data
         private Language language;
 
         private AppThemeType currentAppTheme;
-        private IconSetType iconSet;
 
         private string defaultBackupDir;
 
@@ -84,19 +83,6 @@ namespace Financisto.Desktop.Data
             }
         }
 
-        public IconSetType IconSet
-        {
-            get => iconSet;
-            set
-            {
-                if (iconSet != value)
-                {
-                    iconSet = value;
-                    RaisePropertyChanged(nameof(IconSet));
-                }
-            }
-        }
-
         public ThemeVariant ThemeVariant
         {
             get => CurrentAppTheme switch
@@ -115,7 +101,6 @@ namespace Financisto.Desktop.Data
                 CheckForUpdatesOnStart = CheckForUpdatesOnStart,
                 Language = Language,
                 CurrentAppTheme = CurrentAppTheme,
-                IconSet = IconSet,
                 DefaultBackupDir = DefaultBackupDir
             };
         }

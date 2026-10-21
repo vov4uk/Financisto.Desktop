@@ -8,7 +8,6 @@ namespace Financisto.Desktop.Tests.Integration
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
     using Financisto.Adapter;
-    using Financisto.BankHelpers;
     using Financisto.Common.Entities;
     using Financisto.DataAccess;
     using Financisto.DataAccess.Abstractions;

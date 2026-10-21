@@ -3,7 +3,7 @@ using System.Globalization;
 using Avalonia.Data.Converters;
 using Financisto.Common.Entities;
 
-namespace Financisto.Converters
+namespace Financisto.Common.Converters
 {
     public class MccConverter : IValueConverter
     {

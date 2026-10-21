@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using Financisto.Common.Localization;
 using Prism.Commands;
 using Prism.Mvvm;
 
@@ -17,7 +18,15 @@ namespace Financisto.Desktop.Wizards
         private DelegateCommand _cancelCommand;
         private DelegateCommand _moveNextCommand;
         private DelegateCommand _movePreviousCommand;
+        private string? errorMessage;
         public event EventHandler<bool> RequestClose;
+
+        /// <summary>Why the wizard could not finish (shown above its buttons); empty when there is no problem. Cleared by the next try and by a page change.</summary>
+        public string? ErrorMessage
+        {
+            get => errorMessage;
+            private set => SetProperty(ref errorMessage, value);
+        }
 
         public DelegateCommand CancelCommand
         {
@@ -34,6 +43,8 @@ namespace Financisto.Desktop.Wizards
             {
                 if (value == _currentPage)
                     return;
+
+                ErrorMessage = null;
 
                 BeforeCurrentPageUpdated(_currentPage, value);
 
@@ -118,8 +129,23 @@ namespace Financisto.Desktop.Wizards
 
         void OnClose(bool save)
         {
-            var output = OnRequestClose(save);
+            Logger.Info($"[{GetType().Name}] closing, save={save}");
+            ErrorMessage = null;
+            object output;
+            try
+            {
+                output = OnRequestClose(save);
+            }
+            catch (Exception ex)
+            {
+                // The wizard stays open: nothing is lost and the user can try again or cancel.
+                Logger.Error(ex, $"[{GetType().Name}] its result could not be made (save={save}), the wizard stays open");
+                ErrorMessage = string.Format(LocalizationService.Instance["wizard_failed"], ex.Message);
+                return;
+            }
+
             RequestClose?.Invoke(output, save);
+            Logger.Info($"[{GetType().Name}] closed");
         }
     }
 }

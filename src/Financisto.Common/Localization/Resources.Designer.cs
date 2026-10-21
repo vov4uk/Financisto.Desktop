@@ -927,6 +927,24 @@ namespace Financisto.Common.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No text found in this file.
+        /// </summary>
+        public static string file_no_text {
+            get {
+                return ResourceManager.GetString("file_no_text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Can't read the file: {0}.
+        /// </summary>
+        public static string file_read_error {
+            get {
+                return ResourceManager.GetString("file_read_error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Finish.
         /// </summary>
         public static string finish {
@@ -986,6 +1004,15 @@ namespace Financisto.Common.Localization {
         public static string grid {
             get {
                 return ResourceManager.GetString("grid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Group by category.
+        /// </summary>
+        public static string group_by_category {
+            get {
+                return ResourceManager.GetString("group_by_category", resourceCulture);
             }
         }
         
@@ -1404,6 +1431,24 @@ namespace Financisto.Common.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open file….
+        /// </summary>
+        public static string open_file {
+            get {
+                return ResourceManager.GetString("open_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Read the text of a receipt file (PDF, HTML or text) into the text field.
+        /// </summary>
+        public static string open_file_tooltip {
+            get {
+                return ResourceManager.GetString("open_file_tooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Open recipes wizard.
         /// </summary>
         public static string open_recipes_wizard {
@@ -1508,6 +1553,24 @@ namespace Financisto.Common.Localization {
         public static string payment_day {
             get {
                 return ResourceManager.GetString("payment_day", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No text found in this PDF: it is a scan or a photo without a text layer, and this system has no built-in OCR. Run it through OCR (e.g. Google Lens) and paste the result..
+        /// </summary>
+        public static string pdf_no_text {
+            get {
+                return ResourceManager.GetString("pdf_no_text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No text could be recognized in this PDF..
+        /// </summary>
+        public static string pdf_ocr_empty {
+            get {
+                return ResourceManager.GetString("pdf_ocr_empty", resourceCulture);
             }
         }
         
@@ -1746,6 +1809,15 @@ namespace Financisto.Common.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Receipts (PDF, HTML, text).
+        /// </summary>
+        public static string receipt_files {
+            get {
+                return ResourceManager.GetString("receipt_files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Total : {0:F2} Current : {1:F2} Diff : {2:F2}.
         /// </summary>
         public static string reciept_wizard_total_format {
@@ -1755,7 +1827,7 @@ namespace Financisto.Common.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Paste recipes text. Make recipes photo and parse text via Google Lens or other OCR. I&apos;ll look for numbers with article symbol..
+        ///   Looks up a localized string similar to Paste recipes text. Make recipes photo and parse text via Google Lens or other OCR. I&apos;ll look for numbers with article symbol. A receipt printed as a table (name, tax letter, quantity x price, value, with Rabat lines) is read row by row..
         /// </summary>
         public static string recipes_instructions_line1 {
             get {
@@ -1778,6 +1850,15 @@ namespace Financisto.Common.Localization {
         public static string recipes_instructions_line2 {
             get {
                 return ResourceManager.GetString("recipes_instructions_line2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The recipes wizard failed: {0}. Details are in the log..
+        /// </summary>
+        public static string recipes_wizard_failed {
+            get {
+                return ResourceManager.GetString("recipes_wizard_failed", resourceCulture);
             }
         }
         
@@ -2426,6 +2507,15 @@ namespace Financisto.Common.Localization {
         public static string what_should_happen {
             get {
                 return ResourceManager.GetString("what_should_happen", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The wizard could not finish: {0}. Details are in the log..
+        /// </summary>
+        public static string wizard_failed {
+            get {
+                return ResourceManager.GetString("wizard_failed", resourceCulture);
             }
         }
         

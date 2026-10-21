@@ -9,7 +9,7 @@
     using Financisto.Desktop.ViewModels.Dialogs;
     using Financisto.Desktop.Views.Dialogs;
     using Financisto.Desktop.Wizards;
-    using Financisto.Desktop.Wizards.RecipesWizard.ViewModel;
+    using Financisto.Desktop.Wizards.Recipes;
     using Financisto.Tests.Common;
     using Moq;
     using Xunit;

@@ -84,6 +84,9 @@
       <None Update="Assets\pireus.pdf">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+      <None Update="Assets\lidl_receipt.html">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
       <None Update="Assets\pko.pdf">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
@@ -105,6 +108,21 @@
       <!-- The bank helper plugins: the parser tests use them directly, the plugin loader tests copy their DLLs into a plugins folder -->
       <ProjectReference Include="..\..\BankHelpers\Plugins\*\*.csproj" />
     </ItemGroup>
+
+    <!-- The Windows OCR library goes to <output>/ocr, where the app has it: the OCR tests load it (same way as in Financisto.Desktop.csproj) -->
+    <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+      <ProjectReference Include="..\..\Ocr\Financisto.Ocr.Windows\Financisto.Ocr.Windows.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" GlobalPropertiesToRemove="RuntimeIdentifier;SelfContained" />
+    </ItemGroup>
+
+    <Target Name="CopyWindowsOcr" AfterTargets="CopyFilesToOutputDirectory" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+      <MSBuild Projects="..\..\Ocr\Financisto.Ocr.Windows\Financisto.Ocr.Windows.csproj" Targets="GetTargetPath" RemoveProperties="RuntimeIdentifier;SelfContained">
+        <Output TaskParameter="TargetOutputs" ItemName="WindowsOcrTargetPath" />
+      </MSBuild>
+      <ItemGroup>
+        <WindowsOcrOutput Include="%(WindowsOcrTargetPath.RootDir)%(WindowsOcrTargetPath.Directory)*.dll;%(WindowsOcrTargetPath.RootDir)%(WindowsOcrTargetPath.Directory)*.deps.json" />
+      </ItemGroup>
+      <Copy SourceFiles="@(WindowsOcrOutput)" DestinationFolder="$(OutDir)ocr" SkipUnchangedFiles="true" />
+    </Target>
 
     <ItemGroup>
       <ProjectReference Include="..\..\Financisto.DataAccess\Financisto.DataAccess.csproj" />

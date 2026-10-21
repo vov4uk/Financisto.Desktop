@@ -22,6 +22,11 @@
     WindowDecorations="Full"
     WindowState="Maximized"
     mc:Ignorable="d">
+    <Window.KeyBindings>
+        <KeyBinding Command="{Binding OpenBackupCommand}" Gesture="Ctrl+O" />
+        <KeyBinding Command="{Binding SaveBackupCommand}" Gesture="Ctrl+S" />
+        <KeyBinding Command="{Binding SaveBackupAsDbCommand}" Gesture="Ctrl+Shift+S" />
+    </Window.KeyBindings>
     <Window.Styles>
         <Style Selector="ListBoxItem">
             <Setter Property="Padding" Value="12,8" />
@@ -71,25 +76,31 @@
                 <Menu DockPanel.Dock="Left" IsEnabled="{Binding !IsLoading}">
                     <MenuItem Header="{loc:Translate Key=menu}">
                         <MenuItem
+                            Classes="bankImport"
                             Command="{Binding OpenBackupCommand}"
                             CommandParameter="{Binding $parent[Window]}"
-                            Header="{loc:Translate Key=open_backup}">
+                            Header="{loc:Translate Key=open_backup}"
+                            Tag="Ctrl+O">
                             <MenuItem.Icon>
                                 <Image Source="{StaticResource ResourceKey=IconFileArrowUp}" />
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem
+                            Classes="bankImport"
                             Command="{Binding SaveBackupCommand}"
                             CommandParameter="{Binding $parent[Window]}"
-                            Header="{loc:Translate Key=save_backup}">
+                            Header="{loc:Translate Key=save_backup}"
+                            Tag="Ctrl+S">
                             <MenuItem.Icon>
                                 <Image Source="{StaticResource ResourceKey=IconFileArrowDown}" />
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem
+                            Classes="bankImport"
                             Command="{Binding SaveBackupAsDbCommand}"
                             CommandParameter="{Binding $parent[Window]}"
-                            Header="{loc:Translate Key=save_as_db}">
+                            Header="{loc:Translate Key=save_as_db}"
+                            Tag="Ctrl+Shift+S">
                             <MenuItem.Icon>
                                 <Image Source="{StaticResource ResourceKey=IconDatabase}" />
                             </MenuItem.Icon>
