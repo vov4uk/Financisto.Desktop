@@ -16,21 +16,21 @@
     <PackageVersion Include="LiveChartsCore" Version="2.1.0-dev-798" />
     <PackageVersion Include="LiveChartsCore.SkiaSharpView" Version="2.1.0-dev-798" />
     <PackageVersion Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.1.0-dev-798" />
-    <PackageVersion Include="MacBundle" Version="1.0.0" />
-    <PackageVersion Include="Cogwheel" Version="2.1.1" />
+    <PackageVersion Include="MacBundle" Version="1.0.1" />
+    <PackageVersion Include="Cogwheel" Version="2.1.2" />
     <PackageVersion Include="coverlet.collector" Version="10.1.0" />
-    <PackageVersion Include="CsvHelper" Version="33.1.0" />
-    <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="2.5.1" />
+    <PackageVersion Include="CsvHelper" Version="34.0.0" />
+    <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="2.5.2" />
     <PackageVersion Include="MiniExcel" Version="1.46.0" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageVersion Include="NLog" Version="6.2.1" />
+    <PackageVersion Include="NLog" Version="6.2.2" />
     <PackageVersion Include="Onova" Version="2.6.13" />
     <PackageVersion Include="Optris.LoadingIndicators.Avalonia" Version="12.0.4" />
     <PackageVersion Include="PdfPig" Version="0.1.16" />
     <PackageVersion Include="Prism.Core" Version="9.0.537" />
-    <PackageVersion Include="System.Security.Cryptography.ProtectedData" Version="10.0.13" />
+    <PackageVersion Include="System.Security.Cryptography.ProtectedData" Version="10.0.14" />
     <PackageVersion Include="Tabula" Version="1.0.1" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.14" />
     <PackageVersion Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <!-- Test packages -->
     <PackageVersion Include="AutoFixture" Version="4.18.1" />
